@@ -1,0 +1,72 @@
+// utils/tablinks.ts
+export const TabLinks = [
+  {
+    category: "IPD",
+    routes: [
+      {
+        name: "IPD Admission",
+        path: "/ipd/admit",
+      },
+      {
+        name: "IPD Record",
+        path: "/ipd/record",
+      },
+    ],
+  },
+  {
+    category: "OPD",
+    routes: [
+      {
+        name: "OPD Admission",
+        path: "/opd/admit",
+      },
+      {
+        name: "OPD Record",
+        path: "/opd/record",
+      },
+    ],
+  },
+  {
+    category: "Setting",
+    routes: [
+      {
+        name: "Hospital Information",
+        path: "/admin/settings/hospital/information",
+      },
+      {
+        name: "User Permission",
+        path: "/admin/settings/users",
+      },
+      {
+        name: "Doctor",
+        path: "/doctor",
+      },
+      // {
+      //   name: "Department",
+      //   path: "/admin/settings/department",
+      // },
+      // {
+      //   name: "Modules",
+      //   path: "/admin/settings/module",
+      // },
+    ],
+  },
+  {
+    category: "Reports",
+    routes: [
+      {
+        name: "Daily Report",
+        path: "/admin/reports/daily",
+      },
+      {
+        name: "Monthly Report",
+        path: "/admin/reports/monthly",
+      },
+      {
+        name: "Yearly Report",
+        path: "/admin/reports/yearly",
+      },
+    ],
+  },
+  // Add more categories and routes as needed
+];
