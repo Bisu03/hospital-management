@@ -9,9 +9,10 @@ import Loading from "@/components/Loading";
 import Heading from "@/components/Heading";
 import HospitalInfoCard from "@/components/component/HospitalInfo";
 import { withAuth } from "@/services/withAuth";
-import apiRequest from "@/services/apiRequest";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import Link from "next/link";
+import { fetchData } from "@/services/apiService";
+import axios from "axios";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
@@ -20,7 +21,7 @@ const CreateInformation = () => {
 
   const getHospitalInfo = async () => {
     try {
-      const { data } = await apiRequest.get('/admin/hospital')
+      const { data } = await axios.get('/api/v1/admin/hospital')
       setHospitalInfo(data?.data)
     } catch (error) {
       ErrorHandeling(error)

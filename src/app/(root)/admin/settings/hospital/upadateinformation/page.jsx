@@ -8,6 +8,7 @@ import { withAuth } from '@/services/withAuth'
 import { ErrorHandeling } from '@/utils/errorHandling'
 import { SuccessHandling } from '@/utils/successHandling'
 import { TabLinks } from '@/utils/tablinks'
+import axios from 'axios'
 import Image from 'next/image'
 import React, { lazy, Suspense, useEffect, useState } from 'react'
 
@@ -48,7 +49,7 @@ const UpdateInformation = () => {
 
   const getHospitalInfo = async () => {
     try {
-      const { data } = await apiRequest.get('/admin/hospital')
+      const { data } = await axios.get('/api/v1/admin/hospital')
       setHospitalInfo(data?.data)
       setBannerUpload(data?.data?.banner)
       setLogoUpload(data?.data?.logo)
@@ -64,7 +65,7 @@ const UpdateInformation = () => {
 
   const handleSubmit = async () => {
     try {
-      const { data } = await apiRequest.put('/admin/hospital', { ...HospitalInfo, banner: BannerUpload, logo: LogoUpload })
+      const { data } = await axios.put('/api/v1/admin/hospital', { ...HospitalInfo, banner: BannerUpload, logo: LogoUpload })
       SuccessHandling(data?.message)
       getHospitalInfo()
     } catch (error) {

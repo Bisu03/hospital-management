@@ -1,5 +1,6 @@
 "use client"
 import apiRequest from "@/services/apiRequest";
+import { fetchData } from "@/services/apiService";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const HospitalContext = createContext();
@@ -9,7 +10,7 @@ export const HospitalProvider = ({ children }) => {
 
     const getHospitalInfo = async () => {
         try {
-            const { data } = await apiRequest.get("/admin/hospital");
+            const { data } = await fetchData("/admin/hospital");
             setHospitalInfo(data?.data || {});
         } catch (error) {
             console.error("Error fetching hospital data:", error);

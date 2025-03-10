@@ -9,6 +9,7 @@ import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
 import { TabLinks } from "@/utils/tablinks";
+import axios from "axios";
 import React, { lazy, Suspense, useEffect, useReducer, useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import { MdOutlineLockReset } from "react-icons/md";
@@ -23,7 +24,7 @@ const Users = () => {
 
   const getUserList = async () => {
     try {
-      const { data } = await apiRequest.get('/admin/user')
+      const { data } = await axios.get('/api/v1/admin/user')
       setUserList(data?.data)
     } catch (error) {
       ErrorHandeling(error)
@@ -40,7 +41,7 @@ const Users = () => {
 
   const handleSubmit = async () => {
     try {
-      const { data } = await apiRequest.post('/admin/user', UsersInfo)
+      const { data } = await axios.post('/api/v1/admin/user', UsersInfo)
       SuccessHandling(data?.message)
       getUserList()
     } catch (error) {
@@ -51,7 +52,7 @@ const Users = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        const { data } = await apiRequest.delete(`/admin/user?id=${id}`)
+        const { data } = await axios.delete(`/api/v1/admin/user?id=${id}`)
         SuccessHandling(data?.message)
         getUserList()
       } catch (error) {
