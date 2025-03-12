@@ -53,7 +53,7 @@ const IpdPrint = () => {
                         <div>
                             <h1 className="text-2xl font-bold text-blue-900">{hospitalInfo?.hospital_name}</h1>
                             <p className="bg-blue-900 text-white px-2 py-1 text-sm font-semibold rounded-md w-fit">
-                                Licence No: {hospitalInfo?.licence_number}
+                                Lic No: {hospitalInfo?.licence_number}
                             </p>
                         </div>
                     </div>
@@ -179,7 +179,7 @@ const IpdPrint = () => {
                     {/* Footer Section */}
                     <div className="flex justify-between text-xs pt-4">
                         {formData?.referr_by && <span>Referred by {formData?.referr_by}</span>}
-                        <span>Printed by {session?.user?.username}</span>
+                        <span>Admited by {session?.user?.username}</span>
                     </div>
                 </div>
             </PrintUi>

@@ -12,7 +12,7 @@ import { TabLinks } from "@/utils/tablinks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import React, { lazy, Suspense, useEffect, useState } from "react";
-import { FaEdit, FaPrint } from "react-icons/fa";
+import { FaPrint } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
@@ -58,7 +58,6 @@ const IpdRecord = () => {
         mutationFn: (id) => deleteData("/ipd", id),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
-            setFormData(initialState);
             SuccessHandling(data.message);
             refetch();
         },
@@ -96,6 +95,7 @@ const IpdRecord = () => {
                                         <tr className="bg-secondary text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                             <th className="px-4 py-3">MRD ID</th>
                                             <th className="px-4 py-3">REG ID</th>
+                                            <th className="px-4 py-3">BILL No</th>
                                             <th className="px-4 py-3">Full Name</th>
                                             <th className="px-4 py-3">Phone</th>
                                             <th className="px-4 py-3">Age</th>
@@ -109,6 +109,9 @@ const IpdRecord = () => {
                                             <tr key={patient._id} className="hover:bg-gray-50">
                                                 <td className="px-4 py-3">{patient?.mrd_id}</td>
                                                 <td className="px-4 py-3">{patient?.reg_id}</td>
+                                                <td className="px-4 py-3">
+                                                    {patient?.patient?.bill_no}
+                                                </td>
                                                 <td className="px-4 py-3">
                                                     {patient?.patient?.fullname}
                                                 </td>

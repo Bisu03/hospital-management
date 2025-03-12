@@ -59,6 +59,22 @@ export const NavLinks = [
       },
     ],
   },
+  {
+    icon: < FaMoneyBill />,
+    category: "Billing",
+    routes: [
+      {
+        name: "Billing",
+        path: "/billing/makebills",
+      },
+      // {
+      //   name: "Bill Record",
+      //   path: "/opd/record",
+      // },
+    ],
+  },
+
+
 
   {
     icon: <MdBed />,
@@ -81,6 +97,10 @@ export const NavLinks = [
       {
         name: "Hospital Information",
         path: "/admin/settings/hospital/information",
+      },
+      {
+        name: "Services",
+        path: "/admin/services",
       },
     ],
   },

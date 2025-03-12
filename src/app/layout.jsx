@@ -16,7 +16,9 @@ export default function RootLayout({ children }) {
         <Toaster position="top-right" reverseOrder={false} />
         <AuthProvider>
           <QueryClientProvider client={queryClient}>
-            <HospitalProvider>{children}</HospitalProvider>
+            <HospitalProvider>
+              {children}
+            </HospitalProvider>
           </QueryClientProvider>
         </AuthProvider>
       </body>

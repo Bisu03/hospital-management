@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchData } from "@/services/apiService";
+import { usePatient } from "@/context/patientdetails/PatientDetails";
 
-const PatientDropdown = ({ onSelectPatient, PatientSearch, setPatientSearch }) => {
+const PatientDropdown = ({ onSelectPatient }) => {
+    const { PatientList, patientRefetch, setPatientSearch, PatientSearch } = usePatient()
     const [isOpen, setIsOpen] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+
     const dropdownRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -19,12 +23,6 @@ const PatientDropdown = ({ onSelectPatient, PatientSearch, setPatientSearch }) =
         return () => clearTimeout(delayDebounce);
     }, [PatientSearch.fullname]);
 
-    // Fetch patient list
-    const { data: PatientList, refetch: patientRefetch } = useQuery({
-        queryKey: ["patientrecord", PatientSearch.fullname], // Ensure unique queries
-        queryFn: () => fetchData(`/patient?fullname=${PatientSearch.fullname || ""}`),
-        enabled: !!PatientSearch.fullname, // Only fetch when fullname exists
-    });
 
     // Handle key navigation
     const handleKeyDown = (e) => {
@@ -47,7 +45,7 @@ const PatientDropdown = ({ onSelectPatient, PatientSearch, setPatientSearch }) =
             case "Enter":
                 e.preventDefault();
                 if (PatientList?.data[highlightedIndex]) {
-                    handlePatientSelect(PatientList.data[highlightedIndex]);
+                    handlePatientSelect(PatientList?.data[highlightedIndex]);
                 }
                 break;
             case "Escape":
@@ -107,13 +105,12 @@ const PatientDropdown = ({ onSelectPatient, PatientSearch, setPatientSearch }) =
                             PatientList.data.map((patient, index) => (
                                 <div
                                     key={patient._id}
-                                    className={`px-4 py-2 cursor-pointer ${
-                                        index === highlightedIndex
-                                            ? "bg-blue-500 text-white"
-                                            : selectedPatient?.id === patient._id
+                                    className={`px-4 py-2 cursor-pointer ${index === highlightedIndex
+                                        ? "bg-blue-500 text-white"
+                                        : selectedPatient?.id === patient._id
                                             ? "bg-blue-50"
                                             : "hover:bg-gray-100"
-                                    }`}
+                                        }`}
                                     onClick={() => handlePatientSelect(patient)}
                                     onMouseEnter={() => setHighlightedIndex(index)}
                                 >

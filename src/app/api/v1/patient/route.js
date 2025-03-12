@@ -4,7 +4,8 @@ import { getServerSession } from "next-auth";
 import { connectDB } from "@/lib/mongoConnection"; // MongoDB connection utility
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
-import Patient from "@/models/Patient.models"; // Mongoose Patient model
+import Patient from "@/models/Patient.models"; // Mongoose  model
+import Billing from "@/models/Billing.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
 
 export async function GET(req) {
@@ -55,77 +56,80 @@ export async function POST(req) {
             { status: 401 }
         );
     }
+
     try {
         const body = await req.json();
+        if (!body) {
+            return NextResponse.json(
+                { success: false, message: "Invalid request body" },
+                { status: 400 }
+            );
+        }
 
-        let uhid;
+        let uhid = null;
+        let regid = null;
+        let mrdid = null;
+        let billno = null;
+
         if (!body.uh_id) {
             uhid = await Counter.findOneAndUpdate(
-                {
-                    id: "uhid",
-                },
-                {
-                    $inc: { seq: 1 },
-                },
-                { new: true }
+                { id: "uhid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
             );
-
-            if (uhid == null) {
-                uhid = await Counter.create({
-                    id: "uhid",
-                    seq: 100,
-                });
-            }
         }
 
-        let regid;
         regid = await Counter.findOneAndUpdate(
-            {
-                id: "regid",
-            },
-            {
-                $inc: { seq: 1 },
-            },
-            { new: true }
+            { id: "regid" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
         );
-
-        if (regid == null) {
-            regid = await Counter.create({
-                id: "regid",
-                seq: 10000,
-            });
-        }
-
-
-        let mrdid;
 
         if (!body.mrd_id) {
             mrdid = await Counter.findOneAndUpdate(
-                {
-                    id: "mrdid",
-                },
-                {
-                    $inc: { seq: 1 },
-                },
-                { new: true }
+                { id: "mrdid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
             );
-
-            if (mrdid == null) {
-                mrdid = await Counter.create({
-                    id: "mrdid",
-                    seq: 1000,
-                });
-            }
         }
 
-        const { _id, ...newData } = body
-        if (body.mrd_id) {
-            await Patient.create({ ...newData, reg_id: regid.seq });
-        } else {
-            if (mrdid && uhid && regid) {
-                await Patient.create({ ...newData, uh_id: uhid.seq, reg_id: regid.seq, mrd_id: mrdid.seq });
-            }
+        billno = await Counter.findOneAndUpdate(
+            { id: "billno" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
 
+        const { _id, ipd_id, opd_id, billing, ...newData } = body;
+
+        let patientData;
+        if (body.mrd_id) {
+            patientData = await Patient.create({
+                ...newData,
+                reg_id: regid.seq,
+                bill_no: billno.seq,
+            });
+        } else {
+            patientData = await Patient.create({
+                ...newData,
+                uh_id: uhid?.seq,
+                reg_id: regid.seq,
+                mrd_id: mrdid?.seq,
+                bill_no: billno.seq,
+            });
+        }
+
+        if (patientData) {
+            const billData = await Billing.create({
+                uh_id: patientData.uh_id || newData?.uh_id,
+                reg_id: regid.seq,
+                mrd_id: patientData.mrd_id || newData?.mrd_id,
+                bill_no: billno.seq,
+                patient: patientData._id,
+            });
+
+            if (billData) {
+                await Patient.findByIdAndUpdate(patientData._id, { billing: billData._id });
+            }
         }
 
 
@@ -140,6 +144,7 @@ export async function POST(req) {
         );
     }
 }
+
 
 export async function PUT(req) {
     await connectDB();
@@ -182,10 +187,12 @@ export async function DELETE(req) {
         const patientid = searchParams.get("id");
 
         await Patient.findByIdAndDelete(patientid);
+
         return NextResponse.json({
             success: true,
-            message: "Patient Updated Successfully",
+            message: "Patient Deleted Successfully",
         });
+
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },

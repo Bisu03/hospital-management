@@ -177,6 +177,7 @@ export async function POST(req) {
         return NextResponse.json({
             success: true,
             message: "Patient Admited Successfully",
+            data
         });
     } catch (error) {
         return NextResponse.json(

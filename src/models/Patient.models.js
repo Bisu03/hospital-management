@@ -16,6 +16,14 @@ const patientSchema = new Schema({
         type: String,
         required: true,
     },
+    bill_no: {
+        type: String,
+        required: true,
+    },
+    billing: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "billing",
+    },
     ipd_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "ipd",

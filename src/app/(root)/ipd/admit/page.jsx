@@ -9,12 +9,13 @@ import Tab from '@/components/Tab';
 import Spinner from '@/components/ui/Spinner';
 import { getDate } from '@/lib/currentDate';
 import { formattedTime } from '@/lib/timeGenerate';
-import { createData, fetchData } from '@/services/apiService';
+import { createData, fetchData, updateData } from '@/services/apiService';
 import { withAuth } from '@/services/withAuth'
 import { ErrorHandeling } from '@/utils/errorHandling';
 import { SuccessHandling } from '@/utils/successHandling';
 import { TabLinks } from '@/utils/tablinks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import React, { lazy, Suspense, useState } from 'react'
 import { FaPlus } from 'react-icons/fa';
 import Select from "react-select";
@@ -23,7 +24,8 @@ const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const IpdAdmission = () => {
     const queryClient = useQueryClient();
-    const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
+
+    const router = useRouter()
     const initialState = {
         uh_id: "",
         reg_id: "",
@@ -33,7 +35,7 @@ const IpdAdmission = () => {
         weight: "",
         bp: "",
         consultant: "",
-        admission_charge: "",
+        admission_charge: "200",
         paidby: "",
         admit_date: getDate(),
         admit_time: formattedTime(),
@@ -41,30 +43,37 @@ const IpdAdmission = () => {
         medical_case: "",
         provisional_diagnosis: "",
     }
+
     const [formData, setFormData] = useState(initialState);
     const [consultant, setConsultant] = useState({});
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-
     const handlePatientSelection = (patient) => {
-
         if (patient?.ipd_id) {
-
             fetchData(`/ipd?id=${patient.ipd_id}`).then((data) => {
-                setFormData(data.data);
-                setConsultant(data?.data?.consultant?._id);
+                setFormData({
+                    ...data.data,
+                    fullname: data?.data?.patient?.fullname,
+                    phone_number: data?.data?.patient?.phone_number,
+                    referr_by: data?.data?.patient?.referr_by,
+                });
+                setConsultant({
+                    value: data?.data?.consultant?._id,
+                    label: data?.data?.consultant?.drname,
+                });
             }).catch((error) => {
                 ErrorHandeling(error);
             });
 
         } else {
+
             setFormData({
-                ...patient, patient: patient._id,
-                admit_date: getDate(),
-                admit_time: formattedTime(),
+                ...formData, ...patient, patient: patient._id,
+
             });
+
         }
 
     };
@@ -87,10 +96,21 @@ const IpdAdmission = () => {
             queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
             setFormData(initialState);
             SuccessHandling(data.message);
+            router.push(`/ipd/print/${data?.data?._id}`);
         },
         onError: (error) => {
             ErrorHandeling(error);
-            console.error("Error adding data:", error);
+        },
+    });
+    const mutationUpdate = useMutation({
+        mutationFn: (newItem) => updateData("/ipd", newItem._id, newItem),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
+            setFormData(initialState);
+            SuccessHandling(data.message);
+        },
+        onError: (error) => {
+            ErrorHandeling(error);
         },
     });
 
@@ -98,6 +118,11 @@ const IpdAdmission = () => {
         e.preventDefault(); // Prevents default form submission
         mutation.mutate({ ...formData, consultant: consultant.value });
     };
+
+    const handleUpdate = () => {
+        mutationUpdate.mutate({ ...formData, consultant: consultant.value });
+    };
+
 
     return (
         <>
@@ -108,9 +133,7 @@ const IpdAdmission = () => {
                         <div className="w-full">
                             <Heading heading="IPD Admission">
                                 <div className='flex items-center space-x-2'>
-                                    <PatientDropdown onSelectPatient={handlePatientSelection}
-                                        PatientSearch={PatientSearch}
-                                        setPatientSearch={setPatientSearch} />
+                                    <PatientDropdown onSelectPatient={handlePatientSelection} />
                                     <PatientRegistration />
                                 </div>
                             </Heading>
@@ -342,20 +365,34 @@ const IpdAdmission = () => {
                                         >
                                             Clear
                                         </button>
-                                        <button
-                                            onClick={handleSubmit}
+                                        {formData?.ipd_id ? <button
+                                            onClick={handleUpdate}
                                             className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
                                             disabled={mutation.isPending} // Disable if mutation is pending
                                         >
-                                            {mutation.isPending ? (
+                                            {mutationUpdate.isPending ? (
                                                 <>
                                                     <Spinner />
 
                                                 </>
                                             ) : (
-                                                "Admit Patient"
+                                                "Update Patient"
                                             )}
-                                        </button>
+                                        </button> :
+                                            <button
+                                                onClick={handleSubmit}
+                                                className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
+                                                disabled={mutation.isPending} // Disable if mutation is pending
+                                            >
+                                                {mutation.isPending ? (
+                                                    <>
+                                                        <Spinner />
+
+                                                    </>
+                                                ) : (
+                                                    "Admit Patient"
+                                                )}
+                                            </button>}
                                     </div>
 
                                 </div>

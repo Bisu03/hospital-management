@@ -49,9 +49,6 @@ const OpdRecord = () => {
         },
     });
 
-    console.log(data);
-
-
     // Pagination controls
     const handlePreviousPage = () => {
         setCurrentPage((prev) => Math.max(1, prev - 1));
@@ -64,13 +61,11 @@ const OpdRecord = () => {
         mutationFn: (id) => deleteData("/opd", id),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["opdarecord"] }); // Refetch data after adding
-            setFormData(initialState);
             SuccessHandling(data.message);
             refetch();
         },
         onError: (error) => {
             ErrorHandeling(error);
-            console.error("Error adding data:", error);
         },
     });
 
@@ -102,6 +97,7 @@ const OpdRecord = () => {
                                         <tr className="bg-secondary text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                             <th className="px-4 py-3">MRD ID</th>
                                             <th className="px-4 py-3">REG ID</th>
+                                            <th className="px-4 py-3">BILL NO</th>
                                             <th className="px-4 py-3">Full Name</th>
                                             <th className="px-4 py-3">Phone</th>
                                             <th className="px-4 py-3">Age</th>
@@ -116,6 +112,9 @@ const OpdRecord = () => {
                                             <tr key={patient._id} className="hover:bg-gray-50">
                                                 <td className="px-4 py-3">{patient?.mrd_id}</td>
                                                 <td className="px-4 py-3">{patient?.reg_id}</td>
+                                                <td className="px-4 py-3">
+                                                    {patient?.patient?.bill_no}
+                                                </td>
                                                 <td className="px-4 py-3">
                                                     {patient?.patient?.fullname}
                                                 </td>

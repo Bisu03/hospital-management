@@ -1,4 +1,6 @@
 
+import Spinner from "@/components/ui/Spinner";
+import { usePatient } from "@/context/patientdetails/PatientDetails";
 import { createData, fetchData } from "@/services/apiService";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
@@ -8,6 +10,8 @@ const PatientRegistration = () => {
     const queryClient = useQueryClient();
     const [isModalOpen, setModalOpen] = useState(false);
     const [MrdId, setMrdId] = useState("");
+    const { patientRefetch } = usePatient()
+
 
     const initialState = {
         fullname: "",
@@ -66,7 +70,7 @@ const PatientRegistration = () => {
             queryClient.invalidateQueries({ queryKey: ["patientrecord"] }); // Refetch data after adding
             setFormData(initialState);
             SuccessHandling(data.message);
-            location.reload()
+            patientRefetch()
             handleClose();
         },
         onError: (error) => {
@@ -391,7 +395,7 @@ const PatientRegistration = () => {
                                             onClick={handleSubmit}
                                             className="px-6 py-2 bg-primary text-white rounded-lg  hover:bg-secondary "
                                         >
-                                            Submit
+                                            Submit {mutation.isPending && <Spinner />}
                                         </button>
                                     </div>
                                 </div>

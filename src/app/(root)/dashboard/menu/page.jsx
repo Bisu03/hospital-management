@@ -4,7 +4,7 @@ import Loading from "@/components/Loading";
 import { withAuth } from "@/services/withAuth";
 import Link from "next/link";
 import React, { lazy, Suspense, useState } from "react";
-import { FaRegistered } from "react-icons/fa";
+import { FaClinicMedical, FaMoneyBill, FaRegistered } from "react-icons/fa";
 import { MdBedroomParent, MdDashboard } from "react-icons/md";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
@@ -15,7 +15,8 @@ const Menu = () => {
         { href: "   ", icon: <MdDashboard size={60} />, label: "Daily Report" },
         { href: "/patient/record", icon: <FaRegistered size={60} />, label: "Patient Record" },
         { href: "/ipd/admit", icon: <MdBedroomParent size={60} />, label: "IPD" },
-        { href: "/opd/admit", icon: <MdBedroomParent size={60} />, label: "OPD" },
+        { href: "/opd/admit", icon: <FaClinicMedical size={60} />, label: "OPD" },
+        { href: "/billing/makebills", icon: <FaMoneyBill size={60} />, label: "Bill" },
     ];
 
     return (

@@ -56,7 +56,7 @@ const OpdPrint = () => {
                                     {hospitalInfo?.hospital_name}
                                 </h1>
                                 <p className="text-sm text-black py-1 rounded-md mt-2">
-                                    Licence No: {hospitalInfo?.licence_number}
+                                    Lic No: {hospitalInfo?.licence_number}
                                 </p>
                             </div>
                         </div>
@@ -70,6 +70,23 @@ const OpdPrint = () => {
                                 <span className="font-semibold">GST:</span> {hospitalInfo?.gst_number}
                             </p>
                             <p className="text-blue-900">{hospitalInfo?.email}</p>
+                            <p className="text-blue-900">For Appoinment:9002296279</p>
+                            <p className="text-blue-900">Call 09:00 AM To 03:00 PM (Except Saturday)</p>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between items-end">
+                        <div></div>
+
+                        <div className="space-y-1">
+                            <p className="text-xl font-bold">{formData?.consultant?.drname}</p>
+                            <p className="text-sm">{formData?.consultant?.drinfo}</p>
+                            <p className="text-sm">
+                                Department of {formData?.consultant?.category}
+                            </p>
+                            <p className="text-sm">
+                                Contact: {formData?.consultant?.contact}
+                            </p>
                         </div>
                     </div>
 
@@ -106,9 +123,9 @@ const OpdPrint = () => {
                         {/* Left Column - Clinical Findings */}
                         <div className="w-1/3 pr-4 border-r-2 border-gray-300">
                             <h2 className="text-xl font-bold text-blue-900 mb-4">
-                                Clinical Findings
+                                Findings
                             </h2>
-                            <div className="space-y-3">
+                            {/* <div className="space-y-3">
                                 <DetailItem label="Weight" value={formData.weight} />
                                 <DetailItem
                                     label="Present Complain"
@@ -136,12 +153,12 @@ const OpdPrint = () => {
                                     value={formData?.provisional_diagnosis}
                                 />
                                 <DetailItem label="Notes" value={formData?.note} />
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Right Column - Prescription */}
                         <div className="w-2/3">
-                            <h2 className="text-2xl font-bold text-blue-900 mb-6">Rx</h2>
+                            <h2 className="text-2xl font-bold text-blue-900 mb-6">Advice</h2>
                             <div className="space-y-4">
                                 {/* Add prescription items here */}
                             </div>
@@ -149,17 +166,10 @@ const OpdPrint = () => {
                     </div>
 
                     {/* Doctor Footer */}
-                    <div className="mt-8 border-t-2 border-black pt-6">
+                    <div className="mt-8 border-t-2 border-black pt-10">
                         <div className="flex justify-between items-end">
-                            <div className="space-y-1">
-                                <p className="text-xl font-bold">{formData?.consultant?.drname}</p>
-                                <p className="text-sm">{formData?.consultant?.drinfo}</p>
-                                <p className="text-sm">
-                                    Department of {formData?.consultant?.category}
-                                </p>
-                                <p className="text-sm">
-                                    Contact: {formData?.consultant?.contact}
-                                </p>
+                            <div>
+                                Registration No:- {formData?.reg_id}
                             </div>
 
                             <div className="text-center">
