@@ -102,6 +102,10 @@ export const NavLinks = [
         name: "Services",
         path: "/admin/services",
       },
+      {
+        name: "Pathology",
+        path: "/admin/pathology/record",
+      },
     ],
   },
 ];

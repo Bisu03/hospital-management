@@ -9,7 +9,13 @@ const doctorSchema = new mongoose.Schema(
         drinfo: {
             type: String,
         },
+        regno: {
+            type: String,
+        },
         contact: {
+            type: String,
+        },
+        email: {
             type: String,
         },
         category: {

@@ -42,7 +42,7 @@ const OpdPrint = () => {
                 {/* Main Container */}
                 <div className="min-h-[100vh] p-6 flex flex-col justify-between">
                     {/* Hospital Header */}
-                    <div className="w-full flex justify-between items-start mb-6 border-b-2 border-black pb-4">
+                    <div className="w-full flex justify-between items-start mb-2 border-b-2 border-black pb-4">
                         <div className="flex items-center gap-4">
                             <Image
                                 width={120}
@@ -70,13 +70,33 @@ const OpdPrint = () => {
                                 <span className="font-semibold">GST:</span> {hospitalInfo?.gst_number}
                             </p>
                             <p className="text-blue-900">{hospitalInfo?.email}</p>
-                            <p className="text-blue-900">For Appoinment:9002296279</p>
-                            <p className="text-blue-900">Call 09:00 AM To 03:00 PM (Except Saturday)</p>
+                            <p className="text-blue-900 font-semibold">For Appoinment:9002296279</p>
+                            <p className="text-blue-900 ">Call 09:00 AM To 03:00 PM (Except Saturday)</p>
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-end">
-                        <div></div>
+                    <div className="flex justify-between">
+
+                        <div className=" text-sm space-y-1">
+                            <p className=" font-semibold">{formData?.patient?.fullname}</p>
+                            <div>
+                                <span className="font-semibold">Age:</span>{" "}
+                                {formData?.patient?.age}
+                            </div>
+                            <div>
+                                <span className="font-semibold">Sex:</span>{" "}
+                                {formData?.patient?.gender}
+                            </div>
+                            <div>
+                                <span className="font-semibold">Date:</span>{" "}
+                                {formatDate(formData?.consultant_date)}
+                            </div>
+                            <div>
+                                <span className="font-semibold">Time:</span>{" "}
+                                {formatDate(formData?.consultant_time)}
+                            </div>
+                        </div>
+
 
                         <div className="space-y-1">
                             <p className="text-xl font-bold">{formData?.consultant?.drname}</p>
@@ -85,13 +105,19 @@ const OpdPrint = () => {
                                 Department of {formData?.consultant?.category}
                             </p>
                             <p className="text-sm">
+                                Reg No. {formData?.consultant?.regno}
+                            </p>
+                            <p className="text-sm">
                                 Contact: {formData?.consultant?.contact}
+                            </p>
+                            <p className="text-sm">
+                                Email: {formData?.consultant?.email}
                             </p>
                         </div>
                     </div>
 
                     {/* Patient Details Header */}
-                    <div className="bg-gray-100 p-4 rounded-lg mb-6">
+                    {/* <div className="bg-gray-100 p-4 rounded-lg mb-6">
                         <div className="flex justify-between items-center flex-wrap gap-4">
                             <div className="text-lg">
                                 <span className="font-bold">Name:</span>{" "}
@@ -116,10 +142,10 @@ const OpdPrint = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Main Content */}
-                    <div className="flex flex-1 gap-8">
+                    <div className="flex flex-1 gap-8 mt-2">
                         {/* Left Column - Clinical Findings */}
                         <div className="w-1/3 pr-4 border-r-2 border-gray-300">
                             <h2 className="text-xl font-bold text-blue-900 mb-4">

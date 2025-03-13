@@ -2,10 +2,11 @@
 
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
-import { fetchData } from "@/services/apiService";
+import { fetchData, updateData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import React, { lazy, Suspense, useState } from "react";
 import toast from "react-hot-toast";
 import { FaTrash } from "react-icons/fa";
@@ -18,6 +19,8 @@ const MakeBills = () => {
         queryFn: () => fetchData("/admin/service"),
     });
 
+    const router = useRouter()
+
     const [searchQuery, setSearchQuery] = useState("");
     const [serviceCart, setServiceCart] = useState({
         services: [],
@@ -25,7 +28,7 @@ const MakeBills = () => {
     });
     const [formData, setFormData] = useState({});
     const [quantities, setQuantities] = useState({});
-    const [BillNo, setBillNo] = useState()
+    const [RegNo, setRegNo] = useState()
 
     const filteredServices = (services?.data || [])?.filter(service =>
         service?.servicename?.toLowerCase()?.includes(searchQuery.toLowerCase())
@@ -93,12 +96,15 @@ const MakeBills = () => {
     };
 
     const handleGetpatientinfor = async () => {
-        const { data } = await axios.get(`/api/v1/billing/${BillNo}`)
+        const { data } = await axios.get(`/api/v1/billing/${RegNo}`)
         setFormData(data?.data)
     }
 
-    const handleGenerateBill = () => {
-        toast.error("Working under process")
+    const handleGenerateBill = async () => {
+        const { data } = await axios.put(`/api/v1/billing/${formData?._id}`, { service_cart: serviceCart })
+        toast.success(data?.message)
+        router.push(`/billing/print/${formData?.reg_id}`)
+        
     }
 
     if (isLoading) return <Loading />;
@@ -114,10 +120,10 @@ const MakeBills = () => {
                                 <input
                                     className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                     type="text"
-                                    name="BillNo"
-                                    value={BillNo}
-                                    onChange={(e) => setBillNo(e.target.value)}
-                                    placeholder="Enter Bill No."
+                                    name="RegNo"
+                                    value={RegNo}
+                                    onChange={(e) => setRegNo(e.target.value)}
+                                    placeholder="Enter Reg No."
                                 />
                                 <button onClick={handleGetpatientinfor} className="btn btn-secondary"> Get </button>
                             </div>
@@ -143,15 +149,6 @@ const MakeBills = () => {
                                     <p className="text-xs md:text-sm font-medium text-gray-500">REG ID</p>
                                     <p className="text-gray-700 text-sm md:text-base font-mono truncate">
                                         {formData.reg_id}
-                                    </p>
-                                </div>
-                            )}
-
-                            {formData?.phone_number && (
-                                <div className="space-y-0.5 min-w-[200px]">
-                                    <p className="text-xs md:text-sm font-medium text-gray-500">Phone Number</p>
-                                    <p className="text-gray-700 text-sm md:text-base truncate">
-                                        {formData.phone_number}
                                     </p>
                                 </div>
                             )}

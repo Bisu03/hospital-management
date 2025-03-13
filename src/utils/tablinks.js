@@ -27,6 +27,19 @@ export const TabLinks = [
     ],
   },
   {
+    category: "Pathology",
+    routes: [
+      {
+        name: "Category Record",
+        path: "/admin/pathology/category",
+      },
+      {
+        name: "Pathology Record",
+        path: "/admin/pathology/record",
+      },
+    ],
+  },
+  {
     category: "Setting",
     routes: [
       {

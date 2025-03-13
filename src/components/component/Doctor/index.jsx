@@ -11,6 +11,8 @@ const DoctorForm = ({ btn }) => {
     const initialState = {
         drname: "",
         drinfo: "",
+        regno: "",
+        email: "",
         contact: "",
         category: "",
     }
@@ -121,6 +123,19 @@ const DoctorForm = ({ btn }) => {
                                         </div>
                                         <div className="space-y-1">
                                             <label className="block text-sm font-medium text-gray-700 ">
+                                                Doctor Reg No.
+                                                <span className="text-red-500 text-lg">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="regno"
+                                                value={formData.regno}
+                                                onChange={handleChange}
+                                                className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg  focus:ring-2 focus:ring-blue-500 focus:border-blue-500   transition-all duration-200 shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="block text-sm font-medium text-gray-700 ">
                                                 Doctor Contact Details
                                                 <span className="text-red-500 text-lg">*</span>
                                             </label>
@@ -128,6 +143,19 @@ const DoctorForm = ({ btn }) => {
                                                 type="text"
                                                 name="contact"
                                                 value={formData.contact}
+                                                onChange={handleChange}
+                                                className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg  focus:ring-2 focus:ring-blue-500 focus:border-blue-500   transition-all duration-200 shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="block text-sm font-medium text-gray-700 ">
+                                                Doctor Email
+                                                <span className="text-red-500 text-lg">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="email"
+                                                value={formData.email}
                                                 onChange={handleChange}
                                                 className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg  focus:ring-2 focus:ring-blue-500 focus:border-blue-500   transition-all duration-200 shadow-sm"
                                             />

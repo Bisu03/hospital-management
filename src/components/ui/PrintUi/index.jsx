@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { set } from 'mongoose';
 
 const PrintUi = ({ children, path }) => {
   const componentRef = useRef();
@@ -14,6 +15,16 @@ const PrintUi = ({ children, path }) => {
       window.location.reload();
     }
   };
+
+  // useEffect(
+  //   () => {
+  //     setTimeout(() => {
+  //       handlePrint();
+  //     }, 5000)
+  //   },
+  //   []
+  // )
+
   return (
     <div className="p-4">
       <div

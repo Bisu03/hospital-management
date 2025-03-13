@@ -12,6 +12,7 @@ import { MdDelete } from "react-icons/md";
 import DoctorForm from "@/components/component/Doctor";
 import { SuccessHandling } from "@/utils/successHandling";
 import { ErrorHandeling } from "@/utils/errorHandling";
+import Spinner from "@/components/ui/Spinner";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
@@ -32,7 +33,7 @@ const Doctor = () => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["doctorrecord"] }); // Refetch data after adding
             refetch();
-            SuccessHandling(data.message);
+            SuccessHandling(data?.message);
         },
         onError: (error) => {
             ErrorHandeling(error);
@@ -61,7 +62,9 @@ const Doctor = () => {
                                             <th className="px-4 py-3">Doctor Department</th>
                                             <th className="px-4 py-3">Doctor Name</th>
                                             <th className="px-4 py-3">Doctor Details</th>
+                                            <th className="px-4 py-3">Doctor Reg No.</th>
                                             <th className="px-4 py-3">Doctor Contact</th>
+                                            <th className="px-4 py-3">Doctor Email</th>
                                             <th className="px-4 py-3 ">Actions</th>
                                         </tr>
                                     </thead>
@@ -71,7 +74,9 @@ const Doctor = () => {
                                                 <td className="px-4 py-3">{dr?.category}</td>
                                                 <td className="px-4 py-3">{dr?.drname}</td>
                                                 <td className="px-4 py-3">{dr?.drinfo}</td>
+                                                <td className="px-4 py-3">{dr?.regno}</td>
                                                 <td className="px-4 py-3">{dr?.contact}</td>
+                                                <td className="px-4 py-3">{dr?.email}</td>
                                                 <td className="px-4 py-3 space-x-2 flex">
                                                     {/* <button className="btn btn-secondary ">
                                                         {" "}
