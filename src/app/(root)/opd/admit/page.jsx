@@ -16,7 +16,7 @@ import { SuccessHandling } from "@/utils/successHandling";
 import { TabLinks } from "@/utils/tablinks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import React, { lazy, Suspense, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import Select from "react-select";
 
@@ -42,7 +42,6 @@ const OpdAdmission = () => {
     gi_system: "",
     nervious_system: "",
     consultant_date: getDate(),
-    consultant_time: formattedTime(),
     present_complain: "",
     medical_case: "",
     opd_fees: "",
@@ -50,10 +49,14 @@ const OpdAdmission = () => {
     provisional_diagnosis: "",
   };
   const [formData, setFormData] = useState(initialState);
+  const [Times, setTimes] = useState(formattedTime())
+
   const [consultant, setConsultant] = useState({});
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+
 
   const handlePatientSelection = (patient) => {
     if (patient?.opd_id) {
@@ -364,9 +367,9 @@ const OpdAdmission = () => {
                         />
                         <input
                           type="text"
-                          name="consultant_time"
-                          value={formData?.consultant_time}
-                          onChange={handleChange}
+                          name="Times"
+                          value={Times}
+                          onChange={(e) => setTimes(e.target.value)}
                           className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         />
                       </div>

@@ -2,16 +2,18 @@
 import Spinner from "@/components/ui/Spinner";
 import { usePatient } from "@/context/patientdetails/PatientDetails";
 import { createData, fetchData } from "@/services/apiService";
+import { stateData } from "@/utils/data";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import React, { useEffect, useReducer, useState } from "react";
 const PatientRegistration = () => {
     const queryClient = useQueryClient();
     const [isModalOpen, setModalOpen] = useState(false);
     const [MrdId, setMrdId] = useState("");
     const { patientRefetch } = usePatient()
-
+    const { data: session } = useSession();
 
     const initialState = {
         fullname: "",
@@ -22,8 +24,8 @@ const PatientRegistration = () => {
         marital_status: "",
         occupation: "",
         blood_group: "",
-        state: "",
-        dist: "",
+        state: "West Bengal",
+        dist: "Purba Medinipur (East Medinipur)",
         city_vill: "",
         ps: "",
         po: "",
@@ -33,6 +35,7 @@ const PatientRegistration = () => {
         religion: "",
         guardian_phone: "",
         referr_by: "",
+        admited_by: session?.user?.username,
     }
     const [formData, setFormData] = useState(initialState);
 
@@ -40,7 +43,6 @@ const PatientRegistration = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Prevent body scroll when modal is open
     // Prevent body scroll when modal is open
     useEffect(() => {
         if (isModalOpen) {
@@ -259,13 +261,20 @@ const PatientRegistration = () => {
                                             <label className="block text-sm font-medium text-gray-700 ">
                                                 State
                                             </label>
-                                            <input
-                                                type="text"
+                                            <select
                                                 name="state"
                                                 value={formData.state}
                                                 onChange={handleChange}
-                                                className="w-full max-w-sm py-1  px-4  border border-gray-300 rounded-lg  focus:ring-2 focus:ring-blue-500 focus:border-blue-500   transition-all duration-200 shadow-sm"
-                                            />
+                                                className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                                            >
+                                                <option >Select State</option>
+                                                {stateData.states.map((data, idx) => (
+                                                    <option value={data.state} key={idx}>
+                                                        {data.state}
+                                                    </option>
+                                                ))}
+                                            </select>
+
                                         </div>
                                         <div className="space-y-1">
                                             <label className="block text-sm font-medium text-gray-700 ">

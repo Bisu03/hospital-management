@@ -1,5 +1,6 @@
 "use client"
 
+import { useHospital } from "@/context/setting/HospitalInformation";
 import { fetchData } from "@/services/apiService";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -7,21 +8,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [hospitalInfo, setHospitalInfo] = useState({});
   const { data: session } = useSession();
-
-  const getHospitalInfo = async () => {
-    try {
-      const { data } = await fetchData("/admin/hospital");
-      setHospitalInfo(data || {});
-    } catch (error) {
-      console.error("Error fetching hospital data:", error);
-    }
-  };
-
-  useEffect(() => {
-    getHospitalInfo();
-  }, []);
+   const { hospitalInfo } = useHospital();
 
   return (
     <div className="w-full min-h-screen flex items-center justify-center bg-slate-50 p-4 sm:p-6">

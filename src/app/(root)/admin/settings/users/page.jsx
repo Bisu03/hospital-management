@@ -111,6 +111,24 @@ const Users = () => {
                           required
                         />
                       </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Role
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          name="role"
+                          value={UsersInfo.role}
+                          onChange={handleChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                          focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                          transition-all duration-200 shadow-sm"
+                        >
+                          <option>Select</option>
+                          <option value="Admin">Admin</option>
+                          <option value="Staff">Staff</option>
+                        </select>
+                      </div>
                     </div>
 
                     {/* Submit Button */}
@@ -136,6 +154,7 @@ const Users = () => {
                   <tr className="bg-secondary text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Role</th>
                     <th className="px-4 py-3 ">Actions</th>
                   </tr>
                 </thead>
@@ -144,6 +163,7 @@ const Users = () => {
                     <tr key={users._id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">{users?.username}</td>
                       <td className="px-4 py-3">{users?.email}</td>
+                      <td className="px-4 py-3">{users?.role}</td>
                       <td className="w-full flex space-x-3">
                         <button className="text-neutral hover:text-black focus:outline-none p-1" >
                           <MdOutlineLockReset className="h-6 w-6" />

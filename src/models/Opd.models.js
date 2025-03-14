@@ -4,15 +4,19 @@ const { Schema } = mongoose;
 const opdSchema = new Schema({
 
     uh_id: {
-        type: String,
+        type: Number,
         required: true,
     },
     reg_id: {
-        type: String,
+        type: Number,
         required: true,
     },
     mrd_id: {
-        type: String,
+        type: Number,
+        required: true,
+    },
+    opd_id: {
+        type: Number,
         required: true,
     },
     patient: {

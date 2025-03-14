@@ -4,21 +4,20 @@ const { Schema } = mongoose;
 const patientSchema = new Schema({
 
     uh_id: {
-        type: String,
+        type: Number,
         required: true,
     },
     reg_id: {
-        type: String,
+        type: Number,
         required: true,
         unique: true
     },
     mrd_id: {
-        type: String,
+        type: Number,
         required: true,
     },
-    bill_no: {
-        type: String,
-        required: true,
+    admited_in: {
+        type: String
     },
     billing: {
         type: mongoose.Schema.Types.ObjectId,
@@ -91,6 +90,9 @@ const patientSchema = new Schema({
     is_locked: {
         type: Boolean,
         default: false
+    },
+    admited_by: {
+        type: String,
     },
 }, {
     timestamps: true

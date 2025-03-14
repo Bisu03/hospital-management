@@ -53,7 +53,7 @@ const PatientRecord = () => {
                             <Heading heading="Patient Record">
                                 <PatientRegistration />
                             </Heading>
-
+                            {isLoading && <Loading />}
 
                             <div className="overflow-x-auto">
                                 <table className="w-full">
@@ -70,7 +70,6 @@ const PatientRecord = () => {
                                         </tr>
                                     </thead>
 
-                                    {isLoading && <Loading />}
 
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {data?.data?.map((patient) => (

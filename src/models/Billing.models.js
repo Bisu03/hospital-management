@@ -17,14 +17,22 @@ const billingSchema = new Schema({
     },
     bill_no: {
         type: String,
-        required: true,
     },
     patient: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "patient_registration",
     },
+    radiology_cart: {
+        type: Object
+    },
+    pathology_cart: {
+        type: Object
+    },
     service_cart: {
         type: Object
+    },
+    amount: {
+        type: Object,
     },
     paidby: {
         type: String,

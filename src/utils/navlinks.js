@@ -1,4 +1,4 @@
-import { FaCartPlus, FaClinicMedical, FaMoneyBill, FaRegistered } from "react-icons/fa";
+import { FaCartPlus, FaClinicMedical, FaMoneyBill, FaRegistered, FaXRay } from "react-icons/fa";
 import {
   MdAdminPanelSettings,
   MdBed,
@@ -60,6 +60,36 @@ export const NavLinks = [
     ],
   },
   {
+    icon: < MdGraphicEq />,
+    category: "Pathology",
+    routes: [
+      {
+        name: "Pathology Test",
+        path: "/pathology/create",
+      },
+      {
+        name: "Pathology Record",
+        path: "/pathology/record",
+      },
+
+    ],
+  },
+  {
+    icon: < FaXRay />,
+    category: "Radiology",
+    routes: [
+      {
+        name: "Radiology Test",
+        path: "/radiology/create",
+      },
+      {
+        name: "Radiology Record",
+        path: "/radiology/record",
+      },
+
+    ],
+  },
+  {
     icon: < FaMoneyBill />,
     category: "Billing",
     routes: [
@@ -73,9 +103,6 @@ export const NavLinks = [
       // },
     ],
   },
-
-
-
   {
     icon: <MdBed />,
     category: "Bed",
@@ -105,6 +132,10 @@ export const NavLinks = [
       {
         name: "Pathology",
         path: "/admin/pathology/record",
+      },
+      {
+        name: "Radiology",
+        path: "/admin/radiology/record",
       },
     ],
   },

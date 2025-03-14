@@ -69,7 +69,6 @@ export async function POST(req) {
         let uhid = null;
         let regid = null;
         let mrdid = null;
-        let billno = null;
 
         if (!body.uh_id) {
             uhid = await Counter.findOneAndUpdate(
@@ -93,12 +92,6 @@ export async function POST(req) {
             );
         }
 
-        billno = await Counter.findOneAndUpdate(
-            { id: "billno" },
-            { $inc: { seq: 1 } },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
-
         const { _id, ipd_id, opd_id, billing, ...newData } = body;
 
         let patientData;
@@ -106,7 +99,6 @@ export async function POST(req) {
             patientData = await Patient.create({
                 ...newData,
                 reg_id: regid.seq,
-                bill_no: billno.seq,
             });
         } else {
             patientData = await Patient.create({
@@ -114,7 +106,6 @@ export async function POST(req) {
                 uh_id: uhid?.seq,
                 reg_id: regid.seq,
                 mrd_id: mrdid?.seq,
-                bill_no: billno.seq,
             });
         }
 
@@ -123,7 +114,6 @@ export async function POST(req) {
                 uh_id: patientData.uh_id || newData?.uh_id,
                 reg_id: regid.seq,
                 mrd_id: patientData.mrd_id || newData?.mrd_id,
-                bill_no: billno.seq,
                 patient: patientData._id,
             });
 
