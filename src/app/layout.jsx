@@ -7,6 +7,7 @@ import { HospitalProvider } from "@/context/setting/HospitalInformation";
 import { Toaster } from "react-hot-toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+
 export default function RootLayout({ children }) {
   const queryClient = new QueryClient();
 
