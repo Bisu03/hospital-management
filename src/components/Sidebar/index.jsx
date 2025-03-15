@@ -12,6 +12,7 @@ import { useSession, signOut } from "next-auth/react";
 import { NavLinks } from "@/utils/navlinks";
 import Link from "next/link";
 import { useHospital } from "@/context/setting/HospitalInformation";
+import { FaBed } from "react-icons/fa";
 
 export default function ResponsiveSidebar({ children }) {
   const { data: session } = useSession();
@@ -71,6 +72,9 @@ export default function ResponsiveSidebar({ children }) {
 
             {/* Right Section */}
             <div className="flex items-center space-x-6">
+              <Link  href="/bedmanagement/bedallotment/342342"  className="flex items-center space-x-2 group focus:outline-none">
+                <FaBed className="h-6 w-6 text-white" />
+              </Link>
               <Link href="/dashboard/menu" className="flex items-center space-x-2 group focus:outline-none">
                 <MdDashboard className="h-6 w-6 text-white" />
               </Link>

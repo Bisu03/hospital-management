@@ -43,6 +43,14 @@ export const NavLinks = [
         name: "IPD Record",
         path: "/ipd/record",
       },
+      {
+        name: "Discharge",
+        path: "/discharge/create",
+      },
+      {
+        name: "Discharge Record",
+        path: "/discharge/record",
+      },
     ],
   },
   {
@@ -74,21 +82,21 @@ export const NavLinks = [
 
     ],
   },
-  {
-    icon: < FaXRay />,
-    category: "Radiology",
-    routes: [
-      {
-        name: "Radiology Test",
-        path: "/radiology/create",
-      },
-      {
-        name: "Radiology Record",
-        path: "/radiology/record",
-      },
+  // {
+  //   icon: < FaXRay />,
+  //   category: "Radiology",
+  //   routes: [
+  //     {
+  //       name: "Radiology Test",
+  //       path: "/radiology/create",
+  //     },
+  //     {
+  //       name: "Radiology Record",
+  //       path: "/radiology/record",
+  //     },
 
-    ],
-  },
+  //   ],
+  // },
   {
     icon: < FaMoneyBill />,
     category: "Billing",
@@ -97,10 +105,10 @@ export const NavLinks = [
         name: "Billing",
         path: "/billing/makebills",
       },
-      // {
-      //   name: "Bill Record",
-      //   path: "/opd/record",
-      // },
+      {
+        name: "Bill Record",
+        path: "/billing/record",
+      },
     ],
   },
   {

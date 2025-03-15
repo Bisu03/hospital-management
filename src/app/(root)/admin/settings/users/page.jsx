@@ -4,6 +4,7 @@ import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import Tab from "@/components/Tab";
 import FixedLayout from "@/components/ui/FixedLayout";
+import Spinner from "@/components/ui/Spinner";
 import apiRequest from "@/services/apiRequest";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
@@ -21,6 +22,7 @@ const Users = () => {
   const [UserList, setUserList] = useState([])
 
   const [isModalOpen, setModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const getUserList = async () => {
     try {
@@ -40,11 +42,15 @@ const Users = () => {
   };
 
   const handleSubmit = async () => {
+    setLoading(true)
     try {
       const { data } = await axios.post('/api/v1/admin/user', UsersInfo)
       SuccessHandling(data?.message)
       getUserList()
+      setModalOpen(false)
+      setLoading(false)
     } catch (error) {
+      setLoading(false)
       ErrorHandeling(error)
     }
   }
@@ -138,7 +144,7 @@ const Users = () => {
                         className="px-6 py-2 bg-primary text-white rounded-lg
                  hover:bg-secondary "
                       >
-                        Submit
+                        Submit {loading && <Spinner />}
                       </button>
                     </div>
                   </div>

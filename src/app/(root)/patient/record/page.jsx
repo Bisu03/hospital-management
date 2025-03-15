@@ -1,7 +1,6 @@
 "use client";
 
-import React, { lazy, Suspense } from "react";
-
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import { withAuth } from "@/services/withAuth";
@@ -13,16 +12,33 @@ import { MdDelete } from "react-icons/md";
 import Link from "next/link";
 import { SuccessHandling } from "@/utils/successHandling";
 import { ErrorHandeling } from "@/utils/errorHandling";
+import { getDate } from "@/lib/currentDate";
+import Spinner from "@/components/ui/Spinner";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const PatientRecord = () => {
 
     const queryClient = useQueryClient();
+
+    const [startDate, setStartDate] = useState(getDate());
+    const [endDate, setEndDate] = useState(getDate());
+    const [searchTerm, setSearchTerm] = useState("");
+
     const { data, error, isLoading, refetch } = useQuery({
-        queryKey: ["patientrecord"], // Unique query key
-        queryFn: () => fetchData("/patient"), // Function to fetch data
+        queryKey: ["patientrecord", startDate, endDate, searchTerm],
+        queryFn: () => {
+            const params = new URLSearchParams();
+            if (startDate) params.append("startDate", startDate);
+            if (endDate) params.append("endDate", endDate);
+            if (searchTerm) params.append("fullname", searchTerm);
+            return fetchData(`/patient?${params.toString()}`);
+        },
     });
+
+    useEffect(() => {
+        refetch();
+    }, [startDate, endDate, searchTerm])
 
     const deleteMutation = useMutation({
         mutationFn: (id) => deleteData("/patient", id),
@@ -53,6 +69,47 @@ const PatientRecord = () => {
                             <Heading heading="Patient Record">
                                 <PatientRegistration />
                             </Heading>
+
+                            <div className="flex flex-wrap w-full justify-end my-4 items-center  ">
+                                {/* Name Search */}
+                                <input
+                                    type="text"
+                                    placeholder="Search by name..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="border p-2 rounded w-64"
+                                />
+
+                                {/* Date Filters */}
+                                <div className="flex gap-2 items-center">
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="border p-2 rounded"
+                                    />
+                                    <span>to</span>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="border p-2 rounded"
+                                    />
+                                </div>
+
+                                {/* Clear Button */}
+                                <button
+                                    onClick={() => {
+                                        setStartDate(getDate());
+                                        setEndDate(getDate());
+                                        setSearchTerm("");
+                                    }}
+                                    className="bg-secondary px-4 py-2 rounded hover:bg-gray-300"
+                                >
+                                    Clear Filters
+                                </button>
+                            </div>
+
                             {isLoading && <Loading />}
 
                             <div className="overflow-x-auto">
@@ -65,6 +122,7 @@ const PatientRecord = () => {
                                             <th className="px-4 py-3">Phone</th>
                                             <th className="px-4 py-3">Age</th>
                                             <th className="px-4 py-3">Gender</th>
+                                            <th className="px-4 py-3">Admited In</th>
                                             <th className="px-4 py-3">Referr By</th>
                                             <th className="px-4 py-3 ">Actions</th>
                                         </tr>
@@ -80,6 +138,7 @@ const PatientRecord = () => {
                                                 <td className="px-4 py-3">{patient?.phone_number}</td>
                                                 <td className="px-4 py-3">{patient?.age}</td>
                                                 <td className="px-4 py-3">{patient?.gender}</td>
+                                                <td className="px-4 py-3">{patient?.admited_in}</td>
                                                 <td className="px-4 py-3">{patient?.referr_by}</td>
                                                 <td className="px-4 py-3 space-x-2 flex">
                                                     {/* <button className="btn btn-success "> <FaPrint /> </button> */}
@@ -95,7 +154,7 @@ const PatientRecord = () => {
                                                         className="btn btn-error "
                                                     >
                                                         {" "}
-                                                        <MdDelete />{" "}
+                                                        <MdDelete />{" "} {deleteMutation.isPending && <Spinner />}
                                                     </button>
                                                 </td>
                                             </tr>

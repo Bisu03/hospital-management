@@ -13,17 +13,22 @@ import { getDate } from "@/lib/currentDate";
 import { formattedTime } from "@/lib/timeGenerate";
 import { SuccessHandling } from "@/utils/successHandling";
 import Spinner from "@/components/ui/Spinner";
+import { useRouter } from "next/navigation";
+import Tab from "@/components/Tab";
+import { TabLinks } from "@/utils/tablinks";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const CreatePathology = () => {
   const queryClient = useQueryClient();
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("");
   const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
   const [ServiceData, setServiceData] = useState({
     reg_id: "",
     mrd_id: "",
     fullname: "",
+    referr_by: "",
     patient: "",
     reporting_date: getDate(),
     test_cart: {
@@ -31,8 +36,7 @@ const CreatePathology = () => {
       totalAmount: 0,
     },
   });
-  const [Times, setTimes] = useState(formattedTime())
-  const [RegNo, setRegNo] = useState("");
+  const [Times, setTimes] = useState(formattedTime());
 
   const handleChange = (e) => {
     setServiceData({ ...ServiceData, [e.target.name]: e.target.value });
@@ -44,42 +48,68 @@ const CreatePathology = () => {
     queryFn: () => fetchData("/admin/pathology/category"),
   });
 
+  const { data: pathologytests, isLoading, error } = useQuery({
+    queryKey: ["pathologyservices"],
+    queryFn: () => fetchData("/admin/pathology/record"),
+  });
+
+
   const handlePatientSelection = (patient) => {
     setServiceData({
       ...ServiceData,
       fullname: patient.fullname,
       patient: patient._id,
+      referr_by: patient.referr_by,
       reg_id: patient.reg_id,
       mrd_id: patient.mrd_id,
     });
   };
-  ;
-
-
 
   const mutation = useMutation({
-    mutationFn: (newRecord) => createData("/pathology", { ...newRecord, reporting_time: Times }),
+    mutationFn: (newRecord) =>
+      createData("/pathology", { ...newRecord, reporting_time: Times }),
     onSuccess: (data) => {
       queryClient.invalidateQueries(["pathologyrecords"]);
       SuccessHandling(data.message);
+      setServiceData({
+        reg_id: "",
+        mrd_id: "",
+        fullname: "",
+        referr_by: "",
+        patient: "",
+        reporting_date: getDate(),
+        test_cart: {
+          services: [],
+          totalAmount: 0,
+        },
+      })
+      router.push(`/pathology/reading/${data?.data?.reg_id}`);
     },
     onError: (error) => ErrorHandeling(error),
   });
 
-
   const handleSubmit = () => {
     mutation.mutate(ServiceData);
   };
-
   const addToCart = (test) => {
-    setServiceData((prev) => {
-      const updatedCart = {
-        ...prev.test_cart,
-        services: [...prev.test_cart.services, test],
-        totalAmount: prev.test_cart.totalAmount + Number(test.pathology_charge),
-      };
-      return { ...prev, test_cart: updatedCart };
-    });
+
+    const relatedTests = pathologytests.data
+      .filter((pt) => {
+        const categoryId = pt.pathology_category?._id;
+        return categoryId === test._id;
+      })
+      .map((pt) => ({
+        ...pt,
+        reading_unit: "", // Add new property with an empty string
+      }));
+
+    setServiceData({
+      ...ServiceData,
+      test_cart: {
+        services: [...ServiceData.test_cart.services, { ...test, related_tests: [relatedTests] }],
+        totalAmount: ServiceData.test_cart.totalAmount + Number(test.pathology_charge),
+      },
+    })
   };
 
   const removeFromCart = (test) => {
@@ -99,6 +129,7 @@ const CreatePathology = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="flex flex-wrap w-full justify-between">
+        <Tab tabs={TabLinks} category="Pathology Patient" />
         <MiddleSection>
           <div className="w-full">
             <Heading heading="Pathology Admission">
@@ -108,7 +139,7 @@ const CreatePathology = () => {
                   setPatientSearch={setPatientSearch}
                   onSelectPatient={handlePatientSelection}
                 />
-                <PatientRegistration />
+                <PatientRegistration admitedin="PATHOLOGY" />
               </div>
             </Heading>
             <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
@@ -137,30 +168,16 @@ const CreatePathology = () => {
                     </p>
                   </div>
                 )}
-              </div>
-              <div className="flex w-full justify-end">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Reporting Date & Time{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex gap-3">
-                    <input
-                      type="date"
-                      name="reporting_date"
-                      value={ServiceData?.reporting_date}
-                      onChange={handleChange}
-                      className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
-                      type="text"
-                      name="Times"
-                      value={Times}
-                      onChange={(e) => setTimes(e.target.value)}
-                      className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                {ServiceData?.referr_by && (
+                  <div className="space-y-0.5 min-w-[200px]">
+                    <p className="text-xs md:text-sm font-medium text-gray-500">
+                      Referred By
+                    </p>
+                    <p className="text-gray-700 text-sm md:text-base truncate">
+                      {ServiceData.referr_by}
+                    </p>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -175,29 +192,23 @@ const CreatePathology = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              {categories?.data
-                ?.filter((test) =>
-                  test.pathology_category
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase())
-                )
-                .map((test) => (
-                  <div
-                    key={test._id}
-                    className="flex justify-between items-center p-3 border rounded"
+              {categories?.data?.map((test) => (
+                <div
+                  key={test._id}
+                  className="flex justify-between items-center p-3 border rounded"
+                >
+                  <p className="font-semibold">{test.pathology_category}</p>
+                  <p className="text-sm font-bold text-gray-500">
+                    ₹{Number(test.pathology_charge)}
+                  </p>
+                  <button
+                    onClick={() => addToCart(test)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                   >
-                    <p className="font-semibold">{test.pathology_category}</p>
-                    <p className="text-sm font-bold text-gray-500">
-                      ₹{Number(test.pathology_charge)}
-                    </p>
-                    <button
-                      onClick={() => addToCart(test)}
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                      Add
-                    </button>
-                  </div>
-                ))}
+                    Add
+                  </button>
+                </div>
+              ))}
             </div>
 
             <div className="space-y-4">
@@ -222,7 +233,9 @@ const CreatePathology = () => {
               <p className="text-lg font-bold">
                 Total: ₹{ServiceData.test_cart.totalAmount}
               </p>
-              <button onClick={handleSubmit} className="btn btn-primary">Submit {mutation.isPending && <Spinner />}</button>
+              <button onClick={handleSubmit} className="btn btn-primary w-full">
+                Submit {mutation.isPending && <Spinner />}
+              </button>
             </div>
           </div>
         </MiddleSection>

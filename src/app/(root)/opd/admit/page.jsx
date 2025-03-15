@@ -9,7 +9,7 @@ import Tab from "@/components/Tab";
 import Spinner from "@/components/ui/Spinner";
 import { getDate } from "@/lib/currentDate";
 import { formattedTime } from "@/lib/timeGenerate";
-import { createData, fetchData } from "@/services/apiService";
+import { createData, fetchData, updateData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
@@ -35,6 +35,7 @@ const OpdAdmission = () => {
     on_examin: "",
     pulse: "",
     spo2: "",
+    admited_in: "OPD",
     jaundice: "",
     pallor: "",
     cvs: "",
@@ -68,6 +69,7 @@ const OpdAdmission = () => {
             phone_number: data?.data?.patient?.phone_number,
             referr_by: data?.data?.patient?.referr_by,
           });
+          setTimes(data?.data?.consultant_time)
           setConsultant({
             value: data?.data?.consultant?._id,
             label: data?.data?.consultant?.drname,
@@ -94,7 +96,7 @@ const OpdAdmission = () => {
   }));
 
   const mutation = useMutation({
-    mutationFn: (newItem) => createData("/opd", newItem),
+    mutationFn: (newItem) => createData("/opd", { ...newItem, consultant_time: Times }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["opdarecord"] }); // Refetch data after adding
       setFormData(initialState);
@@ -106,10 +108,27 @@ const OpdAdmission = () => {
     },
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Prevents default form submission
+
+  const mutationUpdate = useMutation({
+    mutationFn: (newItem) => updateData("/opd", newItem._id, newItem),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["opdarecord"] }); // Refetch data after adding
+      setFormData(initialState);
+      SuccessHandling(data.message);
+    },
+    onError: (error) => {
+      ErrorHandeling(error);
+    },
+  });
+
+  const handleSubmit = () => {
     mutation.mutate({ ...formData, consultant: consultant.value });
   };
+
+  const handleUpdate = () => {
+    mutationUpdate.mutate({ ...formData, consultant: consultant.value });
+  };
+
 
   return (
     <>
@@ -125,7 +144,7 @@ const OpdAdmission = () => {
                     PatientSearch={PatientSearch}
                     setPatientSearch={setPatientSearch}
                   />
-                  <PatientRegistration />
+                  <PatientRegistration admitedin="OPD" />
                 </div>
               </Heading>
 
@@ -487,12 +506,13 @@ const OpdAdmission = () => {
                   {/* Submit Button */}
                   <div className="pt-6 flex justify-end space-x-2">
                     <button
+
                       onClick={() => setFormData(initialState)} // Ensure proper reset
                       className="px-6 py-2 bg-gray-500 text-white rounded-lg transition-colors font-medium hover:bg-gray-600"
                     >
                       Clear
                     </button>
-                    {formData?.opd_id ? <button
+                    {formData?.patient?.opd_id ? <button
                       onClick={handleUpdate}
                       className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
                       disabled={mutation.isPending} // Disable if mutation is pending

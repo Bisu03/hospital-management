@@ -2,9 +2,14 @@
 
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
+import Spinner from "@/components/ui/Spinner";
+import { getDate } from "@/lib/currentDate";
+import { formattedTime } from "@/lib/timeGenerate";
 import { fetchData, updateData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
-import { useQuery } from "@tanstack/react-query";
+import { ErrorHandeling } from "@/utils/errorHandling";
+import { SuccessHandling } from "@/utils/successHandling";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { lazy, Suspense, useState } from "react";
@@ -14,6 +19,7 @@ import { FaTrash } from "react-icons/fa";
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const MakeBills = () => {
+    const queryClient = useQueryClient();
     const { data: services, error, isLoading } = useQuery({
         queryKey: ["servicerecord"],
         queryFn: () => fetchData("/admin/service"),
@@ -21,14 +27,24 @@ const MakeBills = () => {
 
     const router = useRouter()
 
-    const [searchQuery, setSearchQuery] = useState("");
-    const [serviceCart, setServiceCart] = useState({
+    const initialState = {
         services: [],
         totalAmount: 0
+    }
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [serviceCart, setServiceCart] = useState(initialState);
+    const [formData, setFormData] = useState({
+        billing_date: getDate(),
+        billing_time: formattedTime(),
+        discount: 0,
+        gst: 0,
+        due: 0,
     });
-    const [formData, setFormData] = useState({});
     const [quantities, setQuantities] = useState({});
     const [RegNo, setRegNo] = useState()
+
+    const [loading, setLoading] = useState(false)
 
     const filteredServices = (services?.data || [])?.filter(service =>
         service?.servicename?.toLowerCase()?.includes(searchQuery.toLowerCase())
@@ -96,16 +112,40 @@ const MakeBills = () => {
     };
 
     const handleGetpatientinfor = async () => {
-        const { data } = await axios.get(`/api/v1/billing/${RegNo}`)
-        setFormData(data?.data)
+        setLoading(true)
+        try {
+            const { data } = await fetchData(`/billing/${RegNo}`)
+            setFormData({ ...formData, ...data })
+            setServiceCart(data?.service_cart || initialState)
+            setLoading(false)
+        } catch (error) {
+            ErrorHandeling(error)
+            setLoading(false)
+        }
+
     }
 
+    const mutation = useMutation({
+        mutationFn: (newItem) => updateData(`/billing`, formData._id, newItem),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["billingrecord"] }); // Refetch data after adding;
+            SuccessHandling(data.message);
+            router.push(`/billing/print/${formData?.reg_id}`)
+        },
+        onError: (error) => {
+            ErrorHandeling(error);
+            console.error("Error adding data:", error);
+        },
+    });
+
     const handleGenerateBill = async () => {
-        const { data } = await axios.put(`/api/v1/billing/${formData?._id}`, { service_cart: serviceCart })
-        toast.success(data?.message)
-        router.push(`/billing/print/${formData?.reg_id}`)
-        
+        mutation.mutate({ ...formData, service_cart: serviceCart });
     }
+
+    const subtotal = (serviceCart?.totalAmount || 0) + (formData?.pathology_cart?.totalAmount || 0);
+    const discountAmount = subtotal * (formData.discount / 100);
+    const gstAmount = (subtotal - discountAmount) * (formData.gst / 100);
+    const total = (subtotal - discountAmount) + gstAmount;
 
     if (isLoading) return <Loading />;
     if (error) return <div>Error loading services</div>;
@@ -129,7 +169,7 @@ const MakeBills = () => {
                             </div>
                         </Heading>
                     </div>
-
+                    {loading && <Loading />}
                     <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
                         <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 truncate">
                             {formData?.patient?.fullname || "No Patient Selected"}
@@ -161,6 +201,33 @@ const MakeBills = () => {
                                     </p>
                                 </div>
                             )}
+
+                            <div className="space-y-0.5 min-w-[200px]">
+                                <p className="text-xs md:text-sm font-medium text-gray-500">Billing Date</p>
+                                <input
+                                    type="date"
+                                    className="w-full p-1 border rounded"
+                                    value={formData.billing_date}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        billing_date: e.target.value
+                                    }))}
+                                />
+                            </div>
+
+                            {/* Add Time Input */}
+                            <div className="space-y-0.5 min-w-[200px]">
+                                <p className="text-xs md:text-sm font-medium text-gray-500">Billing Time</p>
+                                <input
+                                    type="test"
+                                    className="w-full p-1 border rounded"
+                                    value={formData.billing_time}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        billing_time: e.target.value
+                                    }))}
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -179,7 +246,7 @@ const MakeBills = () => {
 
                             <div className="space-y-3">
                                 {filteredServices.map(service => (
-                                    <div key={service._id} className="flex items-center justify-between p-2 border rounded">
+                                    <div key={service._id} className="flex items-center justify-between p-2 border rounded bg-gray-200">
                                         <div className="flex-1 min-w-[60%]">
                                             <h3 className="font-semibold truncate">{service.servicename}</h3>
                                             <p className="text-sm text-gray-500">
@@ -212,48 +279,107 @@ const MakeBills = () => {
                         {/* Cart Section */}
                         <div className="flex-1 max-w-[600px] bg-gray-50 p-2 rounded-lg">
                             <h2 className="text-xl font-semibold mb-4">Service Cart</h2>
-                            {serviceCart.services.length === 0 ? (
-                                <p className="text-gray-500">No services added</p>
-                            ) : (
-                                <>
-                                    <div className="space-y-2 mb-4">
-                                        {serviceCart.services.map(item => (
-                                            <div key={item._id} className="flex justify-between items-center  bg-white rounded">
-                                                <div className="flex-1">
-                                                    <h3 className="font-medium truncate">{item.servicename}</h3>
-                                                    <p className="text-sm text-gray-500">
-                                                        ₹{item.unitcharge} x {item.quantity} {item.unittype}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        min="1"
-                                                        value={item.quantity}
-                                                        onChange={(e) => updateQuantity(item._id, e.target.value)}
-                                                        className="w-16 p-1 border rounded"
-                                                    />
-                                                    <button
-                                                        onClick={() => removeFromCart(item._id)}
-                                                        className="text-red-500 hover:text-red-700 text-xl"
-                                                    >
-                                                        <FaTrash />
-                                                    </button>
-                                                </div>
+
+                            <>
+                                <div className="space-y-2 mb-4">
+                                    {formData?.pathology_cart?.services?.map(item => (
+                                        <div key={item._id} className="flex justify-between items-center  bg-white rounded">
+                                            <div className="flex-1">
+                                                <h3 className="font-medium truncate">{item.pathology_category}</h3>
+
                                             </div>
-                                        ))}
-                                    </div>
-                                    <div className="border-t pt-4">
-                                        <div className="flex justify-between font-semibold text-lg">
-                                            <span>Total:</span>
-                                            <span>₹{serviceCart.totalAmount.toFixed(2)}</span>
+                                            <div className="flex items-center gap-2">
+
+                                                <button
+                                                    className=" text-xl"
+                                                >
+                                                    ₹{item.pathology_charge}
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button onClick={handleGenerateBill} className="w-full mt-4 bg-green-500 text-white py-2 rounded hover:bg-green-600">
-                                            Generate Bill
-                                        </button>
+                                    ))}
+                                    {serviceCart.services.map(item => (
+                                        <div key={item._id} className="flex justify-between items-center  bg-white rounded">
+                                            <div className="flex-1">
+                                                <h3 className="font-medium truncate">{item.servicename}</h3>
+                                                <p className="text-sm text-gray-500">
+                                                    ₹{item.unitcharge} x {item.quantity} {item.unittype}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    value={item.quantity}
+                                                    onChange={(e) => updateQuantity(item._id, e.target.value)}
+                                                    className="w-16 p-1 border rounded"
+                                                />
+                                                <button
+                                                    onClick={() => removeFromCart(item._id)}
+                                                    className="text-red-500 hover:text-red-700 text-xl"
+                                                >
+                                                    <FaTrash />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="border-t pt-4 space-y-4">
+                                    <div className="flex justify-between font-semibold text-lg">
+                                        <span>Subtotal:</span>
+                                        <span>₹{subtotal.toFixed(2)}</span>
                                     </div>
-                                </>
-                            )}
+
+                                    <div className="space-y-0.5">
+                                        <p className="text-xs md:text-sm font-medium text-gray-500">Discount (%)</p>
+                                        <input
+                                            type="number"
+                                            className="w-full p-1 border rounded"
+                                            value={formData.discount}
+                                            onChange={(e) => setFormData(prev => ({
+                                                ...prev,
+                                                discount: Math.max(0, parseFloat(e.target.value) || 0)
+                                            }))}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-0.5">
+                                        <p className="text-xs md:text-sm font-medium text-gray-500">GST (%)</p>
+                                        <input
+                                            type="number"
+                                            className="w-full p-1 border rounded"
+                                            value={formData.gst}
+                                            onChange={(e) => setFormData(prev => ({
+                                                ...prev,
+                                                gst: Math.max(0, parseFloat(e.target.value) || 0)
+                                            }))}
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-between font-semibold text-lg">
+                                        <span>Total:</span>
+                                        <span>₹{total.toFixed(2)}</span>
+                                    </div>
+
+                                    <div className="space-y-0.5">
+                                        <p className="text-xs md:text-sm font-medium text-gray-500">Due Amount</p>
+                                        <input
+                                            type="number"
+                                            className="w-full p-1 border rounded"
+                                            value={formData.due}
+                                            onChange={(e) => setFormData(prev => ({
+                                                ...prev,
+                                                due: Math.max(0, parseFloat(e.target.value) || 0)
+                                            }))}
+                                        />
+                                    </div>
+
+                                    <button onClick={handleGenerateBill} className="w-full mt-4 bg-green-500 text-white py-2 rounded hover:bg-green-600">
+                                        Generate Bill {mutation.isPending && <Spinner />}
+                                    </button>
+                                </div>
+                            </>
+
                         </div>
                     </div>
                 </MiddleSection>

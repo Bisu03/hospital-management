@@ -25,13 +25,32 @@ export async function GET(req) {
         const url = new URL(req.url);
         const searchTerm = url.searchParams.get("fullname");
         const idsearch = url.searchParams.get("id");
-        const page = parseInt(url.searchParams.get("page")) || 1;
-        const limit = parseInt(url.searchParams.get("limit")) || 10;
+        const startDate = url.searchParams.get("startDate");
+        const endDate = url.searchParams.get("endDate");
 
         if (idsearch) {
-            const data = await Ipd.findById(idsearch).populate("patient").populate("consultant");
+            const data = await Ipd.findById(idsearch)
+                .populate("patient")
+                .populate("consultant");
             return NextResponse.json({ success: true, data });
         } else {
+            const matchConditions = {};
+
+            if (searchTerm) {
+                matchConditions["patient.fullname"] = { $regex: searchTerm, $options: "i" };
+            }
+
+            if (startDate && endDate) {
+                matchConditions["admit_date"] = {
+                    $gte: startDate,
+                    $lte: endDate
+                };
+            } else if (startDate) {
+                matchConditions["admit_date"] = { $gte: startDate };
+            } else if (endDate) {
+                matchConditions["admit_date"] = { $lte: endDate };
+            }
+
             const pipeline = [
                 {
                     $lookup: {
@@ -51,38 +70,15 @@ export async function GET(req) {
                     }
                 },
                 { $unwind: { path: "$consultant", preserveNullAndEmptyArrays: true } },
-                ...(searchTerm
-                    ? [
-                        {
-                            $match: {
-                                "patient.fullname": { $regex: searchTerm, $options: "i" }
-                            }
-                        }
-                    ]
-                    : []),
-                { $sort: { createdAt: -1 } },
-                { $skip: (page - 1) * limit },
-                { $limit: limit },
-                {
-                    $facet: {
-                        data: [{ $match: {} }],
-                        totalCount: [{ $count: "total" }]
-                    }
-                }
+                { $match: matchConditions },
+                { $sort: { admit_date: -1 } }
             ];
 
-            const result = await Ipd.aggregate(pipeline);
-            const data = result[0]?.data || [];
-            const total = result[0]?.totalCount?.[0]?.total || 0;
+            const data = await Ipd.aggregate(pipeline);
 
             return NextResponse.json({
                 success: true,
-                data,
-                pagination: {
-                    currentPage: page,
-                    totalPages: Math.ceil(total / limit),
-                    totalItems: total
-                }
+                data
             });
         }
     } catch (error) {
@@ -105,24 +101,6 @@ export async function POST(req) {
     try {
         const body = await req.json();
 
-        // let uhid;
-        // uhid = await Counter.findOneAndUpdate(
-        //     {
-        //         id: "uhid",
-        //     },
-        //     {
-        //         $inc: { seq: 1 },
-        //     },
-        //     { new: true }
-        // );
-
-        // if (uhid == null) {
-        //     uhid = await Counter.create({
-        //         id: "uhid",
-        //         seq: 100,
-        //     });
-        // }
-
         const {
             uh_id,
             reg_id,
@@ -142,30 +120,25 @@ export async function POST(req) {
         } = body;
 
         const data = await Ipd.create({
-            uh_id,
-            reg_id,
-            mrd_id,
-            hight,
-            weight,
-            bp,
-            admission_charge,
-            paidby,
+            // Use spread operator to simplify
+            ...body,
             patient,
-            consultant,
-            admit_date,
-            admit_time,
-            present_complain,
-            medical_case,
-            provisional_diagnosis,
+            consultant
         });
+
         if (data) {
-            await Patient.findByIdAndUpdate(patient, { ipd_id: data._id });
+            await Patient.findByIdAndUpdate(patient, {
+                ipd_id: data._id,
+                admited_in: "IPD"
+            });
         }
+
         return NextResponse.json({
             success: true,
-            message: "Patient Admited Successfully",
+            message: "Patient Admitted Successfully",
             data,
         });
+
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },

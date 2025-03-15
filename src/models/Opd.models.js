@@ -15,10 +15,6 @@ const opdSchema = new Schema({
         type: Number,
         required: true,
     },
-    opd_id: {
-        type: Number,
-        required: true,
-    },
     patient: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "patient_registration",

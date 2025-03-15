@@ -27,6 +27,19 @@ export const TabLinks = [
     ],
   },
   {
+    category: "Pathology Patient",
+    routes: [
+      {
+        name: "Create Pathology",
+        path: "/pathology/create",
+      },
+      {
+        name: "Pathology Record",
+        path: "/pathology/record",
+      },
+    ],
+  },
+  {
     category: "Pathology",
     routes: [
       {
@@ -62,6 +75,19 @@ export const TabLinks = [
       //   name: "Modules",
       //   path: "/admin/settings/module",
       // },
+    ],
+  },
+  {
+    category: "Billing",
+    routes: [
+      {
+        name: "Billing",
+        path: "/billing/makebills",
+      },
+      {
+        name: "Bill Record",
+        path: "/billing/record",
+      },
     ],
   },
   {

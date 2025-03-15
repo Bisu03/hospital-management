@@ -51,7 +51,7 @@ const IpdPrint = () => {
                             className="h-auto"
                         />
                         <div>
-                            <h1 className="text-2xl font-bold text-blue-900">{hospitalInfo?.hospital_name}</h1>
+                            <h1 className="text-3xl font-bold text-blue-900">{hospitalInfo?.hospital_name}</h1>
                             <p className="bg-blue-900 text-white px-2 py-1 text-sm font-semibold rounded-md w-fit">
                                 Lic No: {hospitalInfo?.licence_number}
                             </p>

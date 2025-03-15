@@ -18,6 +18,12 @@ const billingSchema = new Schema({
     bill_no: {
         type: String,
     },
+    billing_date: {
+        type: String,
+    },
+    billing_time: {
+        type: String,
+    },
     patient: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "patient_registration",
@@ -31,8 +37,15 @@ const billingSchema = new Schema({
     service_cart: {
         type: Object
     },
-    amount: {
-        type: Object,
+    discount: {
+        type: Number,
+    },
+    gst: {
+        type: Number,
+    },
+    due: {
+        type: Number,
+        default: 0
     },
     paidby: {
         type: String,

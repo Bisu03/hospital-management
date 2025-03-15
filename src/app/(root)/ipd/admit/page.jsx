@@ -34,6 +34,7 @@ const IpdAdmission = () => {
         hight: "",
         weight: "",
         bp: "",
+        admited_in: "IPD",
         consultant: "",
         admission_charge: "200",
         paidby: "",
@@ -71,13 +72,11 @@ const IpdAdmission = () => {
 
             setFormData({
                 ...formData, ...patient, patient: patient._id,
-
             });
 
         }
 
     };
-
     const {
         data: doctorrecord,
     } = useQuery({
@@ -134,9 +133,11 @@ const IpdAdmission = () => {
                             <Heading heading="IPD Admission">
                                 <div className='flex items-center space-x-2'>
                                     <PatientDropdown onSelectPatient={handlePatientSelection} />
-                                    <PatientRegistration />
+                                    <PatientRegistration admitedin="IPD" />
                                 </div>
                             </Heading>
+
+                            
 
                             <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
                                 <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 truncate">
@@ -351,6 +352,7 @@ const IpdAdmission = () => {
                                             >
                                                 <option value="">Select</option>
                                                 <option value="Cash">Cash</option>
+                                                <option value="Card">Card</option>
                                                 <option value="Online">Online</option>
                                             </select>
                                         </div>
@@ -365,7 +367,7 @@ const IpdAdmission = () => {
                                         >
                                             Clear
                                         </button>
-                                        {formData?.ipd_id ? <button
+                                        {formData?.patient?.ipd_id ? <button
                                             onClick={handleUpdate}
                                             className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
                                             disabled={mutation.isPending} // Disable if mutation is pending

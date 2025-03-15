@@ -4,6 +4,7 @@ import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import Tab from "@/components/Tab";
 import Spinner from "@/components/ui/Spinner";
+import { getDate } from "@/lib/currentDate";
 import { deleteData, fetchData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
@@ -18,52 +19,45 @@ const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const IpdRecord = () => {
     const queryClient = useQueryClient();
-    const [search, setSearch] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    const [totalPages, setTotalPages] = useState(1);
+    const [startDate, setStartDate] = useState(getDate());
+    const [endDate, setEndDate] = useState(getDate());
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-    // Debounce search input
     useEffect(() => {
         const handler = setTimeout(() => {
-            setDebouncedSearch(search);
-            setCurrentPage(1); // Reset to first page when search changes
+            setDebouncedSearchTerm(searchTerm);
         }, 300);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [search]);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
 
     const { data, error, isLoading, refetch } = useQuery({
-        queryKey: ["ipdarecord", currentPage, pageSize, debouncedSearch],
-        queryFn: () => fetchData(
-            `/ipd?fullname=${debouncedSearch}&page=${currentPage}&limit=${pageSize}`
-        ),
-        onSuccess: (data) => {
-            setTotalPages(data?.pagination?.totalPages || 1);
+        queryKey: ["ipdarecord", debouncedSearchTerm, startDate, endDate],
+        queryFn: () => {
+            const params = new URLSearchParams();
+            if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
+            if (startDate) params.append("startDate", startDate);
+            if (endDate) params.append("endDate", endDate);
+            return fetchData(`/ipd?${params.toString()}`);
         }
     });
 
-    // Pagination controls
-    const handlePreviousPage = () => {
-        setCurrentPage(prev => Math.max(1, prev - 1));
+    const handleClearFilters = () => {
+        setStartDate(getDate());
+        setEndDate(getDate());
+        setSearchTerm("");
     };
 
-    const handleNextPage = () => {
-        setCurrentPage(prev => Math.min(totalPages, prev + 1));
-    };
     const deleteMutation = useMutation({
         mutationFn: (id) => deleteData("/ipd", id),
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
+            queryClient.invalidateQueries({ queryKey: ["ipdarecord"] });
             SuccessHandling(data.message);
             refetch();
         },
         onError: (error) => {
             ErrorHandeling(error);
-            console.error("Error adding data:", error);
+            console.error("Error deleting data:", error);
         },
     });
 
@@ -79,14 +73,35 @@ const IpdRecord = () => {
                     <MiddleSection>
                         <div className="w-full">
                             <Heading heading="IPD Record">
-                                <div className="flex items-center space-x-2">
+                                <div className="flex flex-wrap w-full justify-end my-4 items-center gap-2">
                                     <input
-                                        className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                         type="text"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        placeholder="Search by name"
+                                        placeholder="Search by name..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="border p-2 rounded w-64"
                                     />
+                                    <div className="flex gap-2 items-center">
+                                        <input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="border p-2 rounded"
+                                        />
+                                        <span>to</span>
+                                        <input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="border p-2 rounded"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="bg-secondary px-4 py-2 rounded hover:bg-gray-300"
+                                    >
+                                        Clear Filters
+                                    </button>
                                 </div>
                             </Heading>
                             <div className="overflow-x-auto">
@@ -95,13 +110,12 @@ const IpdRecord = () => {
                                         <tr className="bg-secondary text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                             <th className="px-4 py-3">MRD ID</th>
                                             <th className="px-4 py-3">REG ID</th>
-                                            <th className="px-4 py-3">BILL No</th>
                                             <th className="px-4 py-3">Full Name</th>
                                             <th className="px-4 py-3">Phone</th>
                                             <th className="px-4 py-3">Age</th>
-                                            <th className="px-4 py-3">Admit Date & Time </th>
+                                            <th className="px-4 py-3">Admit Date & Time</th>
                                             <th className="px-4 py-3">Consultant</th>
-                                            <th className="px-4 py-3 ">Actions</th>
+                                            <th className="px-4 py-3">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -109,83 +123,23 @@ const IpdRecord = () => {
                                             <tr key={patient._id} className="hover:bg-gray-50">
                                                 <td className="px-4 py-3">{patient?.mrd_id}</td>
                                                 <td className="px-4 py-3">{patient?.reg_id}</td>
-                                                <td className="px-4 py-3">
-                                                    {patient?.patient?.bill_no}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    {patient?.patient?.fullname}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    {patient?.patient?.phone_number}
-                                                </td>
+                                                <td className="px-4 py-3">{patient?.patient?.fullname}</td>
+                                                <td className="px-4 py-3">{patient?.patient?.phone_number}</td>
                                                 <td className="px-4 py-3">{patient?.patient?.age}</td>
-                                                <td className="px-4 py-3">
-                                                    {patient?.admit_date}/{patient?.admit_time}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    {patient?.consultant?.drname}
-                                                </td>
+                                                <td className="px-4 py-3">{patient?.admit_date}/{patient?.admit_time}</td>
+                                                <td className="px-4 py-3">{patient?.consultant?.drname}</td>
                                                 <td className="px-4 py-3 space-x-2 flex">
-                                                    <Link
-                                                        href={`/ipd/print/${patient._id}`}
-                                                        className="btn btn-primary "
-                                                    >
-                                                        {" "}
+                                                    <Link href={`/ipd/print/${patient._id}`} className="btn btn-primary">
                                                         <FaPrint />
                                                     </Link>
-                                                    {/* <Link
-                                                        href={`/ipd/update/${patient._id}`}
-                                                        className="btn btn-secondary "
-                                                    >
-                                                        {" "}
-                                                        <FaEdit />{" "}
-                                                    </Link> */}
-                                                    <button
-                                                        onClick={() => handleDelete(patient._id)}
-                                                        className="btn btn-error "
-                                                    >
-                                                        {" "}
-                                                        <MdDelete />{" "}
-                                                        {deleteMutation?.isPending && <Spinner />}{" "}
+                                                    <button onClick={() => handleDelete(patient._id)} className="btn btn-error">
+                                                        <MdDelete /> {deleteMutation?.isPending && <Spinner />}
                                                     </button>
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
-                                <div className="flex justify-between items-center mt-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-600">
-                                            Page {currentPage} of {totalPages}
-                                        </span>
-                                        <select
-                                            value={pageSize}
-                                            onChange={(e) => setPageSize(Number(e.target.value))}
-                                            className="border rounded px-2 py-1 text-sm"
-                                        >
-                                            {[10, 20, 50].map(size => (
-                                                <option key={size} value={size}>{size} per page</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handlePreviousPage}
-                                            disabled={currentPage === 1}
-                                            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                                        >
-                                            Previous
-                                        </button>
-                                        <button
-                                            onClick={handleNextPage}
-                                            disabled={currentPage === totalPages}
-                                            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                         {isLoading && <Loading />}

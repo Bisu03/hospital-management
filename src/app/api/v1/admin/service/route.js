@@ -23,10 +23,6 @@ export async function GET(req) {
             const users = await Service.find({});
             return NextResponse.json({ success: true, data: users });
         }
-
-        // Regular users get their own profile
-        const user = await User.findById(session.user.id, { password: 0 });
-        return NextResponse.json({ success: true, data: user });
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },

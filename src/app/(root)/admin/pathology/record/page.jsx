@@ -59,7 +59,7 @@ const PathologyRecords = () => {
     mutationFn: (id) => deleteData("/admin/pathology/record", id),
     onSuccess: () => {
       queryClient.invalidateQueries(["pathologyservices"]);
-      SuccessHandling("Service deleted successfully");
+      SuccessHandling("Test deleted successfully");
     },
     onError: (error) => ErrorHandeling(error)
   });

@@ -3,16 +3,17 @@
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import FixedLayout from "@/components/ui/FixedLayout";
-import { createData, fetchData } from "@/services/apiService";
+import { createData, deleteData, fetchData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { lazy, Suspense, useEffect, useReducer, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 const Services = () => {
+    const queryClient = useQueryClient();
     const [ServiceInfor, setServiceInfor] = useState({});
     const [isModalOpen, setModalOpen] = useState(false);
 
@@ -38,6 +39,24 @@ const Services = () => {
             ErrorHandeling(error);
         }
     };
+
+    const deleteMutation = useMutation({
+        mutationFn: (id) => deleteData("/admin/service", id),
+        onSuccess: () => {
+            queryClient.invalidateQueries(["servicerecord"]);
+            SuccessHandling("Service deleted successfully");
+            refetch()
+        },
+        onError: (error) => ErrorHandeling(error)
+    });
+
+
+    const handleDelete = (id) => {
+        if (window.confirm("Are you sure you want to delete this service?")) {
+            deleteMutation.mutate(id);
+        }
+    };
+
 
     return (
         <>

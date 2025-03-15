@@ -72,7 +72,7 @@ export async function POST(req) {
 
     // Generate temporary password (keep your existing logic)
     const tempPassword = body.username + generateUnique();
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    const hashedPassword = await bcrypt.hash(tempPassword.replace(/\s+/g, ""), 10);
 
     // Create user (keep your existing user creation)
     await User.create({
@@ -82,44 +82,27 @@ export async function POST(req) {
       role: body.role || "Staff"
     });
 
-    // Mailjet implementation matching the cURL example
-    // const response = await fetch('https://api.mailjet.com/v3.1/send', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Basic ${Buffer.from(
-    //       `${process.env.NEXT_APP_EMAIL_PUBLIC_KEY}:${process.env.NEXT_APP_EMAIL_PRIVATE_KEY}`
-    //     ).toString('base64')}`
-    //   },
-    //   body: JSON.stringify({
-    //     Messages: [{
-    //       From: {
-    //         Email: "bisubera761@gmail.com", // Replace with verified sender
-    //         Name: "Hospital Admin"
-    //       },
-    //       To: [{
-    //         Email: body.email,
-    //         Name: body.username
-    //       }],
-    //       Subject: "Your Hospital Account Credentials",
-    //       TextPart: `Welcome ${body.username}! Your temporary password: ${tempPassword}`,
-    //       HTMLPart: `
-    //         <h3>Welcome to Hospital Management System!</h3>
-    //         <p>Your account details:</p>
-    //         <ul>
-    //           <li>Username: ${body.username}</li>
-    //           <li>Temporary Password: ${tempPassword}</li>
-    //         </ul>
-    //         <p>Login here: <a href="${process.env.APP_URL}/login">Login Now</a></p>
-    //       `
-    //     }]
-    //   })
-    // });
+    if (body.email) {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_APP_EMAIL_KEY}`,
+        },
+        body: JSON.stringify({
+          from: process.env.NEXT_APP_USER_MAIL,
+          to: [body.email],
+          subject: 'TIUNH LOGIN CREDIENTIAL',
+          html: ` 
+        <p>*** please keep this information secret ***</p> <br/>
+        Login & Employee ID - ${body.email}<br/>
+        Password - ${tempPassword.replace(/\s+/g, "")}
+        `,
+        }),
+      });
+    }
 
-    // if (!response.ok) {
-    //   const errorData = await response.json();
-    //   throw new Error(`Mailjet error: ${errorData.ErrorMessage}`);
-    // }
+
 
     return NextResponse.json(
       { success: true, message: "User Registered Successfully" },
@@ -128,8 +111,8 @@ export async function POST(req) {
 
   } catch (error) {
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         message: "Server error",
         error: error.message,
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined

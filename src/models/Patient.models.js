@@ -31,6 +31,10 @@ const patientSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "opd",
     },
+    discharge_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "discharge",
+    },
     fullname: {
         type: String,
         required: true,

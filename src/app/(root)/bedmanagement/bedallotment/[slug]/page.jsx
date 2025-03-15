@@ -44,13 +44,13 @@ const BedAllotment = () => {
                             <Heading heading="Bed Allotment" />
                         </div>
 
-                        {Object.entries(groupedBeds || {}).map(([category, beds]) => (
+                        {Object?.entries(groupedBeds || {}).map(([category, beds]) => (
                             <div key={category} className="w-full mb-6">
                                 <h3 className="text-lg font-semibold mb-3 p-2 bg-secondary text-center rounded-t">
                                     {category}
                                 </h3>
                                 <div className="flex flex-wrap gap-3 p-2 bg-gray-50 rounded-b">
-                                    {beds.map((bed) => (
+                                    {beds?.map((bed) => (
                                         <button
                                             key={bed._id}
                                             className="px-4 py-2 bg-white hover:bg-blue-50 border border-blue-200 rounded-md 
@@ -59,7 +59,7 @@ const BedAllotment = () => {
                                                 hover:shadow-sm hover:border-blue-300"
                                             onClick={() => handleBedSelect(bed._id)}
                                         >
-                                            {bed.bed_number}
+                                            {bed?.bed_number}
                                         </button>
                                     ))}
                                 </div>

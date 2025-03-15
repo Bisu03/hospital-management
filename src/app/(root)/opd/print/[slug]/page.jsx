@@ -52,7 +52,7 @@ const OpdPrint = () => {
                                 className="h-24 w-24 object-contain"
                             />
                             <div>
-                                <h1 className="text-3xl font-bold text-blue-900">
+                                <h1 className="text-3xl font-bold text-black">
                                     {hospitalInfo?.hospital_name}
                                 </h1>
                                 <p className="text-sm text-black py-1 rounded-md mt-2">
@@ -69,16 +69,16 @@ const OpdPrint = () => {
                             <p>
                                 <span className="font-semibold">GST:</span> {hospitalInfo?.gst_number}
                             </p>
-                            <p className="text-blue-900">{hospitalInfo?.email}</p>
-                            <p className="text-blue-900 font-semibold">For Appoinment:9002296279</p>
-                            <p className="text-blue-900 ">Call 09:00 AM To 03:00 PM (Except Saturday)</p>
+                            <p className="text-black">{hospitalInfo?.email}</p>
+                            <p className="text-black font-semibold">For Appoinment:9002296279</p>
+                            <p className="text-black ">Call 09:00 AM To 03:00 PM (Except Saturday)</p>
                         </div>
                     </div>
 
                     <div className="flex justify-between">
 
                         <div className=" text-sm space-y-1">
-                            <p className=" font-semibold">{formData?.patient?.fullname}</p>
+                            <p className=" font-semibold">{formData?.patient?.fullname} -  {formData?.reg_id}</p>
                             <div>
                                 <span className="font-semibold">Age:</span>{" "}
                                 {formData?.patient?.age}
@@ -148,7 +148,7 @@ const OpdPrint = () => {
                     <div className="flex flex-1 gap-8 mt-2">
                         {/* Left Column - Clinical Findings */}
                         <div className="w-1/3 pr-4 border-r-2 border-gray-300">
-                            <h2 className="text-xl font-bold text-blue-900 mb-4">
+                            <h2 className="text-xl font-bold text-black mb-4">
                                 Findings
                             </h2>
                             {/* <div className="space-y-3">
@@ -184,7 +184,7 @@ const OpdPrint = () => {
 
                         {/* Right Column - Prescription */}
                         <div className="w-2/3">
-                            <h2 className="text-2xl font-bold text-blue-900 mb-6">Advice</h2>
+                            <h2 className="text-2xl font-bold text-black mb-6">Advice</h2>
                             <div className="space-y-4">
                                 {/* Add prescription items here */}
                             </div>
@@ -195,7 +195,6 @@ const OpdPrint = () => {
                     <div className="mt-8 border-t-2 border-black pt-10">
                         <div className="flex justify-between items-end">
                             <div>
-                                Registration No:- {formData?.reg_id}
                             </div>
 
                             <div className="text-center">

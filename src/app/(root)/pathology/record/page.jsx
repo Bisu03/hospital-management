@@ -39,7 +39,7 @@ const PathologyRecord = () => {
     const { data, error, isLoading, refetch } = useQuery({
         queryKey: ["pathologyrecord"],
         queryFn: () => fetchData(
-            `/pathology?fullname=${debouncedSearch}&page=${currentPage}&limit=${pageSize}`
+            `/pathology?regid=${debouncedSearch}&page=${currentPage}&limit=${pageSize}`
         ),
         onSuccess: (data) => {
             setTotalPages(data?.pagination?.totalPages || 1);
@@ -75,7 +75,7 @@ const PathologyRecord = () => {
         <>
             <Suspense fallback={<Loading />}>
                 <div className="flex flex-wrap w-full justify-between">
-                    {/* <Tab tabs={TabLinks} category="IPD" /> */}
+                    <Tab tabs={TabLinks} category="Pathology Patient" />
                     <MiddleSection>
                         <div className="w-full">
                             <Heading heading="Pathology Record">

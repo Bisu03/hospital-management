@@ -8,8 +8,8 @@ import ButtomSpinner from "@/components/ui/Spinner";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("biswanathbera03@gmail.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,8 +18,8 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     const res = await signIn("credentials", {
-      usernameOrEmail: email,
-      password: password,
+      usernameOrEmail: email.trim(),
+      password: password.trim(),
       redirect: false,
     });
     if (res?.error) {

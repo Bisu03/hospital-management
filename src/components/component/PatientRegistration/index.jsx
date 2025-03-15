@@ -8,7 +8,7 @@ import { SuccessHandling } from "@/utils/successHandling";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useReducer, useState } from "react";
-const PatientRegistration = () => {
+const PatientRegistration = ({ admitedin }) => {
     const queryClient = useQueryClient();
     const [isModalOpen, setModalOpen] = useState(false);
     const [MrdId, setMrdId] = useState("");
@@ -30,6 +30,7 @@ const PatientRegistration = () => {
         ps: "",
         po: "",
         pincode: "",
+        admited_in: admitedin,
         aadhar: "",
         guardian_name: "",
         religion: "",

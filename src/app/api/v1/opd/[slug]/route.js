@@ -23,7 +23,7 @@ export async function PUT(req, context) {
     try {
         const { slug } = await context.params;
         const body = await req.json()
-        await Doctor.findByIdAndUpdate(slug, body);
+        await Opd.findByIdAndUpdate(slug, body);
         // Return the message
         return NextResponse.json(
             { success: true, message: "Update Successfully" },
