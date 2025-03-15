@@ -54,6 +54,7 @@ const PathologyRecord = () => {
     const handleNextPage = () => {
         setCurrentPage(prev => Math.min(totalPages, prev + 1));
     };
+    
     const deleteMutation = useMutation({
         mutationFn: (id) => deleteData("/pathology", id),
         onSuccess: (data) => {
@@ -123,7 +124,7 @@ const PathologyRecord = () => {
                                                 </td>
                                                 <td className="px-4 py-3 space-x-2 flex">
                                                     <Link
-                                                        href={`/pathology/print/${patient._id}`}
+                                                        href={`/pathology/print/${patient.reg_id}`}
                                                         className="btn btn-primary "
                                                     >
                                                         {" "}
