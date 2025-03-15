@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongoConnection'; // MongoDB connection utility
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import Bed from '@/models/Bed.models'; // Mongoose User model
+import BedCategory from '@/models/BedCategory.models'; // Mongoose User model
 
 export async function GET(req) {
     await connectDB();

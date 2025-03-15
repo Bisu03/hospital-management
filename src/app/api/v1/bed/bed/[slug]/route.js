@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
 import Bed from '@/models/Bed.models'; // Mongoose model
+import BedCategory from '@/models/BedCategory.models'; // Mongoose User model
 
 export async function PUT(req, context) {
     // Connect to the database
