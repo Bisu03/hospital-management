@@ -30,8 +30,12 @@ export const TabLinks = [
     category: "Pathology Patient",
     routes: [
       {
-        name: "Create Pathology",
+        name: "Pathology Test",
         path: "/pathology/create",
+      },
+      {
+        name: "Pathology Reading",
+        path: "/pathology/reading",
       },
       {
         name: "Pathology Record",

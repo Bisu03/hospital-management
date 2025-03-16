@@ -5,7 +5,7 @@ import { connectDB } from "@/lib/mongoConnection";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import Pathology from "@/models/Pathology.models";
 import Patient from "@/models/Patient.models";
-import Billing from "@/models/Billing.models";
+import Counter from "@/models/Counter.models";
 
 export async function GET(req) {
     try {
@@ -23,12 +23,13 @@ export async function GET(req) {
             id: url.searchParams.get("id"),
             search: url.searchParams.get("search"),
             page: parseInt(url.searchParams.get("page")) || 1,
-            limit: parseInt(url.searchParams.get("limit")) || 10
+            limit: parseInt(url.searchParams.get("limit")) || 10,
         };
 
         if (searchParams.id) {
-            const data = await Pathology.findById(searchParams.id)
-                .populate("patient");
+            const data = await Pathology.findById(searchParams.id).populate(
+                "patient"
+            );
             return NextResponse.json({ success: true, data });
         }
 
@@ -38,30 +39,37 @@ export async function GET(req) {
                     from: "patient_registrations",
                     localField: "patient",
                     foreignField: "_id",
-                    as: "patient"
-                }
+                    as: "patient",
+                },
             },
             { $unwind: "$patient" },
-            ...(searchParams.search ? [
-                {
-                    $match: {
-                        $or: [
-                            { "patient.fullname": { $regex: searchParams.search, $options: "i" } },
-                            { reg_id: { $regex: searchParams.search, $options: "i" } },
-                            { mrd_id: { $regex: searchParams.search, $options: "i" } }
-                        ]
-                    }
-                }
-            ] : []),
+            ...(searchParams.search
+                ? [
+                    {
+                        $match: {
+                            $or: [
+                                {
+                                    "patient.fullname": {
+                                        $regex: searchParams.search,
+                                        $options: "i",
+                                    },
+                                },
+                                { reg_id: { $regex: searchParams.search, $options: "i" } },
+                                { mrd_id: { $regex: searchParams.search, $options: "i" } },
+                            ],
+                        },
+                    },
+                ]
+                : []),
             { $sort: { createdAt: -1 } },
             { $skip: (searchParams.page - 1) * searchParams.limit },
             { $limit: searchParams.limit },
             {
                 $facet: {
                     data: [],
-                    totalCount: [{ $count: "total" }]
-                }
-            }
+                    totalCount: [{ $count: "total" }],
+                },
+            },
         ];
 
         const result = await Pathology.aggregate(pipeline);
@@ -74,10 +82,9 @@ export async function GET(req) {
             pagination: {
                 currentPage: searchParams.page,
                 totalPages: Math.ceil(total / searchParams.limit),
-                totalItems: total
-            }
+                totalItems: total,
+            },
         });
-
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },
@@ -98,15 +105,104 @@ export async function POST(req) {
         }
 
         const body = await req.json();
-        const newPathology = await Pathology.create(body);
-        await Billing.findOneAndUpdate({ patient: body.patient }, { pathology_cart: body?.test_cart });
+
+        const {
+            fullname,
+            phone_number,
+            referr_by,
+            gender,
+            patient,
+            dob,
+            age,
+            address,
+            paydby,
+            paid_amount,
+            due_amount,
+            reporting_time,
+            reporting_date,
+            test_cart,
+        } = body;
+
+        let newPathology;
+        if (body?.patient) {
+            newPathology = await Pathology.findOneAndUpdate({
+                reg_id: body.reg_id
+            }, {
+                fullname,
+                phone_number,
+                referr_by,
+                gender,
+                patient,
+                dob,
+                age,
+                address,
+                paydby,
+                paid_amount,
+                due_amount,
+                reporting_time,
+                reporting_date,
+                test_cart,
+            }, { new: true });
+        } else {
+            let regid = null;
+            let mrdid = null;
+            let billno = null
+
+
+
+            regid = await Counter.findOneAndUpdate(
+                { id: "regid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+
+            mrdid = await Counter.findOneAndUpdate(
+                { id: "mrdid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+            billno = await Counter.findOneAndUpdate(
+                { id: "billno" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+
+
+            const data = await Patient.create({
+                fullname,
+                phone_number,
+                referr_by,
+                gender,
+                patient,
+                dob,
+                age,
+                address,
+                uh_id: uhid?.seq,
+                reg_id: regid?.seq,
+                mrd_id: mrdid?.seq,
+            });
+            body.patient = data._id;
+            if (data._id) {
+                newPathology = await Pathology.create({
+                    reg_id: regid?.seq,
+                    mrd_id: mrdid?.seq,
+                    bill_no: billno?.seq,
+                    paydby,
+                    paid_amount,
+                    patient: data._id,
+                    due_amount,
+                    reporting_time,
+                    reporting_date,
+                    test_cart,
+                });
+            }
+        }
 
         return NextResponse.json({
             success: true,
             message: "Pathology record created",
-            data: newPathology
+            data: newPathology,
         });
-
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },
@@ -130,11 +226,9 @@ export async function PUT(req) {
         const recordId = searchParams.get("id");
         const body = await req.json();
 
-        const updatedRecord = await Pathology.findByIdAndUpdate(
-            recordId,
-            body,
-            { new: true }
-        ).populate("patient");
+        const updatedRecord = await Pathology.findByIdAndUpdate(recordId, body, {
+            new: true,
+        }).populate("patient");
 
         if (!updatedRecord) {
             return NextResponse.json(
@@ -146,9 +240,8 @@ export async function PUT(req) {
         return NextResponse.json({
             success: true,
             message: "Record updated",
-            data: updatedRecord
+            data: updatedRecord,
         });
-
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },
@@ -182,9 +275,8 @@ export async function DELETE(req) {
 
         return NextResponse.json({
             success: true,
-            message: "Record deleted"
+            message: "Record deleted",
         });
-
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },

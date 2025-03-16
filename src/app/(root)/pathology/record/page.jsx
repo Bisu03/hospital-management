@@ -13,7 +13,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { FaPrint } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
+import { MdDelete, MdEdit } from "react-icons/md";
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const PathologyRecord = () => {
@@ -59,7 +59,7 @@ const PathologyRecord = () => {
         mutationFn: (id) => deleteData("/pathology", id),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["pathologyrecord"] }); // Refetch data after adding
-            SuccessHandling(data.message);
+            SuccessHandling("Record Deleted");
             refetch();
         },
         onError: (error) => {
@@ -123,8 +123,15 @@ const PathologyRecord = () => {
                                                     {patient?.test_cart?.totalAmount}/- paid by {patient?.paidby}
                                                 </td>
                                                 <td className="px-4 py-3 space-x-2 flex">
+                                                    {/* <Link
+                                                        href={`/pathology/reading/${patient.reg_id}`}
+                                                        className="btn btn-primary "
+                                                    >
+                                                        {" "}
+                                                        <MdEdit />
+                                                    </Link> */}
                                                     <Link
-                                                        href={`/pathology/print/${patient.reg_id}`}
+                                                        href={`/pathology/printreceipt/${patient.reg_id}`}
                                                         className="btn btn-primary "
                                                     >
                                                         {" "}

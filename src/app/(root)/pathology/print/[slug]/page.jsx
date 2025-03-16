@@ -66,6 +66,8 @@ const PathologyPrint = () => {
                             <p><span className="font-semibold">Full Name:</span> {data?.data?.patient?.fullname}</p>
                             <p><span className="font-semibold">Phone No.:</span> {data?.data?.patient?.phone_number}</p>
                             <p><span className="font-semibold">Gender:</span> {data?.data?.patient?.gender}</p>
+                            <p><span className="font-semibold">Age:</span> {data?.data?.patient?.age}</p>
+                            <p><span className="font-semibold">Address:</span> {data?.data?.patient?.address}</p>
 
                         </div>
                         <div>

@@ -1,14 +1,15 @@
-
 export const getDate = () => {
-    const now = new Date();
+  // Create date object with current time
+  const now = new Date();
   
-    // Get the UTC time
-    const utcTime = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
-  
-    // Calculate IST time by adding the IST offset (5 hours 30 minutes in milliseconds)
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const istTime = new Date(utcTime + istOffset);
-  
-    return istTime.toISOString().slice(0, 10); // Returns date in YYYY-MM-DD format
-  };
-  
+  // Add IST offset (5 hours 30 minutes)
+  const istOffset = 5.5 * 60 * 60 * 1000;  // IST is UTC+5:30
+  const istTime = new Date(now.getTime() + istOffset);
+
+  // Extract UTC components (which now represent IST date/time)
+  const year = istTime.getUTCFullYear();
+  const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(istTime.getUTCDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};

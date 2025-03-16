@@ -58,23 +58,8 @@ const patientSchema = new Schema({
     occupation: {
         type: String,
     },
-    state: {
+    address: {
         type: String,
-    },
-    dist: {
-        type: String,
-    },
-    city_vill: {
-        type: String,
-    },
-    ps: {
-        type: String,
-    },
-    po: {
-        type: String,
-    },
-    pincode: {
-        type: Number,
     },
     aadhar: {
         type: Number,

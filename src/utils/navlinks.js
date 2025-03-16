@@ -21,16 +21,16 @@ export const NavLinks = [
       },
     ],
   },
-  {
-    icon: <FaRegistered />,
-    category: "Patient",
-    routes: [
-      {
-        name: "Patient Record",
-        path: "/patient/record",
-      },
-    ],
-  },
+  // {
+  //   icon: <FaRegistered />,
+  //   category: "Patient",
+  //   routes: [
+  //     {
+  //       name: "Patient Record",
+  //       path: "/patient/record",
+  //     },
+  //   ],
+  // },
   {
     icon: <MdBedroomParent />,
     category: "IPD",
@@ -74,6 +74,10 @@ export const NavLinks = [
       {
         name: "Pathology Test",
         path: "/pathology/create",
+      },
+      {
+        name: "Pathology Reading",
+        path: "/pathology/reading",
       },
       {
         name: "Pathology Record",

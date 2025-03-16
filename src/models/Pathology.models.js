@@ -10,6 +10,9 @@ const pathologySchema = new Schema({
         type: String,
         required: true,
     },
+    bill_no: {
+        type: String
+    },
     reporting_time: {
         type: String,
     },
@@ -25,9 +28,16 @@ const pathologySchema = new Schema({
     },
     test_cart: {
         type: Object
+    },
+    due_amount: {  // New field
+        type: Number,
+        default: 0
+    },
+    paydby: {      // New field (you might want to rename to 'paid_by' for proper spelling)
+        type: String
     }
 }, {
     timestamps: true
 });
 
-export default mongoose.models.pathology || mongoose.model("pathology", pathologySchema)
+export default mongoose.models.pathology || mongoose.model("pathology", pathologySchema);
