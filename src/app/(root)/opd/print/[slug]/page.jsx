@@ -91,10 +91,10 @@ const OpdPrint = () => {
                                 <span className="font-semibold">Date:</span>{" "}
                                 {formatDate(formData?.consultant_date)}
                             </div>
-                            <div>
+                            {formData?.consultant_time && <div>
                                 <span className="font-semibold">Time:</span>{" "}
-                                {formatDate(formData?.consultant_time)}
-                            </div>
+                                {formData?.consultant_time}
+                            </div>}
                         </div>
 
 

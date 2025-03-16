@@ -7,6 +7,7 @@ import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import Tab from "@/components/Tab";
 import Spinner from "@/components/ui/Spinner";
+import { getCompactAge } from "@/lib/ageCount";
 import { getDate } from "@/lib/currentDate";
 import { formattedTime } from "@/lib/timeGenerate";
 import { createData, fetchData, updateData } from "@/services/apiService";
@@ -25,12 +26,22 @@ const MiddleSection = lazy(() => import("@/components/Middlesection"));
 const OpdAdmission = () => {
   const queryClient = useQueryClient();
   const router = useRouter()
+
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
   const initialState = {
     uh_id: "",
     reg_id: "",
     mrd_id: "",
+    fullname: "",
+    phone_number: "",
+    referr_by: "",
+    gender: "",
     patient: "",
+    dob: "",
+    age: "",
+    address: "",
     consultant: "",
     on_examin: "",
     pulse: "",
@@ -51,6 +62,7 @@ const OpdAdmission = () => {
   };
   const [formData, setFormData] = useState(initialState);
   const [Times, setTimes] = useState(formattedTime())
+  const [selectDob, setSelectDob] = useState("");
 
   const [consultant, setConsultant] = useState({});
   const handleChange = (e) => {
@@ -58,32 +70,61 @@ const OpdAdmission = () => {
   };
 
 
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, age: getCompactAge(selectDob || "") }));
+  }, [selectDob]);
 
-  const handlePatientSelection = (patient) => {
-    if (patient?.opd_id) {
-      fetchData(`/opd?id=${patient.opd_id}`)
-        .then((data) => {
-          setFormData({
-            ...data.data,
-            fullname: data?.data?.patient?.fullname,
-            phone_number: data?.data?.patient?.phone_number,
-            referr_by: data?.data?.patient?.referr_by,
-          });
-          setTimes(data?.data?.consultant_time)
-          setConsultant({
-            value: data?.data?.consultant?._id,
-            label: data?.data?.consultant?.drname,
-          });
-        })
-        .catch((error) => {
-          ErrorHandeling(error);
-        });
-    } else {
-      setFormData({
-        ...formData, ...patient, patient: patient._id,
-      });
-    }
-  };
+
+  const { data: prevData, error, isLoading, refetch } = useQuery({
+    queryKey: ["opdarecord", searchTerm],
+    queryFn: () => fetchData(`/opd?id=${searchTerm}`),
+  });
+
+  const handleRegIdSearch = async () => {
+    refetch();
+  }
+
+  useEffect(() => {
+    setFormData({
+      _id: prevData?.data?._id,
+      uh_id: prevData?.data?.uh_id,
+      reg_id: prevData?.data?.reg_id,
+      mrd_id: prevData?.data?.mrd_id,
+      fullname: prevData?.data?.patient?.fullname,
+      phone_number: prevData?.data?.patient?.phone_number,
+      referr_by: prevData?.data?.patient?.referr_by,
+      gender: prevData?.data?.patient?.gender,
+      dob: prevData?.data?.patient?.dob,
+      age: prevData?.data?.patient?.age,
+      address: prevData?.data?.patient?.address,
+      patient: prevData?.data?.patient?._id,
+      consultant: prevData?.data?.consultant?._id,
+      on_examin: prevData?.data?.on_examin,
+      pulse: prevData?.data?.pulse,
+      spo2: prevData?.data?.spo2,
+      jaundice: prevData?.data?.jaundice,
+      pallor: prevData?.data?.pallor,
+      cvs: prevData?.data?.cvs,
+      resp_system: prevData?.data?.resp_system,
+      gi_system: prevData?.data?.gi_system,
+      nervious_system: prevData?.data?.nervious_system,
+      consultant_date: prevData?.data?.consultant_date,
+      present_complain: prevData?.data?.present_complain,
+      medical_case: prevData?.data?.medical_case,
+      opd_fees: prevData?.data?.opd_fees,
+      paidby: prevData?.data?.paidby,
+      provisional_diagnosis: prevData?.data?.provisional_diagnosis,
+
+    })
+
+    setTimes(prevData?.data?.consultant_time)
+
+    setConsultant({
+      value: prevData?.data?.consultant?._id,
+      label: prevData?.data?.consultant?.drname
+    })
+  }, [prevData]);
+
 
   const { data: doctorrecord } = useQuery({
     queryKey: ["doctorrecord"], // Unique query key
@@ -96,12 +137,12 @@ const OpdAdmission = () => {
   }));
 
   const mutation = useMutation({
-    mutationFn: (newItem) => createData("/opd", { ...newItem, consultant_time: Times }),
+    mutationFn: (newItem) => createData("/opd", { ...newItem }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["opdarecord"] }); // Refetch data after adding
       setFormData(initialState);
       SuccessHandling(data.message);
-      router.push(`/opd/print/${data?.data?._id}`);
+      router.push(`/opd/print/${data?.data?.reg_id}`);
     },
     onError: (error) => {
       ErrorHandeling(error);
@@ -122,11 +163,11 @@ const OpdAdmission = () => {
   });
 
   const handleSubmit = () => {
-    mutation.mutate({ ...formData, consultant: consultant.value });
+    mutation.mutate({ ...formData, consultant: consultant.value, dob: selectDob, consultant_time: Times });
   };
 
   const handleUpdate = () => {
-    mutationUpdate.mutate({ ...formData, consultant: consultant.value });
+    mutationUpdate.mutate({ ...formData, consultant: consultant.value, dob: selectDob, consultant_time: Times });
   };
 
 
@@ -138,67 +179,158 @@ const OpdAdmission = () => {
           <MiddleSection>
             <div className="w-full">
               <Heading heading="OPD Admission">
-                <div className="flex items-center space-x-2">
-                  <PatientDropdown
-                    onSelectPatient={handlePatientSelection}
-                    PatientSearch={PatientSearch}
-                    setPatientSearch={setPatientSearch}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter REG ID"
+                    className="p-2 border rounded"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  <PatientRegistration admitedin="OPD" />
+                  <button
+                    onClick={handleRegIdSearch}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Search
+                  </button>
                 </div>
               </Heading>
 
               <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 truncate">
-                  {formData?.fullname || "No Patient Selected"}
-                </h1>
-                <div className="grid grid-cols-2 sm:grid-cols-1 lg:grid-cols-4 gap-2 md:gap-4 ">
-                  {formData?.mrd_id && (
-                    <div className="space-y-0.5 min-w-[200px]">
-                      <p className="text-xs md:text-sm font-medium text-gray-500">
-                        MRD ID
-                      </p>
-                      <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                        {formData.mrd_id}
-                      </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Full Name<span className="text-red-500 text-lg">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="fullname"
+                      value={formData.fullname}
+                      onChange={handleChange}
+                      className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Phone Number<span className="text-red-500 text-lg">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="phone_number"
+                      value={formData.phone_number}
+                      onChange={handleChange}
+                      className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Gender<span className="text-red-500 text-lg">*</span>
+                    </label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Age<span className="text-red-500 text-lg">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="age"
+                      value={formData.age}
+                      onChange={handleChange}
+                      className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      name="selectDob"
+                      value={selectDob}
+                      onChange={(e) => setSelectDob(e.target.value)}
+                      className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Referred By
+                    </label>
+                    <input
+                      type="text"
+                      name="referr_by"
+                      value={formData.referr_by}
+                      onChange={handleChange}
+                      className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Admit Date & Time{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-3">
+                      <input
+                        type="date"
+                        name="consultant_date"
+                        value={formData?.consultant_date}
+                        onChange={handleChange}
+                        className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                      <input
+                        type="text"
+                        name="Times"
+                        value={Times}
+                        onChange={(e) => setTimes(e.target.value)}
+                        className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
                     </div>
-                  )}
+                  </div>
 
-                  {formData?.reg_id && (
-                    <div className="space-y-0.5 min-w-[200px]">
-                      <p className="text-xs md:text-sm font-medium text-gray-500">
-                        REG ID
-                      </p>
-                      <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                        {formData.reg_id}
-                      </p>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Consultant
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <Select
+                        options={doctorOptions}
+                        value={consultant}
+                        name="consultant"
+                        onChange={(selectedOption) =>
+                          setConsultant(selectedOption)
+                        }
+                        isClearable
+                        placeholder="Select Doctor"
+                        className="w-full max-w-sm text-lg"
+                      />{" "}
+                      <DoctorForm btn={<FaPlus />} />
                     </div>
-                  )}
+                  </div>
 
-                  {formData?.phone_number && (
-                    <div className="space-y-0.5 min-w-[200px]">
-                      <p className="text-xs md:text-sm font-medium text-gray-500">
-                        Phone Number
-                      </p>
-                      <p className="text-gray-700 text-sm md:text-base truncate">
-                        {formData.phone_number}
-                      </p>
-                    </div>
-                  )}
-
-                  {formData?.referr_by && (
-                    <div className="space-y-0.5 min-w-[200px]">
-                      <p className="text-xs md:text-sm font-medium text-gray-500">
-                        Referred By
-                      </p>
-                      <p className="text-gray-700 text-sm md:text-base truncate">
-                        {formData.referr_by}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
-
               <div className="w-full p-4 bg-gray-100  rounded-xl border border-gray-200 shadow-sm">
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -371,48 +503,6 @@ const OpdAdmission = () => {
                     </div>
 
                     {/* Admit Date & Time */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Admit Date & Time{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex gap-3">
-                        <input
-                          type="date"
-                          name="consultant_date"
-                          value={formData?.consultant_date}
-                          onChange={handleChange}
-                          className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                        <input
-                          type="text"
-                          name="Times"
-                          value={Times}
-                          onChange={(e) => setTimes(e.target.value)}
-                          className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Consultant
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <Select
-                          options={doctorOptions}
-                          value={consultant}
-                          name="consultant"
-                          onChange={(selectedOption) =>
-                            setConsultant(selectedOption)
-                          }
-                          isClearable
-                          placeholder="Select Doctor"
-                          className="w-full max-w-sm text-lg"
-                        />{" "}
-                        <DoctorForm btn={<FaPlus />} />
-                      </div>
-                    </div>
 
                     {/* Present Complaint */}
                     <div className="space-y-2 lg:col-span-2">
@@ -512,7 +602,7 @@ const OpdAdmission = () => {
                     >
                       Clear
                     </button>
-                    {formData?.patient?.opd_id ? <button
+                    {formData?.patient ? <button
                       onClick={handleUpdate}
                       className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
                       disabled={mutation.isPending} // Disable if mutation is pending

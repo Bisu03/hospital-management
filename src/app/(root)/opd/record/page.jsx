@@ -148,7 +148,7 @@ const OpdRecord = () => {
                                                 </td>
                                                 <td className="px-4 py-3 space-x-2 flex">
                                                     <Link
-                                                        href={`/opd/print/${patient._id}`}
+                                                        href={`/opd/print/${patient.reg_id}`}
                                                         className="btn btn-primary "
                                                     >
                                                         {" "}

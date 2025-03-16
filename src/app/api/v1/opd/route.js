@@ -28,7 +28,7 @@ export async function GET(req) {
         const endDate = url.searchParams.get("endDate");
 
         if (idsearch) {
-            const data = await Opd.findById(idsearch).populate("patient").populate("consultant");
+            const data = await Opd.findOne({ reg_id: idsearch }).populate("patient").populate("consultant");
             return NextResponse.json({ success: true, data });
         }
 
@@ -91,18 +91,27 @@ export async function POST(req) {
         );
     }
     try {
-        const body = await req.json();
 
+
+        const body = await req.json();
 
         const {
             uh_id,
             reg_id,
             mrd_id,
+            fullname,
+            phone_number,
+            referr_by,
+            gender,
             patient,
+            dob,
+            age,
+            address,
             consultant,
             on_examin,
             pulse,
             spo2,
+            admited_in,
             jaundice,
             pallor,
             cvs,
@@ -110,27 +119,119 @@ export async function POST(req) {
             gi_system,
             nervious_system,
             consultant_date,
-            consultant_time,
             present_complain,
             medical_case,
             opd_fees,
             paidby,
+            consultant_time,
             provisional_diagnosis,
-        } = body;
+        } = body
 
-        const data = await Opd.create({
-            ...body,
-            patient,
-            consultant,
-        });
-        if (data) {
-            await Patient.findByIdAndUpdate(patient, { opd_id: data._id, admited_in: "OPD" });
+
+        if (body?.patient) {
+            const opdData = await Opd.findOneAndUpdate({
+                reg_id: body.reg_id,
+            }, {
+                reg_id,
+                mrd_id,
+                patient,
+                consultant,
+                on_examin,
+                pulse,
+                spo2,
+                admited_in,
+                jaundice,
+                pallor,
+                cvs,
+                resp_system,
+                gi_system,
+                nervious_system,
+                consultant_date,
+                present_complain,
+                medical_case,
+                opd_fees,
+                paidby,
+                consultant_time,
+                provisional_diagnosis,
+            })
         }
-        return NextResponse.json({
-            success: true,
-            message: "Patient Admited Successfully",
-            data
-        });
+        else {
+
+            let uhid = null;
+            let regid = null;
+            let mrdid = null;
+            let billno = null
+
+            if (!body.uh_id) {
+                uhid = await Counter.findOneAndUpdate(
+                    { id: "uhid" },
+                    { $inc: { seq: 1 } },
+                    { new: true, upsert: true, setDefaultsOnInsert: true }
+                );
+            }
+
+            regid = await Counter.findOneAndUpdate(
+                { id: "regid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+
+            mrdid = await Counter.findOneAndUpdate(
+                { id: "mrdid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+            billno = await Counter.findOneAndUpdate(
+                { id: "billno" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+
+
+            const data = await Patient.create({
+                uh_id: uhid.seq,
+                reg_id: regid.seq,
+                mrd_id: mrdid.seq,
+                fullname,
+                phone_number,
+                referr_by,
+                gender,
+                dob,
+                age,
+                address,
+            });
+
+            const opd = await Opd.create({
+                reg_id: regid.seq,
+                mrd_id: mrdid.seq,
+                consultant,
+                on_examin,
+                pulse,
+                spo2,
+                admited_in,
+                jaundice,
+                pallor,
+                consultant_time,
+                patient: data._id,
+                cvs,
+                resp_system,
+                gi_system,
+                nervious_system,
+                consultant_date,
+                present_complain,
+                medical_case,
+                opd_fees,
+                paidby,
+                provisional_diagnosis,
+            });
+
+            return NextResponse.json({
+                success: true,
+                message: "Patient Admited Successfully",
+                data: opd
+            });
+        }
+
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },
