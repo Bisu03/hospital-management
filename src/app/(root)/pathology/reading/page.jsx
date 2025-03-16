@@ -22,7 +22,7 @@ const PathologyReading = () => {
     const router = useRouter();
 
     const { data, error, isLoading, refetch } = useQuery({
-        queryKey: ["pathologyrecord"],
+        queryKey: ["pathologyrecord", searchTerm],
         queryFn: () => fetchData(`/pathology/${searchTerm}`),
     });
 

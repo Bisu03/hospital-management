@@ -80,7 +80,7 @@ const PathologyReceipt = () => {
 
                 {/* Patient Information */}
                 {/* Patient Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 print:gap-1">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4 print:gap-1">
                     <div className="space-y-1">
                         <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">Patient Details</h3>
                         <div className="text-xs space-y-0.5 print:text-2xs">
@@ -128,12 +128,20 @@ const PathologyReceipt = () => {
                     <div className="w-72 space-y-1 text-xs print:text-2xs">
                         <div className="flex justify-between font-semibold">
                             <span>Total Charges:</span>
-                            <span>₹{pathologyData?.test_cart?.totalAmount?.toFixed(2)}</span>
+                            <span>₹{parseFloat(pathologyData?.amount?.total)?.toFixed(2)}</span>
                         </div>
 
                         <div className="flex justify-between">
+                            <span>Discount Amount:</span>
+                            <span>₹{parseFloat(pathologyData?.amount?.discount)?.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
                             <span>Paid Amount:</span>
-                            <span>₹{paidAmount?.toFixed(2)}</span>
+                            <span>₹{parseFloat(pathologyData?.amount?.paid)?.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Net Total:</span>
+                            <span>₹{parseFloat(pathologyData?.amount?.netTotal)?.toFixed(2)}</span>
                         </div>
 
                         <div className="flex justify-between">
@@ -143,7 +151,7 @@ const PathologyReceipt = () => {
 
                         <div className="flex justify-between font-semibold border-t pt-1">
                             <span>Due Amount:</span>
-                            <span className="text-red-600">₹{pathologyData?.due_amount?.toFixed(2)}</span>
+                            <span className="text-red-600">₹{parseFloat(pathologyData?.amount?.due)?.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

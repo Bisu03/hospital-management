@@ -18,6 +18,9 @@ const doctorSchema = new mongoose.Schema(
         email: {
             type: String,
         },
+        charge: {
+            type: String,
+        },
         category: {
             type: String,
         },

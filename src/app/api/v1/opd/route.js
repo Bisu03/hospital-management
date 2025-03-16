@@ -91,12 +91,8 @@ export async function POST(req) {
         );
     }
     try {
-
-
         const body = await req.json();
-
         const {
-            uh_id,
             reg_id,
             mrd_id,
             fullname,
@@ -111,7 +107,6 @@ export async function POST(req) {
             on_examin,
             pulse,
             spo2,
-            admited_in,
             jaundice,
             pallor,
             cvs,
@@ -127,92 +122,25 @@ export async function POST(req) {
             provisional_diagnosis,
         } = body
 
+        if (reg_id) {
 
-        if (body?.patient) {
-            const opdData = await Opd.findOneAndUpdate({
-                reg_id: body.reg_id,
-            }, {
-                reg_id,
-                mrd_id,
-                patient,
-                consultant,
-                on_examin,
-                pulse,
-                spo2,
-                admited_in,
-                jaundice,
-                pallor,
-                cvs,
-                resp_system,
-                gi_system,
-                nervious_system,
-                consultant_date,
-                present_complain,
-                medical_case,
-                opd_fees,
-                paidby,
-                consultant_time,
-                provisional_diagnosis,
-            })
-        }
-        else {
-
-            let uhid = null;
             let regid = null;
-            let mrdid = null;
-            let billno = null
-
-            if (!body.uh_id) {
-                uhid = await Counter.findOneAndUpdate(
-                    { id: "uhid" },
-                    { $inc: { seq: 1 } },
-                    { new: true, upsert: true, setDefaultsOnInsert: true }
-                );
-            }
-
             regid = await Counter.findOneAndUpdate(
                 { id: "regid" },
                 { $inc: { seq: 1 } },
                 { new: true, upsert: true, setDefaultsOnInsert: true }
             );
-
-            mrdid = await Counter.findOneAndUpdate(
-                { id: "mrdid" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true, setDefaultsOnInsert: true }
-            );
-            billno = await Counter.findOneAndUpdate(
-                { id: "billno" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true, setDefaultsOnInsert: true }
-            );
-
-
-            const data = await Patient.create({
-                uh_id: uhid.seq,
-                reg_id: regid.seq,
-                mrd_id: mrdid.seq,
-                fullname,
-                phone_number,
-                referr_by,
-                gender,
-                dob,
-                age,
-                address,
-            });
-
             const opd = await Opd.create({
                 reg_id: regid.seq,
-                mrd_id: mrdid.seq,
+                mrd_id,
                 consultant,
                 on_examin,
                 pulse,
                 spo2,
-                admited_in,
                 jaundice,
                 pallor,
                 consultant_time,
-                patient: data._id,
+                patient,
                 cvs,
                 resp_system,
                 gi_system,
@@ -227,9 +155,73 @@ export async function POST(req) {
 
             return NextResponse.json({
                 success: true,
-                message: "Patient Admited Successfully",
+                message: "Patient Registered Successfully",
                 data: opd
             });
+        }
+        else {
+
+            let regid = null;
+            let mrdid = null;
+            regid = await Counter.findOneAndUpdate(
+                { id: "regid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+
+            mrdid = await Counter.findOneAndUpdate(
+                { id: "mrdid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+
+
+            const data = await Patient.create({
+                reg_id: regid.seq,
+                mrd_id: mrdid.seq,
+                fullname,
+                phone_number,
+                referr_by,
+                gender,
+                patient,
+                dob,
+                age,
+                address,
+            });
+            console.log("run");
+
+
+            if (data) {
+                const opd = await Opd.create({
+                    reg_id: regid.seq,
+                    mrd_id: mrdid.seq,
+                    consultant,
+                    on_examin,
+                    pulse,
+                    spo2,
+                    jaundice,
+                    pallor,
+                    consultant_time,
+                    patient: data._id,
+                    cvs,
+                    resp_system,
+                    gi_system,
+                    nervious_system,
+                    consultant_date,
+                    present_complain,
+                    medical_case,
+                    opd_fees,
+                    paidby,
+                    provisional_diagnosis,
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    message: "Patient Registered Successfully",
+                    data: opd
+                });
+            }
+
         }
 
     } catch (error) {

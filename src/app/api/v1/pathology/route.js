@@ -29,10 +29,9 @@ export async function GET(req) {
         if (searchParams.id) {
             const data = await Pathology.findById(searchParams.id).populate(
                 "patient"
-            );
+            ).sort({ createdAt: -1 }).exec()
             return NextResponse.json({ success: true, data });
         }
-
         const pipeline = [
             {
                 $lookup: {
@@ -107,6 +106,8 @@ export async function POST(req) {
         const body = await req.json();
 
         const {
+            reg_id,
+            mrd_id,
             fullname,
             phone_number,
             referr_by,
@@ -114,60 +115,50 @@ export async function POST(req) {
             patient,
             dob,
             age,
+            consultant,
             address,
             paydby,
-            paid_amount,
-            due_amount,
+            amount,
             reporting_time,
             reporting_date,
             test_cart,
         } = body;
 
         let newPathology;
-        if (body?.patient) {
-            newPathology = await Pathology.findOneAndUpdate({
-                reg_id: body.reg_id
-            }, {
-                fullname,
-                phone_number,
-                referr_by,
-                gender,
-                patient,
-                dob,
-                age,
-                address,
-                paydby,
-                paid_amount,
-                due_amount,
-                reporting_time,
-                reporting_date,
-                test_cart,
-            }, { new: true });
-        } else {
-            let regid = null;
-            let mrdid = null;
-            let billno = null
+
+        let regid = null;
+        let mrdid = null;
 
 
-
+        if (!body.reg_id) {
             regid = await Counter.findOneAndUpdate(
                 { id: "regid" },
                 { $inc: { seq: 1 } },
                 { new: true, upsert: true, setDefaultsOnInsert: true }
             );
+        }
 
+        if (!body.mrd_id) {
             mrdid = await Counter.findOneAndUpdate(
                 { id: "mrdid" },
                 { $inc: { seq: 1 } },
                 { new: true, upsert: true, setDefaultsOnInsert: true }
             );
-            billno = await Counter.findOneAndUpdate(
-                { id: "billno" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true, setDefaultsOnInsert: true }
-            );
+        }
 
-
+        if (body?.reg_id) {
+            newPathology = await Pathology.create({
+                reg_id,
+                mrd_id,
+                paydby,
+                amount,
+                patient,
+                consultant,
+                reporting_time,
+                reporting_date,
+                test_cart,
+            });
+        } else {
             const data = await Patient.create({
                 fullname,
                 phone_number,
@@ -177,25 +168,21 @@ export async function POST(req) {
                 dob,
                 age,
                 address,
-                uh_id: uhid?.seq,
                 reg_id: regid?.seq,
                 mrd_id: mrdid?.seq,
             });
-            body.patient = data._id;
-            if (data._id) {
-                newPathology = await Pathology.create({
-                    reg_id: regid?.seq,
-                    mrd_id: mrdid?.seq,
-                    bill_no: billno?.seq,
-                    paydby,
-                    paid_amount,
-                    patient: data._id,
-                    due_amount,
-                    reporting_time,
-                    reporting_date,
-                    test_cart,
-                });
-            }
+            data._id;
+            newPathology = await Pathology.create({
+                reg_id: regid?.seq,
+                mrd_id: mrdid?.seq,
+                paydby,
+                patient: data._id,
+                amount,
+                consultant,
+                reporting_time,
+                reporting_date,
+                test_cart,
+            });
         }
 
         return NextResponse.json({

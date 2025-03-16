@@ -1,6 +1,6 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createData, fetchData } from "@/services/apiService";
+import { createData, fetchData, updateData } from "@/services/apiService";
 import PatientDropdown from "@/components/component/PatientDropdown";
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
@@ -17,16 +17,17 @@ import { useRouter } from "next/navigation";
 import Tab from "@/components/Tab";
 import { TabLinks } from "@/utils/tablinks";
 import { getCompactAge } from "@/lib/ageCount";
+import { useParams } from "next/navigation";
 import Select from "react-select";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
-const CreatePathology = () => {
+const UpdatePathology = () => {
   const queryClient = useQueryClient();
+  const { slug } = useParams();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
-  const [consultant, setConsultant] = useState({});
   const [ServiceData, setServiceData] = useState({
     reg_id: "",
     mrd_id: "",
@@ -38,29 +39,26 @@ const CreatePathology = () => {
     dob: "",
     age: "",
     address: "",
-    consultant: "",
     paydby: "",
-    reporting_date: getDate(),
-    test_cart: {
-      services: [],
-    },
     amount: {
       total: 0,
       discount: 0,
       paid: 0,
       due: 0,
       netTotal: 0
-    }
+    },
+    reporting_date: getDate(),
+    test_cart: {
+      services: [],
+      totalAmount: 0,
+    },
   });
   const [Times, setTimes] = useState(formattedTime());
   const [selectDob, setSelectDob] = useState("");
+  const [consultant, setConsultant] = useState({});
 
   useEffect(() => {
-    setServiceData(prev => ({
-      ...prev,
-      age: getCompactAge(selectDob || ""),
-      dob: selectDob
-    }));
+    setServiceData(prev => ({ ...prev, age: getCompactAge(selectDob || ""), dob: selectDob }));
   }, [selectDob]);
 
   const handleChange = (e) => {
@@ -101,30 +99,6 @@ const CreatePathology = () => {
     }
   };
 
-
-  const handleRegIdSearch = async () => {
-    try {
-      const { data: prevData } = await fetchData(`/patient/searchbyreg/${searchTerm}`);
-      console.log(prevData);
-
-      setServiceData({
-        ...ServiceData,
-        fullname: prevData?.fullname,
-        patient: prevData?._id,
-        reg_id: prevData?.reg_id,
-        mrd_id: prevData?.mrd_id,
-        phone_number: prevData?.phone_number,
-        referr_by: prevData?.referr_by,
-        gender: prevData?.gender,
-        age: prevData?.age,
-        address: prevData?.address,
-      });
-      setSelectDob(prevData?.dob);
-    } catch (error) {
-      ErrorHandeling(error);
-    }
-  };
-
   const { data: doctorrecord } = useQuery({
     queryKey: ["doctorrecord"], // Unique query key
     queryFn: () => fetchData("/doctor"), // Function to fetch data
@@ -134,6 +108,43 @@ const CreatePathology = () => {
     value: doctor,
     label: doctor.drname,
   }));
+
+  const handleRegIdSearch = async () => {
+    try {
+      const { data: prevData } = await fetchData(`/pathology/${slug}`)
+      setServiceData({
+        fullname: prevData?.patient?.fullname,
+        patient: prevData?.patient?._id,
+        reg_id: prevData?.patient?.reg_id,
+        mrd_id: prevData?.patient?.mrd_id,
+        phone_number: prevData?.patient?.phone_number,
+        referr_by: prevData?.patient?.referr_by,
+        gender: prevData?.patient?.gender,
+        age: prevData?.patient?.age,
+        dob: prevData?.patient?.dob,
+        address: prevData?.patient?.address,
+        paydby: prevData?.paydby,
+        reporting_date: prevData?.reporting_date,
+        test_cart: prevData?.test_cart,
+        amount: prevData?.amount,
+      })
+      setSelectDob(prevData?.patient?.dob);
+      setConsultant({
+        value: response?.data?.consultant,
+        label: response?.data?.consultant?.drname,
+      });
+
+    } catch (error) {
+      ErrorHandeling(error);
+    }
+
+  }
+
+  useEffect(() => {
+    handleRegIdSearch()
+  }, [slug]);
+
+
 
   // Fetch categories and tests
   const { data: categories } = useQuery({
@@ -146,16 +157,10 @@ const CreatePathology = () => {
     queryFn: () => fetchData("/admin/pathology/record"),
   });
 
+
   const mutation = useMutation({
     mutationFn: (newRecord) =>
-      createData("/pathology", {
-        ...newRecord,
-        reporting_time: Times,
-        amount: {
-          ...newRecord.amount,
-          netTotal: newRecord.amount.total - newRecord.amount.discount
-        }
-      }),
+      updateData("/pathology", slug, { ...newRecord, reporting_time: Times }),
     onSuccess: (data) => {
       queryClient.invalidateQueries(["pathologyrecords"]);
       SuccessHandling(data.message);
@@ -164,13 +169,10 @@ const CreatePathology = () => {
     onError: (error) => ErrorHandeling(error),
   });
 
+
   const handleSubmit = () => {
-    if (!ServiceData.paydby) {
-      return ErrorHandeling({ message: "Please select payment method" });
-    }
     mutation.mutate({ ...ServiceData, consultant: consultant.value._id });
   };
-
   const addToCart = (test) => {
     setServiceData(prev => {
       const newTotal = prev.amount.total + Number(test.pathology_charge);
@@ -222,22 +224,7 @@ const CreatePathology = () => {
         <Tab tabs={TabLinks} category="Pathology Patient" />
         <MiddleSection>
           <div className="w-full">
-            <Heading heading="Pathology Admission">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter REG ID"
-                  className="p-2 border rounded"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button
-                  onClick={handleRegIdSearch}
-                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Search
-                </button>
-              </div>
+            <Heading heading="Update Pathology">
             </Heading>
             <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -299,7 +286,6 @@ const CreatePathology = () => {
                   </label>
                   <input
                     type="date"
-
                     name="selectDob"
                     value={selectDob}
                     onChange={(e) => setSelectDob(e.target.value)}
@@ -324,7 +310,6 @@ const CreatePathology = () => {
                   </label>
                   <input
                     type="date"
-                    disabled
                     name="reporting_date"
                     value={ServiceData.reporting_date}
                     onChange={handleChange}
@@ -338,7 +323,6 @@ const CreatePathology = () => {
                   <input
                     type="text"
                     name="Times"
-                    disabled
                     value={Times}
                     onChange={(e) => setTimes(e.target.value)}
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
@@ -410,14 +394,14 @@ const CreatePathology = () => {
 
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Test Cart</h2>
-              {ServiceData.test_cart.services.map((test, index) => (
+              {ServiceData?.test_cart?.services.map((test, index) => (
                 <div
                   key={index}
                   className="flex justify-between items-center p-3 border rounded"
                 >
-                  <p className="font-semibold">{test.pathology_category}</p>
+                  <p className="font-semibold">{test?.pathology_category}</p>
                   <p className="text-sm font-bold text-gray-500">
-                    ₹{Number(test.pathology_charge)}
+                    ₹{Number(test?.pathology_charge)}
                   </p>
                   <button
                     onClick={() => removeFromCart(test)}
@@ -526,4 +510,4 @@ const CreatePathology = () => {
   );
 };
 
-export default withAuth(CreatePathology);
+export default withAuth(UpdatePathology);

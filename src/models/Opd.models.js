@@ -2,10 +2,6 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const opdSchema = new Schema({
-
-    uh_id: {
-        type: Number,
-    },
     reg_id: {
         type: Number,
         required: true,

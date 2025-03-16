@@ -3,10 +3,6 @@ const { Schema } = mongoose;
 
 const patientSchema = new Schema({
 
-    uh_id: {
-        type: Number,
-        required: true,
-    },
     reg_id: {
         type: Number,
         required: true,

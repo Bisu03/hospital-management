@@ -26,12 +26,15 @@ const pathologySchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "patient_registration",
     },
+    consultant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "doctors",
+    },
     test_cart: {
         type: Object
     },
-    due_amount: {  // New field
-        type: Number,
-        default: 0
+    amount: {
+        type: Object
     },
     paydby: {      // New field (you might want to rename to 'paid_by' for proper spelling)
         type: String

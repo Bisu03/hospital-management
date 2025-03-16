@@ -15,6 +15,7 @@ const DoctorForm = ({ btn }) => {
         email: "",
         contact: "",
         category: "",
+        charge: "",
     }
     const [formData, setFormData] = useState(initialState);
 
@@ -169,6 +170,19 @@ const DoctorForm = ({ btn }) => {
                                                 type="text"
                                                 name="category"
                                                 value={formData.category}
+                                                onChange={handleChange}
+                                                className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg  focus:ring-2 focus:ring-blue-500 focus:border-blue-500   transition-all duration-200 shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="block text-sm font-medium text-gray-700 ">
+                                                Doctor Charge
+                                                <span className="text-red-500 text-lg">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="charge"
+                                                value={formData.charge}
                                                 onChange={handleChange}
                                                 className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg  focus:ring-2 focus:ring-blue-500 focus:border-blue-500   transition-all duration-200 shadow-sm"
                                             />

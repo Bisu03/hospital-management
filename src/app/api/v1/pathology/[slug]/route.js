@@ -6,6 +6,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
 import Pathology from "@/models/Pathology.models"; // Mongoose  model
 import "@/models/Patient.models"
+import "@/models/Doctor.models"
 
 export async function GET(req, context) {
     // Connect to the database
@@ -23,7 +24,7 @@ export async function GET(req, context) {
         const { slug } = await context.params;
         const data = await Pathology.findOne({
             reg_id: slug
-        }).populate("patient");
+        }).sort({ createdAt: -1 }).populate("patient").polygon("consultant");
         // Return the message
         return NextResponse.json(
             { success: true, data },
@@ -53,7 +54,6 @@ export async function PUT(req, context) {
     try {
         const { slug } = await context.params;
         const body = await req.json();
-        console.log(body);
 
         const data = await Pathology.findOneAndUpdate({
             reg_id: slug

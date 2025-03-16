@@ -28,10 +28,7 @@ const OpdAdmission = () => {
   const router = useRouter()
 
   const [searchTerm, setSearchTerm] = useState("");
-
-  const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
   const initialState = {
-    uh_id: "",
     reg_id: "",
     mrd_id: "",
     fullname: "",
@@ -63,68 +60,42 @@ const OpdAdmission = () => {
   const [formData, setFormData] = useState(initialState);
   const [Times, setTimes] = useState(formattedTime())
   const [selectDob, setSelectDob] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [consultant, setConsultant] = useState({});
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-
   useEffect(() => {
-    setFormData(prev => ({ ...prev, age: getCompactAge(selectDob || "") }));
-  }, [selectDob]);
+    setFormData(prev => ({ ...prev, opd_fees: consultant?.value?.charge || 0 }));
+  }, [consultant?.value]);
 
+  const handleGetPatient = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetchData(`/patient/${searchTerm}`);
+      setFormData(
+        {
+          ...formData,
+          reg_id: response?.data?.reg_id,
+          mrd_id: response?.data?.mrd_id,
+          fullname: response?.data?.fullname,
+          gender: response?.data?.gender,
+          patient: response?.data?._id,
+          address: response?.data?.address,
+          phone_number: response?.data?.phone_number,
+          referr_by: response?.data?.referr_by,
+        }
+      );
+      setSelectDob(response?.data?.dob);
+      setIsLoading(false);
 
-  const { data: prevData, error, isLoading, refetch } = useQuery({
-    queryKey: ["opdarecord", searchTerm],
-    queryFn: () => fetchData(`/opd?id=${searchTerm}`),
-  });
-
-  const handleRegIdSearch = async () => {
-    refetch();
+    } catch (error) {
+      setIsLoading(false);
+      ErrorHandeling(error)
+    }
   }
-
-  useEffect(() => {
-    setFormData({
-      _id: prevData?.data?._id,
-      uh_id: prevData?.data?.uh_id,
-      reg_id: prevData?.data?.reg_id,
-      mrd_id: prevData?.data?.mrd_id,
-      fullname: prevData?.data?.patient?.fullname,
-      phone_number: prevData?.data?.patient?.phone_number,
-      referr_by: prevData?.data?.patient?.referr_by,
-      gender: prevData?.data?.patient?.gender,
-      dob: prevData?.data?.patient?.dob,
-      age: prevData?.data?.patient?.age,
-      address: prevData?.data?.patient?.address,
-      patient: prevData?.data?.patient?._id,
-      consultant: prevData?.data?.consultant?._id,
-      on_examin: prevData?.data?.on_examin,
-      pulse: prevData?.data?.pulse,
-      spo2: prevData?.data?.spo2,
-      jaundice: prevData?.data?.jaundice,
-      pallor: prevData?.data?.pallor,
-      cvs: prevData?.data?.cvs,
-      resp_system: prevData?.data?.resp_system,
-      gi_system: prevData?.data?.gi_system,
-      nervious_system: prevData?.data?.nervious_system,
-      consultant_date: prevData?.data?.consultant_date,
-      present_complain: prevData?.data?.present_complain,
-      medical_case: prevData?.data?.medical_case,
-      opd_fees: prevData?.data?.opd_fees,
-      paidby: prevData?.data?.paidby,
-      provisional_diagnosis: prevData?.data?.provisional_diagnosis,
-
-    })
-
-    setTimes(prevData?.data?.consultant_time)
-
-    setConsultant({
-      value: prevData?.data?.consultant?._id,
-      label: prevData?.data?.consultant?.drname
-    })
-  }, [prevData]);
-
 
   const { data: doctorrecord } = useQuery({
     queryKey: ["doctorrecord"], // Unique query key
@@ -132,12 +103,16 @@ const OpdAdmission = () => {
   });
 
   const doctorOptions = doctorrecord?.data?.map((doctor) => ({
-    value: doctor._id,
+    value: doctor,
     label: doctor.drname,
   }));
 
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, age: getCompactAge(selectDob || ""), dob: selectDob }));
+  }, [selectDob]);
+
   const mutation = useMutation({
-    mutationFn: (newItem) => createData("/opd", { ...newItem }),
+    mutationFn: (newItem) => createData("/opd", newItem),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["opdarecord"] }); // Refetch data after adding
       setFormData(initialState);
@@ -150,26 +125,9 @@ const OpdAdmission = () => {
   });
 
 
-  const mutationUpdate = useMutation({
-    mutationFn: (newItem) => updateData("/opd", newItem._id, newItem),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["opdarecord"] }); // Refetch data after adding
-      setFormData(initialState);
-      SuccessHandling(data.message);
-    },
-    onError: (error) => {
-      ErrorHandeling(error);
-    },
-  });
-
   const handleSubmit = () => {
-    mutation.mutate({ ...formData, consultant: consultant.value, dob: selectDob, consultant_time: Times });
+    mutation.mutate({ ...formData, consultant: consultant.value._id,  consultant_time: Times });
   };
-
-  const handleUpdate = () => {
-    mutationUpdate.mutate({ ...formData, consultant: consultant.value, dob: selectDob, consultant_time: Times });
-  };
-
 
   return (
     <>
@@ -182,16 +140,16 @@ const OpdAdmission = () => {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Enter REG ID"
+                    placeholder="Enter MRD ID"
                     className="p-2 border rounded"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   <button
-                    onClick={handleRegIdSearch}
+                    onClick={handleGetPatient}
                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                   >
-                    Search
+                    Search {isLoading && <Spinner />}
                   </button>
                 </div>
               </Heading>
@@ -288,7 +246,7 @@ const OpdAdmission = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
-                      Admit Date & Time{" "}
+                      Consultant Date & Time{" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <div className="flex gap-3">
@@ -325,10 +283,40 @@ const OpdAdmission = () => {
                         placeholder="Select Doctor"
                         className="w-full max-w-sm text-lg"
                       />{" "}
-                      <DoctorForm btn={<FaPlus />} />
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Opd Fees
+                    </label>
+                    <input
+                      type="text"
+                      name="opd_fees"
+                      value={formData?.opd_fees}
+                      onChange={handleChange}
+                      className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    />
+                  </div>
 
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Paid by
+                    </label>
+
+                    <select
+                      name="paidby"
+                      value={formData?.paidby}
+                      onChange={handleChange}
+                      className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white cursor-pointer"
+                    >
+                      <option value="">Select</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Card">Card</option>
+                      <option value="Cashless">Cashless</option>
+                      <option value="Sasthyasathi">Sasthyasathi</option>
+                      <option value="Cancel">Cancel</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className="w-full p-4 bg-gray-100  rounded-xl border border-gray-200 shadow-sm">
@@ -562,35 +550,7 @@ const OpdAdmission = () => {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Opd Fees
-                      </label>
-                      <input
-                        type="text"
-                        name="opd_fees"
-                        value={formData?.opd_fees}
-                        onChange={handleChange}
-                        className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
-                    </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Paid by
-                      </label>
-
-                      <select
-                        name="paidby"
-                        value={formData?.paidby}
-                        onChange={handleChange}
-                        className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white cursor-pointer"
-                      >
-                        <option value="">Select</option>
-                        <option value="Cash">Cash</option>
-                        <option value="Online">Online</option>
-                      </select>
-                    </div>
                   </div>
 
                   {/* Submit Button */}
@@ -602,20 +562,7 @@ const OpdAdmission = () => {
                     >
                       Clear
                     </button>
-                    {formData?.patient ? <button
-                      onClick={handleUpdate}
-                      className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
-                      disabled={mutation.isPending} // Disable if mutation is pending
-                    >
-                      {mutationUpdate.isPending ? (
-                        <>
-                          <Spinner />
-
-                        </>
-                      ) : (
-                        "Update Patient"
-                      )}
-                    </button> :
+              
                       <button
                         onClick={handleSubmit}
                         className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
@@ -629,7 +576,7 @@ const OpdAdmission = () => {
                         ) : (
                           "Admit Patient"
                         )}
-                      </button>}
+                      </button>
                   </div>
                 </div>
               </div>

@@ -65,6 +65,7 @@ const Doctor = () => {
                                             <th className="px-4 py-3">Doctor Reg No.</th>
                                             <th className="px-4 py-3">Doctor Contact</th>
                                             <th className="px-4 py-3">Doctor Email</th>
+                                            <th className="px-4 py-3">Doctor Charge</th>
                                             <th className="px-4 py-3 ">Actions</th>
                                         </tr>
                                     </thead>
@@ -77,6 +78,7 @@ const Doctor = () => {
                                                 <td className="px-4 py-3">{dr?.regno}</td>
                                                 <td className="px-4 py-3">{dr?.contact}</td>
                                                 <td className="px-4 py-3">{dr?.email}</td>
+                                                <td className="px-4 py-3">{dr?.charge}</td>
                                                 <td className="px-4 py-3 space-x-2 flex">
                                                     {/* <button className="btn btn-secondary ">
                                                         {" "}
