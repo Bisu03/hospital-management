@@ -95,7 +95,7 @@ const PathologyRecord = () => {
                                     <thead>
                                         <tr className="bg-secondary text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                             <th className="px-4 py-3">MRD ID</th>
-                                            <th className="px-4 py-3">REG ID</th>
+                                            <th className="px-4 py-3">Bill No</th>
                                             <th className="px-4 py-3">Full Name</th>
                                             <th className="px-4 py-3">Phone</th>
                                             <th className="px-4 py-3">Age</th>
@@ -108,7 +108,7 @@ const PathologyRecord = () => {
                                         {data?.data?.map((patient) => (
                                             <tr key={patient._id} className="hover:bg-gray-50">
                                                 <td className="px-4 py-3">{patient?.mrd_id}</td>
-                                                <td className="px-4 py-3">{patient?.reg_id}</td>
+                                                <td className="px-4 py-3">{patient?.bill_no}</td>
                                                 <td className="px-4 py-3">
                                                     {patient?.patient?.fullname}
                                                 </td>
@@ -124,14 +124,14 @@ const PathologyRecord = () => {
                                                 </td>
                                                 <td className="px-4 py-3 space-x-2 flex">
                                                     <Link
-                                                        href={`/pathology/update/${patient.reg_id}`}
+                                                        href={`/pathology/update/${patient.bill_no}`}
                                                         className="btn btn-primary "
                                                     >
                                                         {" "}
                                                         <MdEdit />
                                                     </Link>
                                                     <Link
-                                                        href={`/pathology/printreceipt/${patient.reg_id}`}
+                                                        href={`/pathology/printreceipt/${patient.bill_no}`}
                                                         className="btn btn-primary "
                                                     >
                                                         {" "}

@@ -23,7 +23,7 @@ export async function GET(req, context) {
     try {
         const { slug } = await context.params;
         const data = await Pathology.findOne({
-            reg_id: slug
+            bill_no: slug
         }).populate("patient").populate("consultant").sort({ createdAt: -1 });
         // Return the message
         return NextResponse.json(
@@ -56,7 +56,7 @@ export async function PUT(req, context) {
         const body = await req.json();
 
         const data = await Pathology.findOneAndUpdate({
-            reg_id: slug
+            bill_no: slug
         }, body)
         // Return the message
         return NextResponse.json(
@@ -85,13 +85,11 @@ export async function DELETE(req, context) {
     }
     try {
         const { slug } = await context.params;
-        const body = await req.json();
-        console.log(body);
 
         const data = await Pathology.findByIdAndDelete(slug)
         // Return the message
         return NextResponse.json(
-            { success: true, data },
+            { success: true, message: "Record Deleted" },
             { status: 200 }
         );
 

@@ -1,29 +1,45 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { set } from 'mongoose';
 
 const PrintUi = ({ children, path }) => {
   const componentRef = useRef();
 
-  const handlePrint = () => {
+  const handlePrint = (size) => {
     if (componentRef.current) {
-      const printContent = componentRef.current.outerHTML; // Get the outer HTML of the ref
-      const originalContent = document.body.innerHTML; // Save original content
-      document.body.innerHTML = printContent;
+      const printContent = componentRef.current.outerHTML;
+      const originalContent = document.body.innerHTML;
+      
+      // Create size-specific styles
+      const printStyle = `
+        <style>
+          @page {
+            size: ${size};
+            margin: 10mm;
+          }
+          @media print {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+            .print-content {
+              transform: scale(${size === 'A5' ? 0.85 : 1});
+            }
+          }
+        </style>
+      `;
+
+      document.body.innerHTML = `
+        <div class="print-content">
+          ${printStyle}
+          ${printContent}
+        </div>
+      `;
+      
       window.print();
       document.body.innerHTML = originalContent;
       window.location.reload();
     }
   };
-
-  // useEffect(
-  //   () => {
-  //     setTimeout(() => {
-  //       handlePrint();
-  //     }, 5000)
-  //   },
-  //   []
-  // )
 
   return (
     <div className="p-4">
@@ -42,7 +58,16 @@ const PrintUi = ({ children, path }) => {
         >
           Print A4
         </button>
-        <Link href={path} className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+          onClick={() => handlePrint('A5')}
+          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          Print A5
+        </button>
+        <Link 
+          href={path} 
+          className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           Back
         </Link>
       </div>

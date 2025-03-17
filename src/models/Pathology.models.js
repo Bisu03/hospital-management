@@ -2,10 +2,6 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const pathologySchema = new Schema({
-    reg_id: {
-        type: String,
-        required: true,
-    },
     mrd_id: {
         type: String,
         required: true,
@@ -37,6 +33,9 @@ const pathologySchema = new Schema({
         type: Object
     },
     paydby: {      // New field (you might want to rename to 'paid_by' for proper spelling)
+        type: String
+    },
+    admited_by: {
         type: String
     }
 }, {

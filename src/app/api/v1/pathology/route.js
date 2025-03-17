@@ -46,21 +46,21 @@ export async function GET(req) {
       { $unwind: "$patient" },
       ...(searchParams.search
         ? [
-            {
-              $match: {
-                $or: [
-                  {
-                    "patient.fullname": {
-                      $regex: searchParams.search,
-                      $options: "i",
-                    },
+          {
+            $match: {
+              $or: [
+                {
+                  "patient.fullname": {
+                    $regex: searchParams.search,
+                    $options: "i",
                   },
-                  { reg_id: { $regex: searchParams.search, $options: "i" } },
-                  { mrd_id: { $regex: searchParams.search, $options: "i" } },
-                ],
-              },
+                },
+                { bill_no: { $regex: searchParams.search, $options: "i" } },
+                { mrd_id: { $regex: searchParams.search, $options: "i" } },
+              ],
             },
-          ]
+          },
+        ]
         : []),
       { $sort: { createdAt: -1 } },
       { $skip: (searchParams.page - 1) * searchParams.limit },
@@ -108,7 +108,6 @@ export async function POST(req) {
     const body = await req.json();
 
     const {
-      reg_id,
       mrd_id,
       fullname,
       phone_number,
@@ -124,20 +123,21 @@ export async function POST(req) {
       reporting_time,
       reporting_date,
       test_cart,
+      admited_by
     } = body;
 
     let newPathology;
 
-    let regid = null;
+    let billno = null;
     let mrdid = null;
 
-    if (!body.reg_id) {
-      regid = await Counter.findOneAndUpdate(
-        { id: "regid" },
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-    }
+
+    billno = await Counter.findOneAndUpdate(
+      { id: "pathologybill" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
 
     if (!body.mrd_id) {
       mrdid = await Counter.findOneAndUpdate(
@@ -147,9 +147,10 @@ export async function POST(req) {
       );
     }
 
-    if (body?.reg_id) {
+
+    if (body?.mrd_id) {
       newPathology = await Pathology.create({
-        reg_id,
+        bill_no: billno?.seq,
         mrd_id,
         paydby,
         amount,
@@ -158,8 +159,10 @@ export async function POST(req) {
         reporting_time,
         reporting_date,
         test_cart,
+        admited_by
       });
     } else {
+
       const data = await Patient.create({
         fullname,
         phone_number,
@@ -169,12 +172,12 @@ export async function POST(req) {
         dob,
         age,
         address,
-        reg_id: regid?.seq,
         mrd_id: mrdid?.seq,
       });
+
       data._id;
       newPathology = await Pathology.create({
-        reg_id: regid?.seq,
+        bill_no: billno?.seq,
         mrd_id: mrdid?.seq,
         paydby,
         patient: data._id,
@@ -183,6 +186,7 @@ export async function POST(req) {
         reporting_time,
         reporting_date,
         test_cart,
+        admited_by
       });
     }
 

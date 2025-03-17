@@ -167,7 +167,7 @@ const UpdatePathology = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries(["pathologyrecords"]);
       SuccessHandling(data.message);
-      router.push(`/pathology/printreceipt/${data?.data?.reg_id}`);
+      router.push(`/pathology/printreceipt/${slug}`);
     },
     onError: (error) => ErrorHandeling(error),
   });
@@ -425,24 +425,21 @@ const UpdatePathology = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
+
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
-                      Payment Method<span className="text-red-500">*</span>
+                      Discount Amount
                     </label>
-                    <select
-                      name="paydby"
-                      value={ServiceData.paydby}
+                    <input
+                      type="number"
+                      name="amount.discount"
+                      value={ServiceData.amount.discount}
                       onChange={handleChange}
                       className="w-full p-2 border rounded"
-                      required
-                    >
-                      <option value="">Select</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Card">Card</option>
-                      <option value="Cashless">Cashless</option>
-                      <option value="Sasthyasathi">Sasthyasathi</option>
-                      <option value="Cancel">Cancel</option>
-                    </select>
+                      min="0"
+                      max={ServiceData.amount.total}
+                      step="0.01"
+                    />
                   </div>
 
                   <div className="space-y-1">
@@ -460,24 +457,10 @@ const UpdatePathology = () => {
                       step="0.01"
                     />
                   </div>
-                </div>
 
+                </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Discount Amount
-                    </label>
-                    <input
-                      type="number"
-                      name="amount.discount"
-                      value={ServiceData.amount.discount}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                      min="0"
-                      max={ServiceData.amount.total}
-                      step="0.01"
-                    />
-                  </div>
+
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       Due Amount
@@ -489,7 +472,29 @@ const UpdatePathology = () => {
                       className="w-full p-2 border rounded bg-gray-100"
                     />
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Payment Method<span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="paydby"
+                      value={ServiceData.paydby}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="">Select</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Upi">Upi</option>
+                      <option value="Cashless">Cashless</option>
+                      <option value="Sasthyasathi">Sasthyasathi</option>
+                      <option value="Cancel">Cancel</option>
+                    </select>
+                  </div>
                 </div>
+
+
 
                 <div className="flex justify-between font-semibold">
                   <span>Net Total:</span>

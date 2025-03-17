@@ -27,7 +27,7 @@ const PathologyReading = () => {
     });
 
 
-    const handleRegIdSearch = async () => {
+    const handleBillSearch = async () => {
         refetch();
     }
 
@@ -64,7 +64,6 @@ const PathologyReading = () => {
         mutation.mutate({ test_cart: modifiedData });
     };
 
-    if (isLoading) return <Loading />;
 
     return (
         <Suspense fallback={<Loading />}>
@@ -76,19 +75,21 @@ const PathologyReading = () => {
                             <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    placeholder="Enter REG ID"
+                                    placeholder="Enter Bill No."
                                     className="p-2 border rounded"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                                 <button
-                                    onClick={handleRegIdSearch}
+                                    onClick={handleBillSearch}
                                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                                 >
                                     Search
                                 </button>
                             </div>
                         </Heading>
+
+                        {isLoading && <Loading />}
 
                         <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
                             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 truncate">
@@ -106,13 +107,13 @@ const PathologyReading = () => {
                                     </div>
                                 )}
 
-                                {data?.data?.reg_id && (
+                                {data?.data?.bill_no && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
-                                            REG ID
+                                            Bill No.
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {data?.data?.reg_id}
+                                            {data?.data?.bill_no}
                                         </p>
                                     </div>
                                 )}

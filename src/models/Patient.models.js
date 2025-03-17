@@ -5,8 +5,6 @@ const patientSchema = new Schema({
 
     reg_id: {
         type: Number,
-        required: true,
-        unique: true
     },
     mrd_id: {
         type: Number,

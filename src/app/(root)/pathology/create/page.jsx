@@ -18,17 +18,19 @@ import Tab from "@/components/Tab";
 import { TabLinks } from "@/utils/tablinks";
 import { getCompactAge } from "@/lib/ageCount";
 import Select from "react-select";
+import { useSession } from "next-auth/react";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const CreatePathology = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { data: session } = useSession();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
   const [consultant, setConsultant] = useState({});
   const [ServiceData, setServiceData] = useState({
-    reg_id: "",
     mrd_id: "",
     fullname: "",
     phone_number: "",
@@ -50,7 +52,8 @@ const CreatePathology = () => {
       paid: 0,
       due: 0,
       netTotal: 0
-    }
+    },
+    admited_by: session?.user?.username
   });
   const [Times, setTimes] = useState(formattedTime());
   const [selectDob, setSelectDob] = useState("");
@@ -102,16 +105,14 @@ const CreatePathology = () => {
   };
 
 
-  const handleRegIdSearch = async () => {
+  const handlemrdIdSearch = async () => {
     try {
-      const { data: prevData } = await fetchData(`/patient/searchbyreg/${searchTerm}`);
-      console.log(prevData);
+      const { data: prevData } = await fetchData(`/patient/${searchTerm}`);
 
       setServiceData({
         ...ServiceData,
         fullname: prevData?.fullname,
         patient: prevData?._id,
-        reg_id: prevData?.reg_id,
         mrd_id: prevData?.mrd_id,
         phone_number: prevData?.phone_number,
         referr_by: prevData?.referr_by,
@@ -159,7 +160,7 @@ const CreatePathology = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries(["pathologyrecords"]);
       SuccessHandling(data.message);
-      router.push(`/pathology/printreceipt/${data?.data?.reg_id}`);
+      router.push(`/pathology/printreceipt/${data?.data?.bill_no}`);
     },
     onError: (error) => ErrorHandeling(error),
   });
@@ -177,10 +178,14 @@ const CreatePathology = () => {
       const newNetTotal = newTotal - prev.amount.discount;
       const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
 
+      const relatedTests = pathologytests.data
+        .filter((pt) => pt.pathology_category?._id === test._id)
+        .map((pt) => ({ ...pt, reading_unit: "" }));
+
       return {
         ...prev,
         test_cart: {
-          services: [...prev.test_cart.services, test]
+          services: [...prev.test_cart.services, { ...test, related_tests: relatedTests }]
         },
         amount: {
           ...prev.amount,
@@ -226,13 +231,13 @@ const CreatePathology = () => {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Enter REG ID"
+                  placeholder="Enter MRD ID"
                   className="p-2 border rounded"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <button
-                  onClick={handleRegIdSearch}
+                  onClick={handlemrdIdSearch}
                   className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                   Search
@@ -385,14 +390,14 @@ const CreatePathology = () => {
               <input
                 type="text"
                 placeholder="Search tests..."
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border border-black rounded"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {categories?.data?.map((test) => (
                 <div
                   key={test._id}
-                  className="flex justify-between items-center p-3 border rounded"
+                  className="flex justify-between items-center p-3 border border-black rounded"
                 >
                   <p className="font-semibold">{test.pathology_category}</p>
                   <p className="text-sm font-bold text-gray-500">
@@ -435,6 +440,54 @@ const CreatePathology = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Discount Amount
+                    </label>
+                    <input
+                      type="number"
+                      name="amount.discount"
+                      value={ServiceData.amount.discount}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded"
+                      min="0"
+                      max={ServiceData.amount.total}
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Paid Amount
+                    </label>
+                    <input
+                      type="number"
+                      name="amount.paid"
+                      value={ServiceData.amount.paid}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded"
+                      min="0"
+                      max={ServiceData.amount.netTotal}
+                      step="0.01"
+                    />
+                  </div>
+
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Due Amount
+                    </label>
+                    <input
+                      type="number"
+                      value={ServiceData.amount.due}
+                      readOnly
+                      className="w-full p-2 border rounded bg-gray-100"
+                    />
+                  </div>
+
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       Payment Method<span className="text-red-500">*</span>
@@ -454,52 +507,9 @@ const CreatePathology = () => {
                       <option value="Cancel">Cancel</option>
                     </select>
                   </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Paid Amount
-                    </label>
-                    <input
-                      type="number"
-                      name="amount.paid"
-                      value={ServiceData.amount.paid}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                      min="0"
-                      max={ServiceData.amount.netTotal}
-                      step="0.01"
-                    />
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Discount Amount
-                    </label>
-                    <input
-                      type="number"
-                      name="amount.discount"
-                      value={ServiceData.amount.discount}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                      min="0"
-                      max={ServiceData.amount.total}
-                      step="0.01"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Due Amount
-                    </label>
-                    <input
-                      type="number"
-                      value={ServiceData.amount.due}
-                      readOnly
-                      className="w-full p-2 border rounded bg-gray-100"
-                    />
-                  </div>
-                </div>
+
 
                 <div className="flex justify-between font-semibold">
                   <span>Net Total:</span>
@@ -521,8 +531,8 @@ const CreatePathology = () => {
             </div>
           </div>
         </MiddleSection>
-      </div>
-    </Suspense>
+      </div >
+    </Suspense >
   );
 };
 

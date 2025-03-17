@@ -1,22 +1,21 @@
 "use client";
-import Loading from '@/components/Loading';
-import PrintUi from '@/components/ui/PrintUi';
-import { useHospital } from '@/context/setting/HospitalInformation';
-import { withAuth } from '@/services/withAuth';
-import { useSession } from 'next-auth/react';
-import Image from 'next/image';
-import { useParams } from 'next/navigation';
-import React, { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchData } from '@/services/apiService';
-import { formatDate } from '@/lib/formateDate';
+import Loading from "@/components/Loading";
+import PrintUi from "@/components/ui/PrintUi";
+import { useHospital } from "@/context/setting/HospitalInformation";
+import { withAuth } from "@/services/withAuth";
+import { useSession } from "next-auth/react";
+import { useParams } from "next/navigation";
+import React, { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchData } from "@/services/apiService";
+import { formatDate } from "@/lib/formateDate";
 
 const PathologyReceipt = () => {
     const { data: session } = useSession();
     const { hospitalInfo } = useHospital();
     const { slug } = useParams();
 
-    const { data, error, isLoading, refetch } = useQuery({
+    const { data, isLoading, refetch } = useQuery({
         queryKey: ["pathologyrecord", slug],
         queryFn: () => fetchData(`/pathology/${slug}`),
     });
@@ -24,80 +23,86 @@ const PathologyReceipt = () => {
     useEffect(() => {
         refetch();
     }, [slug]);
-console.log(data);
-
 
     if (isLoading) return <Loading />;
 
     return (
         <PrintUi path="/pathology/record">
-            <div className="w-full flex justify-between items-start mb-2 border-b-2 border-black pb-4">
-                <div className="flex items-center gap-4">
-                    <Image
-                        width={120}
-                        height={120}
-                        src={hospitalInfo?.logo}
-                        alt="Hospital Logo"
-                        className="h-24 w-24 object-contain"
-                    />
-                    <div>
-                        <h1 className="text-3xl font-bold text-black">
-                            {hospitalInfo?.hospital_name}
-                        </h1>
-                        <p className="text-sm text-black py-1 rounded-md mt-2">
-                            Lic No: {hospitalInfo?.licence_number}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="text-right text-sm text-gray-700 leading-tight">
-                    <p>{hospitalInfo?.address}</p>
-                    <p>
-                        <span className="font-semibold">Helpline:</span> {hospitalInfo?.phone}
-                    </p>
-                    <p>
-                        <span className="font-semibold">GST:</span> {hospitalInfo?.gst_number}
-                    </p>
-                    <p className="text-black">{hospitalInfo?.email}</p>
-                    <p className="text-black font-semibold">For Appoinment:9002296279</p>
-                    <p className="text-black ">Call 09:00 AM To 03:00 PM (Except Saturday)</p>
-                </div>
+            <div className="w-full h-[100px] flex justify-between items-start mb-2 border-b-2 border-black pb-4">
+                {/* <Image
+                    height={200}
+                    width={1000}
+                    src={hospitalInfo?.banner}
+                    alt="Hospital banner"
+                    className="w-full h-[120px]"
+                /> */}
             </div>
 
-            <div className="mx-auto bg-white p-4 rounded-lg">
-                {/* Receipt Header */}
-                <div className="flex flex-col sm:flex-row justify-between mb-4 print:mb-2">
-                    <div className="mb-2 sm:mb-0">
-                        <h2 className="text-lg font-bold print:text-md">Pathology Receipt</h2>
-                        <p className="text-xs print:text-2xs">Report No: {data?.data?.reg_id}</p>
-                    </div>
-                    <div className="text-right text-xs print:text-2xs">
-                        <p>Date: {formatDate(data?.data?.reporting_date)}</p>
-                        <p>Time: {data?.data?.reporting_time}</p>
-                    </div>
-                </div>
-
-                {/* Patient Information */}
-                {/* Patient Information */}
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4 print:gap-1">
+            <div className="mx-auto bg-white rounded-lg">
+                {/* Patient & Report Details */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                    {/* Patient Details */}
                     <div className="space-y-1">
-                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">Patient Details</h3>
+                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">
+                            Patient Details
+                        </h3>
                         <div className="text-xs space-y-0.5 print:text-2xs">
-                            <p><span className="font-semibold">Full Name:</span> {data?.data?.patient?.fullname}</p>
-                            <p><span className="font-semibold">Phone No.:</span> {data?.data?.patient?.phone_number}</p>
-                            <p><span className="font-semibold">Gender:</span> {data?.data?.patient?.gender}</p>
-                            <p><span className="font-semibold">Age:</span> {data?.data?.patient?.age}</p>
-                            <p><span className="font-semibold">Address:</span> {data?.data?.patient?.address}</p>
+                            <p>
+                                <span className="font-semibold">Full Name:</span>{" "}
+                                {data?.data?.patient?.fullname}
+                            </p>
+                            <div className="flex space-x-2">
+                                <p>
+                                    <span className="font-semibold">Gender:</span>{" "}
+                                    {data?.data?.patient?.gender}
+                                </p>
+                                <p>
+                                    <span className="font-semibold">Age:</span>{" "}
+                                    {data?.data?.patient?.age}
+                                </p>
+                            </div>
+                            <p>
+                                <span className="font-semibold">Doctor Name:</span>{" "}
+                                {data?.data?.consultant?.drname}
+                            </p>
                         </div>
                     </div>
 
+                    {/* Registration Details */}
                     <div className="space-y-1">
-                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">Registration Details</h3>
+                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">
+                            Registration Details
+                        </h3>
                         <div className="text-xs space-y-0.5 print:text-2xs">
-                            <p><span className="font-semibold">Registration ID:</span> {data?.data?.reg_id}</p>
-                            <p><span className="font-semibold">MRD Number:</span> {data?.data?.mrd_id}</p>
-                            <p><span className="font-semibold">Reporting Date:</span> {formatDate(data?.data?.reporting_date)}</p>
-                            <p><span className="font-semibold">Reporting Time:</span> {data?.data?.reporting_time}</p>
+                            <p>
+                                <span className="font-semibold">Address:</span>{" "}
+                                {data?.data?.patient?.address}
+                            </p>
+                            <p>
+                                <span className="font-semibold">Phone No.:</span>{" "}
+                                {data?.data?.patient?.phone_number}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Report Details */}
+                    <div>
+                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">
+                            Report Details
+                        </h3>
+                        <div className="text-xs space-y-0.5 print:text-xs">
+                            <p>
+                                <span className="font-semibold"> Date/Time:</span>{" "}
+                                {formatDate(data?.data?.reporting_date)}/{data?.data?.reporting_time}
+                            </p>
+                            <p>
+                                <span className="font-semibold">Mrd No.:</span>{" "}
+                                {data?.data?.mrd_id}
+                            </p>
+                            <p>
+                                <span className="font-semibold">Bill No.:</span>{" "}
+                                {data?.data?.bill_no}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -107,58 +112,84 @@ console.log(data);
                     <thead>
                         <tr className="bg-gray-200">
                             <th className="p-1 text-left border">Test Name</th>
-                            <th className="p-1 text-left border">Category</th>
-                            <th className="p-1 text-left border">Charge</th>
+                            <th className="p-1 text-right border">Charge (₹)</th>
                         </tr>
                     </thead>
                     <tbody>
                         {data?.data?.test_cart?.services?.map((test, index) => (
                             <tr key={index} className="border">
                                 <td className="p-1 border">{test.pathology_category}</td>
-                                <td className="p-1 border">-</td>
-                                <td className="p-1 border">₹{Number(test.pathology_charge).toFixed(2)}</td>
+                                <td className="p-1 text-right border">
+                                    {Number(test.pathology_charge).toFixed(2)}
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
 
-                {/* Payment Summary */}
+                {/* Billing Summary */}
                 <div className="flex justify-end">
                     <div className="w-72 space-y-1 text-xs print:text-2xs">
                         <div className="flex justify-between font-semibold">
                             <span>Total Charges:</span>
-                            <span>₹{parseFloat(data?.data?.amount?.total)?.toFixed(2)}</span>
+                            <span className="text-right">
+                                ₹{parseFloat(data?.data?.amount?.total)?.toFixed(2)}
+                            </span>
                         </div>
 
                         <div className="flex justify-between">
                             <span>Discount Amount:</span>
-                            <span>₹{parseFloat(data?.data?.amount?.discount)?.toFixed(2)}</span>
+                            <span className="text-right">
+                                ₹{parseFloat(data?.data?.amount?.discount)?.toFixed(2)}
+                            </span>
                         </div>
                         <div className="flex justify-between">
                             <span>Paid Amount:</span>
-                            <span>₹{parseFloat(data?.data?.amount?.paid)?.toFixed(2)}</span>
+                            <span className="text-right">
+                                ₹{parseFloat(data?.data?.amount?.paid)?.toFixed(2)}
+                            </span>
                         </div>
                         <div className="flex justify-between">
                             <span>Net Total:</span>
-                            <span>₹{parseFloat(data?.data?.amount?.netTotal)?.toFixed(2)}</span>
+                            <span className="text-right">
+                                ₹{parseFloat(data?.data?.amount?.netTotal)?.toFixed(2)}
+                            </span>
                         </div>
 
                         <div className="flex justify-between">
                             <span>Payment Method:</span>
-                            <span className="capitalize">{data?.data?.paydby}</span>
+                            <span className="text-right capitalize">
+                                {data?.data?.paydby}
+                            </span>
                         </div>
 
                         <div className="flex justify-between font-semibold border-t pt-1">
                             <span>Due Amount:</span>
-                            <span className="text-red-600">₹{parseFloat(data?.data?.amount?.due)?.toFixed(2)}</span>
+                            <span className="text-red-600 text-right">
+                                ₹{parseFloat(data?.data?.amount?.due)?.toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Signature & Footer */}
+                <div className="mt-8 border-t-2 border-black pt-10">
+                    <div className="flex justify-between items-end">
+                        <div className="text-xs">
+                            Admitted By:{" "}
+                            <span className="font-semibold">{data?.data?.admited_by}</span>
+                        </div>
+
+                        <div className="text-center">
+                            <div className="mb-2 h-1 w-48 border-b-2 border-black"></div>
+                            <p className="text-sm">Authorized Signature</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="mt-4 text-center text-2xs print:mt-2">
+                <div className="mt-8 text-center text-2xs print:mt-2">
                     <p>Thank you for choosing {hospitalInfo?.hospital_name}</p>
-                    <p>Report generated on: {formatDate(data?.data?.reporting_date)} at {data?.data?.reporting_time}</p>
                 </div>
             </div>
         </PrintUi>
