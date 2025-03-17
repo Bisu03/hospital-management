@@ -9,6 +9,8 @@ import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchData } from "@/services/apiService";
 import { formatDate } from "@/lib/formateDate";
+import QRCode from "react-qr-code"
+import { amountToWords } from "@/lib/numberToWord";
 
 const PathologyReceipt = () => {
     const { data: session } = useSession();
@@ -29,7 +31,7 @@ const PathologyReceipt = () => {
     return (
         <PrintUi path="/pathology/record">
 
-            <div className="mx-auto bg-white rounded-lg p-4 ">
+            <div className="mx-auto bg-white rounded-lg p-4 mt-10 ">
                 {/* Patient & Report Details */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
                     {/* Patient Details */}
@@ -110,8 +112,23 @@ const PathologyReceipt = () => {
                 </table>
 
                 {/* Billing Summary */}
-                <div className="flex justify-end">
-                    <div className="w-72 space-y-1 text-xs print:text-2xs">
+                <div className="flex justify-between space-x-2">
+                    <div>
+                        <QRCode
+                            size={100}
+                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                            value={`${window.location.href}/pathology/download/${data._id}`}
+                            viewBox={`0 0 100 100`}
+                        />
+                    </div>
+                    <div className="flex-grow text-left px-4">
+                        <h2 className="text-xs font-semibold text-gray-600">Amount in Words:</h2>
+                        <h1 className="text-sm font-medium text-gray-700">
+                            {amountToWords(data?.data?.amount?.netTotal)}
+                        </h1>
+                    </div>
+
+                    <div className="w-72 space-y-1 text-xs print:text-xs">
                         <div className="flex justify-between font-semibold">
                             <span>Total Charges:</span>
                             <span className="text-right">
@@ -126,18 +143,17 @@ const PathologyReceipt = () => {
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span>Paid Amount:</span>
-                            <span className="text-right">
-                                ₹{parseFloat(data?.data?.amount?.paid)?.toFixed(2)}
-                            </span>
-                        </div>
-                        <div className="flex justify-between">
                             <span>Net Total:</span>
                             <span className="text-right">
                                 ₹{parseFloat(data?.data?.amount?.netTotal)?.toFixed(2)}
                             </span>
                         </div>
-
+                        <div className="flex justify-between">
+                            <span>Paid Amount:</span>
+                            <span className="text-right">
+                                ₹{parseFloat(data?.data?.amount?.paid)?.toFixed(2)}
+                            </span>
+                        </div>
                         <div className="flex justify-between">
                             <span>Payment Method:</span>
                             <span className="text-right capitalize">

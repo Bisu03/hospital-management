@@ -8,7 +8,7 @@ const PrintUi = ({ children, path }) => {
     if (componentRef.current) {
       const printContent = componentRef.current.outerHTML;
       const originalContent = document.body.innerHTML;
-      
+
       // Create size-specific styles
       const printStyle = `
         <style>
@@ -34,10 +34,9 @@ const PrintUi = ({ children, path }) => {
           ${printContent}
         </div>
       `;
-      
+
       window.print();
       document.body.innerHTML = originalContent;
-      window.location.reload();
     }
   };
 
@@ -58,14 +57,8 @@ const PrintUi = ({ children, path }) => {
         >
           Print A4
         </button>
-        <button
-          onClick={() => handlePrint('A5')}
-          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          Print A5
-        </button>
-        <Link 
-          href={path} 
+        <Link
+          href={path}
           className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           Back
