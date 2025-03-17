@@ -24,11 +24,10 @@ const PathologyReceipt = () => {
     useEffect(() => {
         refetch();
     }, [slug]);
+console.log(data);
+
 
     if (isLoading) return <Loading />;
-
-    const paidAmount = data?.data?.test_cart?.totalAmount - data?.data?.due_amount;
-    const pathologyData = data?.data;
 
     return (
         <PrintUi path="/pathology/record">
@@ -70,11 +69,11 @@ const PathologyReceipt = () => {
                 <div className="flex flex-col sm:flex-row justify-between mb-4 print:mb-2">
                     <div className="mb-2 sm:mb-0">
                         <h2 className="text-lg font-bold print:text-md">Pathology Receipt</h2>
-                        <p className="text-xs print:text-2xs">Report No: {pathologyData?.reg_id}</p>
+                        <p className="text-xs print:text-2xs">Report No: {data?.data?.reg_id}</p>
                     </div>
                     <div className="text-right text-xs print:text-2xs">
-                        <p>Date: {formatDate(pathologyData?.reporting_date)}</p>
-                        <p>Time: {pathologyData?.reporting_time}</p>
+                        <p>Date: {formatDate(data?.data?.reporting_date)}</p>
+                        <p>Time: {data?.data?.reporting_time}</p>
                     </div>
                 </div>
 
@@ -84,21 +83,21 @@ const PathologyReceipt = () => {
                     <div className="space-y-1">
                         <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">Patient Details</h3>
                         <div className="text-xs space-y-0.5 print:text-2xs">
-                            <p><span className="font-semibold">Full Name:</span> {pathologyData?.patient?.fullname}</p>
-                            <p><span className="font-semibold">Phone No.:</span> {pathologyData?.patient?.phone_number}</p>
-                            <p><span className="font-semibold">Gender:</span> {pathologyData?.patient?.gender}</p>
-                            <p><span className="font-semibold">Age:</span> {pathologyData?.patient?.age}</p>
-                            <p><span className="font-semibold">Address:</span> {pathologyData?.patient?.address}</p>
+                            <p><span className="font-semibold">Full Name:</span> {data?.data?.patient?.fullname}</p>
+                            <p><span className="font-semibold">Phone No.:</span> {data?.data?.patient?.phone_number}</p>
+                            <p><span className="font-semibold">Gender:</span> {data?.data?.patient?.gender}</p>
+                            <p><span className="font-semibold">Age:</span> {data?.data?.patient?.age}</p>
+                            <p><span className="font-semibold">Address:</span> {data?.data?.patient?.address}</p>
                         </div>
                     </div>
 
                     <div className="space-y-1">
                         <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">Registration Details</h3>
                         <div className="text-xs space-y-0.5 print:text-2xs">
-                            <p><span className="font-semibold">Registration ID:</span> {pathologyData?.reg_id}</p>
-                            <p><span className="font-semibold">MRD Number:</span> {pathologyData?.mrd_id}</p>
-                            <p><span className="font-semibold">Reporting Date:</span> {formatDate(pathologyData?.reporting_date)}</p>
-                            <p><span className="font-semibold">Reporting Time:</span> {pathologyData?.reporting_time}</p>
+                            <p><span className="font-semibold">Registration ID:</span> {data?.data?.reg_id}</p>
+                            <p><span className="font-semibold">MRD Number:</span> {data?.data?.mrd_id}</p>
+                            <p><span className="font-semibold">Reporting Date:</span> {formatDate(data?.data?.reporting_date)}</p>
+                            <p><span className="font-semibold">Reporting Time:</span> {data?.data?.reporting_time}</p>
                         </div>
                     </div>
                 </div>
@@ -113,7 +112,7 @@ const PathologyReceipt = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {pathologyData?.test_cart?.services?.map((test, index) => (
+                        {data?.data?.test_cart?.services?.map((test, index) => (
                             <tr key={index} className="border">
                                 <td className="p-1 border">{test.pathology_category}</td>
                                 <td className="p-1 border">-</td>
@@ -128,30 +127,30 @@ const PathologyReceipt = () => {
                     <div className="w-72 space-y-1 text-xs print:text-2xs">
                         <div className="flex justify-between font-semibold">
                             <span>Total Charges:</span>
-                            <span>₹{parseFloat(pathologyData?.amount?.total)?.toFixed(2)}</span>
+                            <span>₹{parseFloat(data?.data?.amount?.total)?.toFixed(2)}</span>
                         </div>
 
                         <div className="flex justify-between">
                             <span>Discount Amount:</span>
-                            <span>₹{parseFloat(pathologyData?.amount?.discount)?.toFixed(2)}</span>
+                            <span>₹{parseFloat(data?.data?.amount?.discount)?.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Paid Amount:</span>
-                            <span>₹{parseFloat(pathologyData?.amount?.paid)?.toFixed(2)}</span>
+                            <span>₹{parseFloat(data?.data?.amount?.paid)?.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Net Total:</span>
-                            <span>₹{parseFloat(pathologyData?.amount?.netTotal)?.toFixed(2)}</span>
+                            <span>₹{parseFloat(data?.data?.amount?.netTotal)?.toFixed(2)}</span>
                         </div>
 
                         <div className="flex justify-between">
                             <span>Payment Method:</span>
-                            <span className="capitalize">{pathologyData?.paydby}</span>
+                            <span className="capitalize">{data?.data?.paydby}</span>
                         </div>
 
                         <div className="flex justify-between font-semibold border-t pt-1">
                             <span>Due Amount:</span>
-                            <span className="text-red-600">₹{parseFloat(pathologyData?.amount?.due)?.toFixed(2)}</span>
+                            <span className="text-red-600">₹{parseFloat(data?.data?.amount?.due)?.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -159,7 +158,7 @@ const PathologyReceipt = () => {
                 {/* Footer */}
                 <div className="mt-4 text-center text-2xs print:mt-2">
                     <p>Thank you for choosing {hospitalInfo?.hospital_name}</p>
-                    <p>Report generated on: {formatDate(pathologyData?.reporting_date)} at {pathologyData?.reporting_time}</p>
+                    <p>Report generated on: {formatDate(data?.data?.reporting_date)} at {data?.data?.reporting_time}</p>
                 </div>
             </div>
         </PrintUi>

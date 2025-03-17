@@ -24,7 +24,7 @@ export async function GET(req, context) {
         const { slug } = await context.params;
         const data = await Pathology.findOne({
             reg_id: slug
-        }).sort({ createdAt: -1 }).populate("patient").polygon("consultant");
+        }).populate("patient").populate("consultant").sort({ createdAt: -1 });
         // Return the message
         return NextResponse.json(
             { success: true, data },
