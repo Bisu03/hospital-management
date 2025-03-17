@@ -28,6 +28,7 @@ const CreatePathology = () => {
   const { data: session } = useSession();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchTest, setSearchTest] = useState("");
   const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
   const [consultant, setConsultant] = useState({});
   const [ServiceData, setServiceData] = useState({
@@ -391,27 +392,32 @@ const CreatePathology = () => {
                 type="text"
                 placeholder="Search tests..."
                 className="w-full p-2 border border-black rounded"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTest}
+                onChange={(e) => setSearchTest(e.target.value)}
               />
-              {categories?.data?.map((test) => (
-                <div
-                  key={test._id}
-                  className="flex justify-between items-center p-3 border border-black rounded"
-                >
-                  <p className="font-semibold">{test.pathology_category}</p>
-                  <p className="text-sm font-bold text-gray-500">
-                    ₹{Number(test.pathology_charge)}
-                  </p>
-                  <button
-                    onClick={() => addToCart(test)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              {categories?.data
+                ?.filter((test) =>
+                  test.pathology_category.toLowerCase().includes(searchTest.toLowerCase())
+                )
+                .map((test) => (
+                  <div
+                    key={test._id}
+                    className="flex justify-between items-center p-3 border border-black rounded"
                   >
-                    Add
-                  </button>
-                </div>
-              ))}
+                    <p className="font-semibold">{test.pathology_category}</p>
+                    <p className="text-sm font-bold text-gray-500">
+                      ₹{Number(test.pathology_charge)}
+                    </p>
+                    <button
+                      onClick={() => addToCart(test)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      Add
+                    </button>
+                  </div>
+                ))}
             </div>
+
 
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Test Cart</h2>

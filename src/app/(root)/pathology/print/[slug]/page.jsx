@@ -42,7 +42,7 @@ const PathologyPrint = () => {
                                 {hospitalInfo?.hospital_name}
                             </h1>
                             <p className="text-sm text-black py-1 rounded-md mt-2">
-                                Lic No: {hospitalInfo?.licence_number}
+                                Pathology Licence No: WBCE34539900
                             </p>
                         </div>
                     </div>
@@ -60,21 +60,60 @@ const PathologyPrint = () => {
                 </div>
 
                 {/* Patient Details */}
-                <div className="my-4 border-b-2 border-black pb-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p><span className="font-semibold">Full Name:</span> {data?.data?.patient?.fullname}</p>
-                            <p><span className="font-semibold">Phone No.:</span> {data?.data?.patient?.phone_number}</p>
-                            <p><span className="font-semibold">Gender:</span> {data?.data?.patient?.gender}</p>
-                            <p><span className="font-semibold">Age:</span> {data?.data?.patient?.age}</p>
-                            <p><span className="font-semibold">Address:</span> {data?.data?.patient?.address}</p>
-
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                    {/* Patient Details */}
+                    <div className="space-y-1">
+                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">
+                            Patient Details
+                        </h3>
+                        <div className="text-xs space-y-0.5 print:text-xs">
+                            <p>
+                                <span className="font-semibold">Full Name:</span>{" "}
+                                {data?.data?.patient?.fullname}
+                            </p>
+                            <div className="flex space-x-2">
+                                <p>
+                                    <span className="font-semibold">Gender:</span>{" "}
+                                    {data?.data?.patient?.gender}
+                                </p>
+                                <p>
+                                    <span className="font-semibold">Age:</span>{" "}
+                                    {data?.data?.patient?.age}
+                                </p>
+                            </div>
+                            <p>
+                                <span className="font-semibold">Phone No.:</span>{" "}
+                                {data?.data?.patient?.phone_number}
+                            </p>
+                            <p>
+                                <span className="font-semibold">Address:</span>{" "}
+                                {data?.data?.patient?.address}
+                            </p>
                         </div>
-                        <div>
-                            <p><span className="font-semibold">Registration ID:</span> {data?.data?.reg_id}</p>
-                            <p><span className="font-semibold">MRD Number:</span> {data?.data?.mrd_id}</p>
-                            <p><span className="font-semibold">Reporting Date:</span> {formatDate(data?.data?.reporting_date)}</p>
-                            <p><span className="font-semibold">Reporting Time:</span> {data?.data?.reporting_time}</p>
+                    </div>
+
+
+                    <div>
+                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">
+                            Report Details
+                        </h3>
+                        <div className="text-xs space-y-0.5 print:text-xs">
+                            <p>
+                                <span className="font-semibold"> Date/Time:</span>{" "}
+                                {formatDate(data?.data?.reporting_date)}/{data?.data?.reporting_time}
+                            </p>
+                            <p>
+                                <span className="font-semibold">Mrd No.:</span>{" "}
+                                {data?.data?.mrd_id}
+                            </p>
+                            <p>
+                                <span className="font-semibold">Bill No.:</span>{" "}
+                                {data?.data?.bill_no}
+                            </p>
+                            <p>
+                                <span className="font-semibold">Referred By::</span>{" "}
+                                {data?.data?.consultant?.drname}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -104,7 +143,7 @@ const PathologyPrint = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {service.related_tests.flat().map((test) => (
+                                            {service?.related_tests?.flat().map((test) => (
                                                 test.reading_unit && <tr key={test._id}>
                                                     <td className="font-medium">{test.pathology_testname}</td>
                                                     <td>{test.reading_unit}</td>
@@ -121,25 +160,17 @@ const PathologyPrint = () => {
                 </div>
 
                 {/* Total and Signature */}
-                <div className="mt-8 border-t-2 border-black pt-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
+                <div className="mt-8 border-t-2 border-black pt-10">
+                    <div className="flex justify-between items-end">
+                        <div className="text-xs">
+                            Thank you for choosing Tamluk Institute Of Urology Pathology
                         </div>
-                        <div className="text-right">
-                            <div className="mt-8">
-                                <p className="border-t-2 border-black pt-2 inline-block">
-                                    Authorized Signature
-                                </p>
-                                <p className="text-sm">Date: {formatDate(data?.data?.reporting_date)}</p>
-                            </div>
+
+                        <div className="text-center">
+                            <div className="mb-2 h-1 w-48 border-b-2 border-black"></div>
+                            <p className="text-sm">E.&O.E:{data?.data?.admited_by}</p>
                         </div>
                     </div>
-                </div>
-
-                {/* Declaration */}
-                <div className="mt-8 text-xs text-center">
-                    <p>This is a computer generated report and does not require physical signature</p>
-                    <p className="mt-2">** Results should be correlated with clinical findings **</p>
                 </div>
             </div>
         </PrintUi>

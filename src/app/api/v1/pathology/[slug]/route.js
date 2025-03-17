@@ -5,7 +5,7 @@ import { connectDB } from "@/lib/mongoConnection"; // MongoDB connection utility
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
 import Pathology from "@/models/Pathology.models"; // Mongoose  model
-import "@/models/Patient.models"
+import Patient from "@/models/Patient.models"
 import "@/models/Doctor.models"
 
 export async function GET(req, context) {
@@ -55,12 +55,34 @@ export async function PUT(req, context) {
         const { slug } = await context.params;
         const body = await req.json();
 
+        const {
+            fullname,
+            phone_number,
+            gender,
+            patient,
+            dob,
+            age,
+            address,
+        } = body
+
         const data = await Pathology.findOneAndUpdate({
             bill_no: slug
         }, body)
+
+        if (body.patient) {
+            await Patient.findByIdAndUpdate(body.patient, {
+                fullname,
+                phone_number,
+                gender,
+                patient,
+                dob,
+                age,
+                address,
+            })
+        }
         // Return the message
         return NextResponse.json(
-            { success: true, data },
+            { success: true, data, message: "Record Updated", },
             { status: 200 }
         );
 

@@ -28,25 +28,16 @@ const PathologyReceipt = () => {
 
     return (
         <PrintUi path="/pathology/record">
-            <div className="w-full h-[100px] flex justify-between items-start mb-2 border-b-2 border-black pb-4">
-                {/* <Image
-                    height={200}
-                    width={1000}
-                    src={hospitalInfo?.banner}
-                    alt="Hospital banner"
-                    className="w-full h-[120px]"
-                /> */}
-            </div>
 
-            <div className="mx-auto bg-white rounded-lg">
+            <div className="mx-auto bg-white rounded-lg p-4 ">
                 {/* Patient & Report Details */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-2 gap-3 mb-4">
                     {/* Patient Details */}
                     <div className="space-y-1">
-                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">
+                        <h3 className="font-semibold text-sm border-b border-black pb-1 print:text-xs">
                             Patient Details
                         </h3>
-                        <div className="text-xs space-y-0.5 print:text-2xs">
+                        <div className="text-xs space-y-0.5 print:text-xs">
                             <p>
                                 <span className="font-semibold">Full Name:</span>{" "}
                                 {data?.data?.patient?.fullname}
@@ -62,32 +53,19 @@ const PathologyReceipt = () => {
                                 </p>
                             </div>
                             <p>
-                                <span className="font-semibold">Doctor Name:</span>{" "}
-                                {data?.data?.consultant?.drname}
+                                <span className="font-semibold">Phone No.:</span>{" "}
+                                {data?.data?.patient?.phone_number}
                             </p>
-                        </div>
-                    </div>
-
-                    {/* Registration Details */}
-                    <div className="space-y-1">
-                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">
-                            Registration Details
-                        </h3>
-                        <div className="text-xs space-y-0.5 print:text-2xs">
                             <p>
                                 <span className="font-semibold">Address:</span>{" "}
                                 {data?.data?.patient?.address}
                             </p>
-                            <p>
-                                <span className="font-semibold">Phone No.:</span>{" "}
-                                {data?.data?.patient?.phone_number}
-                            </p>
                         </div>
                     </div>
 
-                    {/* Report Details */}
+
                     <div>
-                        <h3 className="font-semibold text-sm border-b pb-1 print:text-xs">
+                        <h3 className="font-semibold text-sm border-b border-black pb-1 print:text-xs">
                             Report Details
                         </h3>
                         <div className="text-xs space-y-0.5 print:text-xs">
@@ -103,23 +81,27 @@ const PathologyReceipt = () => {
                                 <span className="font-semibold">Bill No.:</span>{" "}
                                 {data?.data?.bill_no}
                             </p>
+                            <p>
+                                <span className="font-semibold">Referred By:</span>{" "}
+                                {data?.data?.consultant?.drname}
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Tests Table */}
-                <table className="w-full mb-4 text-xs print:text-2xs">
+                <table className="w-full mb-4 text-xs print:text-xs">
                     <thead>
                         <tr className="bg-gray-200">
-                            <th className="p-1 text-left border">Test Name</th>
-                            <th className="p-1 text-right border">Charge (₹)</th>
+                            <th className="p-1 text-left border text-xs">Test Name</th>
+                            <th className="p-1 text-right border text-xs">Charge (₹)</th>
                         </tr>
                     </thead>
                     <tbody>
                         {data?.data?.test_cart?.services?.map((test, index) => (
                             <tr key={index} className="border">
-                                <td className="p-1 border">{test.pathology_category}</td>
-                                <td className="p-1 text-right border">
+                                <td className="p-1 border text-xs">{test.pathology_category}</td>
+                                <td className="p-1 text-right border text-xs">
                                     {Number(test.pathology_charge).toFixed(2)}
                                 </td>
                             </tr>
@@ -176,20 +158,14 @@ const PathologyReceipt = () => {
                 <div className="mt-8 border-t-2 border-black pt-10">
                     <div className="flex justify-between items-end">
                         <div className="text-xs">
-                            Admitted By:{" "}
-                            <span className="font-semibold">{data?.data?.admited_by}</span>
+                            Thank you for choosing Tamluk Institute Of Urology Pathology
                         </div>
 
                         <div className="text-center">
                             <div className="mb-2 h-1 w-48 border-b-2 border-black"></div>
-                            <p className="text-sm">Authorized Signature</p>
+                            <p className="text-sm">E.&O.E:{data?.data?.admited_by}</p>
                         </div>
                     </div>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-8 text-center text-2xs print:mt-2">
-                    <p>Thank you for choosing {hospitalInfo?.hospital_name}</p>
                 </div>
             </div>
         </PrintUi>

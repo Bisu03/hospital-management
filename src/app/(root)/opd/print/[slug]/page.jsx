@@ -19,8 +19,8 @@ const OpdPrint = () => {
     const [formData, setFormData] = useState({});
 
     const { data, error, isLoading, refetch } = useQuery({
-        queryKey: ["opddetails"], // Unique query key
-        queryFn: () => fetchData(`/opd?id=${slug}`), // Function to fetch data
+        queryKey: ["opddetails", slug], // Unique query key
+        queryFn: () => fetchData(`/opd/${slug}`), // Function to fetch data
     });
 
     useEffect(() => {
@@ -78,7 +78,7 @@ const OpdPrint = () => {
                     <div className="flex justify-between">
 
                         <div className=" text-sm space-y-1">
-                            <p className=" font-semibold">{formData?.patient?.fullname} -  {formData?.reg_id}</p>
+                            <p className=" font-semibold">{formData?.patient?.fullname} -  {formData?.mrd_id}</p>
                             <div>
                                 <span className="font-semibold">Age:</span>{" "}
                                 {formData?.patient?.age}

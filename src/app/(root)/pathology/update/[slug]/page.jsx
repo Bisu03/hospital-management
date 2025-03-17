@@ -172,7 +172,6 @@ const UpdatePathology = () => {
     onError: (error) => ErrorHandeling(error),
   });
 
-
   const handleSubmit = () => {
     mutation.mutate({ ...ServiceData, consultant: consultant.value._id });
   };

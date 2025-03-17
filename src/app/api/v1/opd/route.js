@@ -28,7 +28,7 @@ export async function GET(req) {
         const endDate = url.searchParams.get("endDate");
 
         if (idsearch) {
-            const data = await Opd.findOne({ reg_id: idsearch }).populate("patient").populate("consultant");
+            const data = await Opd.findOne({ mrd_id: idsearch }).populate("patient").populate("consultant");
             return NextResponse.json({ success: true, data });
         }
 
@@ -93,7 +93,6 @@ export async function POST(req) {
     try {
         const body = await req.json();
         const {
-            reg_id,
             mrd_id,
             fullname,
             phone_number,
@@ -122,16 +121,8 @@ export async function POST(req) {
             provisional_diagnosis,
         } = body
 
-        if (reg_id) {
-
-            let regid = null;
-            regid = await Counter.findOneAndUpdate(
-                { id: "regid" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true, setDefaultsOnInsert: true }
-            );
+        if (mrd_id) {
             const opd = await Opd.create({
-                reg_id: regid.seq,
                 mrd_id,
                 consultant,
                 on_examin,
@@ -161,14 +152,8 @@ export async function POST(req) {
         }
         else {
 
-            let regid = null;
             let mrdid = null;
-            regid = await Counter.findOneAndUpdate(
-                { id: "regid" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true, setDefaultsOnInsert: true }
-            );
-
+  
             mrdid = await Counter.findOneAndUpdate(
                 { id: "mrdid" },
                 { $inc: { seq: 1 } },
@@ -177,7 +162,6 @@ export async function POST(req) {
 
 
             const data = await Patient.create({
-                reg_id: regid.seq,
                 mrd_id: mrdid.seq,
                 fullname,
                 phone_number,
@@ -193,7 +177,6 @@ export async function POST(req) {
 
             if (data) {
                 const opd = await Opd.create({
-                    reg_id: regid.seq,
                     mrd_id: mrdid.seq,
                     consultant,
                     on_examin,

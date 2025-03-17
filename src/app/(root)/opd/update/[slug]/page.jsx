@@ -79,7 +79,7 @@ const OpdUpdate = () => {
     const handleGetPatient = async () => {
         setIsLoading(true);
         try {
-            const response = await fetchData(`/opd?id=${slug}`);
+            const response = await fetchData(`/opd/${slug}`);
             setFormData({
                 ...response.data,
                 fullname: response?.data?.patient?.fullname,
@@ -154,7 +154,7 @@ const OpdUpdate = () => {
                     <MiddleSection>
                         <div className="w-full">
                             <Heading heading="OPD Admission"></Heading>
-
+                            {isLoading && <Loading />}
                             <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="space-y-1">
@@ -192,7 +192,7 @@ const OpdUpdate = () => {
                                             onChange={handleChange}
                                             className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                                         >
-                                            <option value="">Select</option>
+                                            <option>Select</option>
                                             <option value="Male">Male</option>
                                             <option value="Female">Female</option>
                                             <option value="Other">Other</option>

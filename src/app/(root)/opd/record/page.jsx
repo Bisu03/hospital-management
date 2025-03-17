@@ -115,7 +115,6 @@ const OpdRecord = () => {
                                     <thead>
                                         <tr className="bg-secondary text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                             <th className="px-4 py-3">MRD ID</th>
-                                            <th className="px-4 py-3">REG ID</th>
                                             <th className="px-4 py-3">Full Name</th>
                                             <th className="px-4 py-3">Phone</th>
                                             <th className="px-4 py-3">Age</th>
@@ -129,7 +128,6 @@ const OpdRecord = () => {
                                         {data?.data?.map((patient) => (
                                             <tr key={patient._id} className="hover:bg-gray-50">
                                                 <td className="px-4 py-3">{patient?.mrd_id}</td>
-                                                <td className="px-4 py-3">{patient?.reg_id}</td>
                                                 <td className="px-4 py-3">
                                                     {patient?.patient?.fullname}
                                                 </td>
@@ -148,19 +146,19 @@ const OpdRecord = () => {
                                                 </td>
                                                 <td className="px-4 py-3 space-x-2 flex">
                                                     <Link
-                                                        href={`/opd/print/${patient.reg_id}`}
+                                                        href={`/opd/print/${patient._id}`}
                                                         className="btn btn-primary "
                                                     >
                                                         {" "}
                                                         <FaPrint />
                                                     </Link>
-                                                    {/* <Link
-                                                        href={`/ipd/update/${patient._id}`}
+                                                    <Link
+                                                        href={`/opd/update/${patient._id}`}
                                                         className="btn btn-secondary "
                                                     >
                                                         {" "}
                                                         <FaEdit />{" "}
-                                                    </Link> */}
+                                                    </Link>
                                                     <button
                                                         onClick={() => handleDelete(patient._id)}
                                                         className="btn btn-error "

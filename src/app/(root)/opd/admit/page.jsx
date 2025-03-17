@@ -29,7 +29,6 @@ const OpdAdmission = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const initialState = {
-    reg_id: "",
     mrd_id: "",
     fullname: "",
     phone_number: "",
@@ -75,10 +74,11 @@ const OpdAdmission = () => {
     setIsLoading(true);
     try {
       const response = await fetchData(`/patient/${searchTerm}`);
+      console.log(response);
+      
       setFormData(
         {
           ...formData,
-          reg_id: response?.data?.reg_id,
           mrd_id: response?.data?.mrd_id,
           fullname: response?.data?.fullname,
           gender: response?.data?.gender,
@@ -117,7 +117,7 @@ const OpdAdmission = () => {
       queryClient.invalidateQueries({ queryKey: ["opdarecord"] }); // Refetch data after adding
       setFormData(initialState);
       SuccessHandling(data.message);
-      router.push(`/opd/print/${data?.data?.reg_id}`);
+      router.push(`/opd/print/${data?.data?._id}`);
     },
     onError: (error) => {
       ErrorHandeling(error);
@@ -252,6 +252,7 @@ const OpdAdmission = () => {
                     <div className="flex gap-3">
                       <input
                         type="date"
+                        disabled
                         name="consultant_date"
                         value={formData?.consultant_date}
                         onChange={handleChange}
@@ -261,6 +262,7 @@ const OpdAdmission = () => {
                         type="text"
                         name="Times"
                         value={Times}
+                        disabled
                         onChange={(e) => setTimes(e.target.value)}
                         className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       />
