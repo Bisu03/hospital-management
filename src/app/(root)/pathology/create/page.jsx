@@ -448,7 +448,7 @@ const CreatePathology = () => {
                     >
                       <option value="">Select</option>
                       <option value="Cash">Cash</option>
-                      <option value="Card">Card</option>
+                      <option value="Upi">Upi</option>
                       <option value="Cashless">Cashless</option>
                       <option value="Sasthyasathi">Sasthyasathi</option>
                       <option value="Cancel">Cancel</option>

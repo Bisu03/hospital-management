@@ -126,7 +126,7 @@ const OpdAdmission = () => {
 
 
   const handleSubmit = () => {
-    mutation.mutate({ ...formData, consultant: consultant.value._id,  consultant_time: Times });
+    mutation.mutate({ ...formData, consultant: consultant.value._id, consultant_time: Times });
   };
 
   return (
@@ -311,7 +311,7 @@ const OpdAdmission = () => {
                     >
                       <option value="">Select</option>
                       <option value="Cash">Cash</option>
-                      <option value="Card">Card</option>
+                      <option value="Upi">Upi</option>
                       <option value="Cashless">Cashless</option>
                       <option value="Sasthyasathi">Sasthyasathi</option>
                       <option value="Cancel">Cancel</option>
@@ -562,21 +562,21 @@ const OpdAdmission = () => {
                     >
                       Clear
                     </button>
-              
-                      <button
-                        onClick={handleSubmit}
-                        className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
-                        disabled={mutation.isPending} // Disable if mutation is pending
-                      >
-                        {mutation.isPending ? (
-                          <>
-                            <Spinner />
 
-                          </>
-                        ) : (
-                          "Admit Patient"
-                        )}
-                      </button>
+                    <button
+                      onClick={handleSubmit}
+                      className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
+                      disabled={mutation.isPending} // Disable if mutation is pending
+                    >
+                      {mutation.isPending ? (
+                        <>
+                          <Spinner />
+
+                        </>
+                      ) : (
+                        "Admit Patient"
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

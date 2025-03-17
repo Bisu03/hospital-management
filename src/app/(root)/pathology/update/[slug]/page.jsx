@@ -27,7 +27,7 @@ const UpdatePathology = () => {
   const { slug } = useParams();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
+  const [loading, setLoading] = useState(false);
   const [ServiceData, setServiceData] = useState({
     reg_id: "",
     mrd_id: "",
@@ -110,6 +110,7 @@ const UpdatePathology = () => {
   }));
 
   const handleRegIdSearch = async () => {
+    setLoading(true);
     try {
       const { data: prevData } = await fetchData(`/pathology/${slug}`)
       setServiceData({
@@ -130,11 +131,13 @@ const UpdatePathology = () => {
       })
       setSelectDob(prevData?.patient?.dob);
       setConsultant({
-        value: response?.data?.consultant,
-        label: response?.data?.consultant?.drname,
+        value: prevData?.consultant,
+        label: prevData?.consultant?.drname,
       });
+      setLoading(false);
 
     } catch (error) {
+      setLoading(false);
       ErrorHandeling(error);
     }
 
@@ -226,6 +229,9 @@ const UpdatePathology = () => {
           <div className="w-full">
             <Heading heading="Update Pathology">
             </Heading>
+
+            {loading && <Loading />}
+
             <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-1">

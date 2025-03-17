@@ -27,7 +27,6 @@ const IpdAdmission = () => {
 
     const router = useRouter()
     const initialState = {
-        uh_id: "",
         reg_id: "",
         mrd_id: "",
         patient: "",
@@ -136,8 +135,6 @@ const IpdAdmission = () => {
                                     <PatientRegistration admitedin="IPD" />
                                 </div>
                             </Heading>
-
-                            
 
                             <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
                                 <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 truncate">
