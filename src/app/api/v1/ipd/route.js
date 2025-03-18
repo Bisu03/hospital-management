@@ -8,7 +8,7 @@ import Ipd from "@/models/Ipd.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
 import Patient from "@/models/Patient.models"
 import Billinng from "@/models/Billing.models"
-
+import Bed from '@/models/Bed.models'; // Mongoose User model
 
 export async function GET(req) {
     try {
@@ -29,7 +29,7 @@ export async function GET(req) {
         const endDate = url.searchParams.get("endDate");
 
         if (idsearch) {
-            const data = await Ipd.findById(idsearch)
+            const data = await Ipd.findOne({ reg_id: idsearch })
                 .populate("patient")
                 .populate("consultant");
             return NextResponse.json({ success: true, data });
@@ -100,6 +100,9 @@ export async function POST(req) {
     }
     try {
         const body = await req.json();
+        const url = new URL(req.url);
+        const searchTerm = url.searchParams.get("bedid");
+
 
         let regid = null;
         let mrdid = null;
@@ -148,7 +151,7 @@ export async function POST(req) {
             admited_by,
         } = body;
 
-        const data = Patient.create({
+        const data = await Patient.create({
             fullname,
             phone_number,
             age,
@@ -187,18 +190,27 @@ export async function POST(req) {
                 consultant: consultant._id
             });
 
-           await Billinng.create({
-                reg_id: regid.seq,
-                mrd_id: mrdid.seq,
-                consultant_cart: consultant,
-                patient: data._id,
-                ipd: ipddata._id
-            })
+            if (ipddata) {
+                if (searchTerm) {
+                    await Bed.findByIdAndUpdate(searchTerm, {
+                        patitentID: ipddata._id, isAllocated: true
+                    })
+                }
+                await Billinng.create({
+                    reg_id: regid.seq,
+                    mrd_id: mrdid.seq,
+                    consultant_cart: consultant,
+                    patient: data._id,
+                    ipd: ipddata._id
+                })
+            }
+
+
 
             return NextResponse.json({
                 success: true,
                 message: "Patient Admitted Successfully",
-                data,
+                data: ipddata,
             });
         }
 

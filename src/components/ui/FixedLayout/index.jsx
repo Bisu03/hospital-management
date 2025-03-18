@@ -11,9 +11,9 @@ const FixedLayout = ({ children, btnname, isOpen, onOpen, onClose }) => {
 
   return (
     <>
-      <button className='btn btn-secondary' onClick={onOpen}>
+      {btnname && <button className='btn btn-secondary' onClick={onOpen}>
         {btnname}
-      </button>
+      </button>}
 
       {isOpen && (
         <div

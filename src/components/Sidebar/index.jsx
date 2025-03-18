@@ -72,7 +72,7 @@ export default function ResponsiveSidebar({ children }) {
 
             {/* Right Section */}
             <div className="flex items-center space-x-6">
-              <Link  href="/bedmanagement/bedallotment/342342"  className="flex items-center space-x-2 group focus:outline-none">
+              <Link  href="/bedmanagement/bedallotment"  className="flex items-center space-x-2 group focus:outline-none">
                 <FaBed className="h-6 w-6 text-white" />
               </Link>
               <Link href="/dashboard/menu" className="flex items-center space-x-2 group focus:outline-none">

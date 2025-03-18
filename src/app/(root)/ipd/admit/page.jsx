@@ -17,6 +17,7 @@ import { SuccessHandling } from '@/utils/successHandling';
 import { TabLinks } from '@/utils/tablinks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import React, { lazy, Suspense, useEffect, useState } from 'react'
 import { FaPlus } from 'react-icons/fa';
@@ -28,6 +29,9 @@ const IpdAdmission = () => {
     const queryClient = useQueryClient();
     const { data: session } = useSession();
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const search = searchParams.get('bedid')
+
     const initialState = {
         reg_id: "",
         mrd_id: "",
@@ -95,7 +99,7 @@ const IpdAdmission = () => {
     }, [consultant]);
 
     const mutation = useMutation({
-        mutationFn: (newItem) => createData("/ipd", newItem),
+        mutationFn: (newItem) => createData(`/ipd?bedid=${search}`, newItem),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
             setFormData(initialState);
