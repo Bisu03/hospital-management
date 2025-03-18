@@ -78,17 +78,17 @@ const LabReceipt = () => {
                     <tbody>
                         {pathologyData?.pathology_test_cart?.services?.map((test, index) => (
                             <tr key={index} className="border">
-                                <td className="print:px-1 px-2 border  ">{test.pathology_category}</td>
+                                <td className="print:px-1 px-2 border  ">{test?.pathology_category}</td>
                                 <td className="print:px-1 px-2 text-right border  ">
-                                    {Number(test.pathology_charge).toFixed(2)}
+                                    {Number(test?.pathology_charge).toFixed(2)}
                                 </td>
                             </tr>
                         ))}
                         {pathologyData?.radiology_test_cart?.services?.map((test, index) => (
                             <tr key={index} className="border">
-                                <td className="print:px-1 px-2 border  ">{test.test_name}</td>
+                                <td className="print:px-1 px-2 border  ">{test?.test_name}</td>
                                 <td className="print:px-1 px-2 text-right border  ">
-                                    {Number(test.test_charge).toFixed(2)}
+                                    {Number(test?.test_charge).toFixed(2)}
                                 </td>
                             </tr>
                         ))}

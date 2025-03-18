@@ -320,7 +320,7 @@ const CreateLabtest = () => {
                   <input
                     type="text"
                     name="fullname"
-                    value={ServiceData.fullname}
+                    value={ServiceData?.fullname}
                     onChange={handleChange}
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                   />
@@ -332,7 +332,7 @@ const CreateLabtest = () => {
                   <input
                     type="text"
                     name="phone_number"
-                    value={ServiceData.phone_number}
+                    value={ServiceData?.phone_number}
                     onChange={handleChange}
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                   />
@@ -343,7 +343,7 @@ const CreateLabtest = () => {
                   </label>
                   <select
                     name="gender"
-                    value={ServiceData.gender}
+                    value={ServiceData?.gender}
                     onChange={handleChange}
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                   >
@@ -360,7 +360,7 @@ const CreateLabtest = () => {
                   <input
                     type="text"
                     name="age"
-                    value={ServiceData.age}
+                    value={ServiceData?.age}
                     onChange={handleChange}
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                   />
@@ -384,7 +384,7 @@ const CreateLabtest = () => {
                   <input
                     type="text"
                     name="address"
-                    value={ServiceData.address}
+                    value={ServiceData?.address}
                     onChange={handleChange}
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                   />
@@ -397,7 +397,7 @@ const CreateLabtest = () => {
                     type="date"
                     disabled
                     name="reporting_date"
-                    value={ServiceData.reporting_date}
+                    value={ServiceData?.reporting_date}
                     onChange={handleChange}
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                   />
@@ -440,7 +440,7 @@ const CreateLabtest = () => {
                   <input
                     type="text"
                     name="referr_by"
-                    value={ServiceData.referr_by}
+                    value={ServiceData?.referr_by}
                     onChange={handleChange}
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                   />
@@ -474,16 +474,15 @@ const CreateLabtest = () => {
                 ?.filter((test) =>
                   test.pathology_category
                     .toLowerCase()
-                    .includes(searchTest.toLowerCase())
-                )
-                .map((test) => (
+                    .includes(searchTest?.toLowerCase())
+                )?.map((test) => (
                   <div
                     key={test._id}
                     className="flex justify-between items-center p-3 border border-black rounded"
                   >
-                    <p className="font-semibold">{test.pathology_category}</p>
+                    <p className="font-semibold">{test?.pathology_category}</p>
                     <p className="text-sm font-bold text-gray-500">
-                      ₹{Number(test.pathology_charge)}
+                      ₹{Number(test?.pathology_charge)}
                     </p>
                     <button
                       onClick={() => addToCart(test, "pathology")}
@@ -496,18 +495,17 @@ const CreateLabtest = () => {
               :
               radiologytest?.data
                 ?.filter((test) =>
-                  test.test_name
+                  test?.test_name
                     .toLowerCase()
                     .includes(searchTest.toLowerCase())
-                )
-                .map((test) => (
+                )?.map((test) => (
                   <div
                     key={test._id}
                     className="flex justify-between items-center p-3 border border-black rounded"
                   >
-                    <p className="font-semibold">{test.test_name}</p>
+                    <p className="font-semibold">{test?.test_name}</p>
                     <p className="text-sm font-bold text-gray-500">
-                      ₹{Number(test.test_charge)}
+                      ₹{Number(test?.test_charge)}
                     </p>
                     <button
                       onClick={() => addToCart(test, "radiology")}
