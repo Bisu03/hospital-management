@@ -22,8 +22,8 @@ const PathologyReading = () => {
     const router = useRouter();
 
     const { data, error, isLoading, refetch } = useQuery({
-        queryKey: ["pathologyrecord", searchTerm],
-        queryFn: () => fetchData(`/pathology/${searchTerm}`),
+        queryKey: ["labtestrecord", searchTerm],
+        queryFn: () => fetchData(`/labtest/${searchTerm}`),
     });
 
 
@@ -33,8 +33,8 @@ const PathologyReading = () => {
 
 
     useEffect(() => {
-        if (data?.data?.test_cart) {
-            const initialData = JSON.parse(JSON.stringify(data.data.test_cart));
+        if (data?.data?.pathology_test_cart) {
+            const initialData = JSON.parse(JSON.stringify(data.data.pathology_test_cart));
             setModifiedData(initialData);
         }
     }, [data?.data]);
@@ -48,11 +48,11 @@ const PathologyReading = () => {
     };
 
     const mutation = useMutation({
-        mutationFn: (newItem) => updateData(`/pathology`, searchTerm, newItem),
+        mutationFn: (newItem) => updateData(`/labtest`, searchTerm, newItem),
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["pathologyreading"] });
+            queryClient.invalidateQueries({ queryKey: ["labtestrecord"] });
             SuccessHandling(data.message);
-            router.push("/pathology/print/" + searchTerm);
+            router.push("/labtest/print/" + searchTerm);
         },
         onError: (error) => {
             ErrorHandeling(error);
@@ -61,14 +61,14 @@ const PathologyReading = () => {
     });
 
     const handleSubmit = () => {
-        mutation.mutate({ test_cart: modifiedData });
+        mutation.mutate({ pathology_test_cart: modifiedData });
     };
 
 
     return (
         <Suspense fallback={<Loading />}>
             <div className="flex flex-wrap w-full justify-between">
-                <Tab tabs={TabLinks} category="Pathology Patient" />
+                <Tab tabs={TabLinks} category="Labtest" />
                 <MiddleSection>
                     <div className="w-full">
                         <Heading heading="Pathology Reading" >

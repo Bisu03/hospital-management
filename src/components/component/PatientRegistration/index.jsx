@@ -10,10 +10,12 @@ import { useSession } from "next-auth/react";
 import React, { useEffect, useReducer, useState } from "react";
 const PatientRegistration = ({ admitedin }) => {
     const queryClient = useQueryClient();
+    const { data: session } = useSession();
+    
     const [isModalOpen, setModalOpen] = useState(false);
     const [MrdId, setMrdId] = useState("");
     const { patientRefetch } = usePatient()
-    const { data: session } = useSession();
+    const [searchTerm, setSearchTerm] = useState("");
 
     const initialState = {
         fullname: "",

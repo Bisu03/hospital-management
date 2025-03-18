@@ -86,7 +86,7 @@ const BedRecord = () => {
 
 
     const handleEdit = (item) => {
-        setFormData({ ...item, isEditing: true });
+        setFormData({ ...item, bed_category: item.bed_category._id, isEditing: true });
         setModalOpen(true);
     };
 
@@ -104,7 +104,7 @@ const BedRecord = () => {
             mutationDelete.mutate(id)
         }
     };
-    
+
 
     return (
         <>

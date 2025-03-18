@@ -5,6 +5,7 @@ import { withAuth } from "@/services/withAuth";
 import Link from "next/link";
 import React, { lazy, Suspense, useState } from "react";
 import { FaClinicMedical, FaMoneyBill, FaRegistered } from "react-icons/fa";
+import { ImLab } from "react-icons/im";
 import { MdBedroomParent, MdDashboard } from "react-icons/md";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
@@ -17,6 +18,7 @@ const Menu = () => {
         { href: "/ipd/admit", icon: <MdBedroomParent size={60} />, label: "IPD" },
         { href: "/opd/admit", icon: <FaClinicMedical size={60} />, label: "OPD" },
         { href: "/billing/makebills", icon: <FaMoneyBill size={60} />, label: "Bill" },
+        { href: "/labtest/create", icon: <ImLab size={60} />, label: "Lab Test" },
     ];
 
     return (
@@ -24,7 +26,7 @@ const Menu = () => {
             <Suspense fallback={<Loading />}>
                 <div className="flex flex-wrap w-full justify-between">
                     <MiddleSection>
-                        <div className="flex w-full justify-center gap-6 md:gap-12 lg:gap-16">
+                        <div className="flex w-full justify-evenly flex-wrap ">
                             {links.map(({ href, icon, label }) => (
                                 <Link
                                     key={href}

@@ -3,7 +3,7 @@
 import React, { lazy, Suspense, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createData, deleteData, fetchData } from "@/services/apiService";
+import { createData, deleteData, fetchData, updateData } from "@/services/apiService";
 import { SuccessHandling } from "@/utils/successHandling";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import Loading from "@/components/Loading";
@@ -12,6 +12,7 @@ import { withAuth } from "@/services/withAuth";
 import FixedLayout from "@/components/ui/FixedLayout";
 import Tab from "@/components/Tab";
 import { TabLinks } from "@/utils/tablinks";
+import Spinner from "@/components/ui/Spinner";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
@@ -40,6 +41,17 @@ const PathologyCategory = () => {
         onError: (error) => ErrorHandeling(error)
     });
 
+    const updateMutation = useMutation({
+        mutationFn: (newdata) => updateData("/admin/pathology/category", newdata._id, newdata),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["pathologycategories"] });
+            setFormData({ pathology_category: "", pathology_charge: "" });
+            SuccessHandling("Category deleted successfully");
+            setModalOpen(false);
+            refetch()
+        },
+        onError: (error) => ErrorHandeling(error)
+    });
     const deleteMutation = useMutation({
         mutationFn: (id) => deleteData("/admin/pathology/category", id),
         onSuccess: () => {
@@ -69,6 +81,15 @@ const PathologyCategory = () => {
         if (window.confirm("Are you sure you want to delete this category?")) {
             deleteMutation.mutate(id);
         }
+    };
+
+    const handleEdit = (category) => {
+        setModalOpen(true);
+        setFormData({ ...category, isEditing: true });
+    };
+
+    const handleUpdate = () => {
+        updateMutation.mutate(formData);
     };
 
     return (
@@ -114,12 +135,22 @@ const PathologyCategory = () => {
                                                 </div>
                                             </div>
                                             <div className="flex justify-end">
-                                                <button
-                                                    onClick={handleSubmit}
-                                                    className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
-                                                >
-                                                    Submit
-                                                </button>
+                                                {
+                                                    formData?.isEditing ? (
+                                                        <button
+                                                            onClick={handleUpdate}
+                                                            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
+                                                        >
+                                                            Update {updateMutation.isPending && <Spinner />}
+                                                        </button>
+                                                    ) : <button
+                                                        onClick={handleSubmit}
+                                                        className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
+                                                    >
+                                                        Submit {updateMutation.isPending && <Spinner />}
+                                                    </button>
+                                                }
+
                                             </div>
                                         </div>
                                     </div>
@@ -150,7 +181,7 @@ const PathologyCategory = () => {
                                                 <td className="px-4 py-3">{category.pathology_category}</td>
                                                 <td className="px-4 py-3">₹{category.pathology_charge}</td>
                                                 <td className="px-4 py-3 flex space-x-3">
-                                                    <button className="text-neutral hover:text-black focus:outline-none p-1">
+                                                    <button onClick={() => handleEdit(category)} className="text-neutral hover:text-black focus:outline-none p-1">
                                                         <FaEdit className="h-6 w-6" />
                                                     </button>
                                                     <button

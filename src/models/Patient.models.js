@@ -13,22 +13,6 @@ const patientSchema = new Schema({
     admited_in: {
         type: String
     },
-    billing: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "billing",
-    },
-    ipd_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "ipd",
-    },
-    opd_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "opd",
-    },
-    discharge_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "discharge",
-    },
     fullname: {
         type: String,
         required: true,

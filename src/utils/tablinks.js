@@ -27,19 +27,19 @@ export const TabLinks = [
     ],
   },
   {
-    category: "Pathology Patient",
+    category: "Labtest",
     routes: [
       {
-        name: "Pathology Test",
-        path: "/pathology/create",
+        name: "Labtest Test",
+        path: "/labtest/create",
+      },
+      {
+        name: "Labtest Record",
+        path: "/labtest/record",
       },
       {
         name: "Pathology Reading",
-        path: "/pathology/reading",
-      },
-      {
-        name: "Pathology Record",
-        path: "/pathology/record",
+        path: "/labtest/reading",
       },
     ],
   },

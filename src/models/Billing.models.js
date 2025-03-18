@@ -2,11 +2,6 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const billingSchema = new Schema({
-
-    uh_id: {
-        type: String,
-        required: true,
-    },
     reg_id: {
         type: String,
         required: true,
@@ -28,28 +23,30 @@ const billingSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "patient_registration",
     },
-    radiology_cart: {
+    ipd: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ipd",
+    },
+    consultant_cart: {
         type: Object
     },
-    pathology_cart: {
+    acomodation_cart: {
         type: Object
     },
+   
     service_cart: {
         type: Object
     },
-    discount: {
-        type: Number,
-    },
-    gst: {
-        type: Number,
-    },
-    due: {
-        type: Number,
-        default: 0
+    amount: {
+        type: Object
     },
     paidby: {
         type: String,
     },
+    isDone: {
+        type: Boolean,
+        default: false
+    }
 }, {
     timestamps: true
 });

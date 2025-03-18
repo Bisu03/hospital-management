@@ -32,7 +32,7 @@ const BedCategoryRecord = () => {
         queryFn: () => fetchData("/bed/category"), // Function to fetch data
     });
 
-    
+
     const mutation = useMutation({
         mutationFn: (newItem) => createData("/bed/category", newItem),
         onSuccess: (data) => {
@@ -130,13 +130,19 @@ const BedCategoryRecord = () => {
 
                                             {/* Submit Button */}
                                             <div className="flex justify-end">
-                                                <button
+                                                {formData.isEditing ? <button
                                                     type="submit"
                                                     className="px-6 py-2 bg-primary text-white rounded-lg
                  hover:bg-secondary "
                                                 >
-                                                    Submit
-                                                </button>
+                                                    Update {mutationUpdate.isPending && <Spinner />}
+                                                </button> : <button
+                                                    type="submit"
+                                                    className="px-6 py-2 bg-primary text-white rounded-lg
+                 hover:bg-secondary "
+                                                >
+                                                    Submit {mutation.isPending && <Spinner />}
+                                                </button>}
                                             </div>
                                         </form>
                                     </div>

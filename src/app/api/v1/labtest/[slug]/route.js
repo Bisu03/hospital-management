@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { connectDB } from "@/lib/mongoConnection"; // MongoDB connection utility
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
-import Pathology from "@/models/Pathology.models"; // Mongoose  model
+import Labtest from "@/models/Labtest.models"; // Mongoose  model
 import Patient from "@/models/Patient.models"
 import "@/models/Doctor.models"
 
@@ -22,7 +22,7 @@ export async function GET(req, context) {
     }
     try {
         const { slug } = await context.params;
-        const data = await Pathology.findOne({
+        const data = await Labtest.findOne({
             bill_no: slug
         }).populate("patient").populate("consultant").sort({ createdAt: -1 });
         // Return the message
@@ -65,7 +65,7 @@ export async function PUT(req, context) {
             address,
         } = body
 
-        const data = await Pathology.findOneAndUpdate({
+        const data = await Labtest.findOneAndUpdate({
             bill_no: slug
         }, body)
 
@@ -108,7 +108,7 @@ export async function DELETE(req, context) {
     try {
         const { slug } = await context.params;
 
-        const data = await Pathology.findByIdAndDelete(slug)
+        const data = await Labtest.findByIdAndDelete(slug)
         // Return the message
         return NextResponse.json(
             { success: true, message: "Record Deleted" },

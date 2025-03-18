@@ -4,7 +4,8 @@ import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import Tab from "@/components/Tab";
 import FixedLayout from "@/components/ui/FixedLayout";
-import { createData, deleteData, fetchData } from "@/services/apiService";
+import Spinner from "@/components/ui/Spinner";
+import { createData, deleteData, fetchData, updateData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
@@ -47,11 +48,26 @@ const radiologyRecords = () => {
     });
 
     // Delete mutation
+    const updateMutation = useMutation({
+        mutationFn: (newdata) => updateData("/admin/radiology", newdata._id, newdata),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries(["radiologytest"]);
+            setModalOpen(false);
+            SuccessHandling(data?.message);
+            setFormData({
+                test_name: "",
+                test_charge: "",
+            });
+            refetch()
+        },
+        onError: (error) => ErrorHandeling(error)
+    });
     const deleteMutation = useMutation({
         mutationFn: (id) => deleteData("/admin/radiology", id),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries(["radiologytest"]);
-            SuccessHandling("Service deleted successfully");
+            SuccessHandling(data?.message);
+            refetch()
         },
         onError: (error) => ErrorHandeling(error)
     });
@@ -63,6 +79,10 @@ const radiologyRecords = () => {
         });
     };
 
+    const handleUpdate = () => {
+        updateMutation.mutate(formData);
+    };
+
     const handleSubmit = () => {
         createMutation.mutate(formData);
     };
@@ -71,6 +91,12 @@ const radiologyRecords = () => {
         if (window.confirm("Are you sure you want to delete this service?")) {
             deleteMutation.mutate(id);
         }
+    };
+
+
+    const handleEdit = (item) => {
+        setFormData({ ...item, isEditing: true });
+        setModalOpen(true);
     };
 
     return (
@@ -117,12 +143,23 @@ const radiologyRecords = () => {
                                                 </div>
                                             </div>
                                             <div className="flex justify-end">
-                                                <button
-                                                    onClick={handleSubmit}
-                                                    className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
-                                                >
-                                                    Submit
-                                                </button>
+                                                {
+                                                    formData.isEditing ? (
+                                                        <button
+                                                            onClick={handleUpdate}
+                                                            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
+                                                        >
+                                                            Update {updateMutation.isPending && <Spinner />}
+                                                        </button>
+                                                    ) : <button
+                                                        onClick={handleSubmit}
+                                                        className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
+                                                    >
+                                                        Submit  {createMutation.isPending && <Spinner />}
+                                                    </button>
+
+                                                }
+
                                             </div>
                                         </div>
                                     </div>
@@ -154,7 +191,7 @@ const radiologyRecords = () => {
                                                 <td className="px-4 py-3">{service?.test_name}</td>
                                                 <td className="px-4 py-3">{service?.test_charge}</td>
                                                 <td className="px-4 py-3 flex space-x-2">
-                                                    <button className="text-blue-500 hover:text-blue-700">
+                                                    <button onClick={() => handleEdit(service)} className="text-blue-500 hover:text-blue-700">
                                                         <FaEdit className="w-5 h-5" />
                                                     </button>
                                                     <button
@@ -171,8 +208,8 @@ const radiologyRecords = () => {
                             </div>
                         </div>
                     </MiddleSection>
-                </div>
-            </Suspense>
+                </div >
+            </Suspense >
         </>
     );
 };

@@ -1,19 +1,25 @@
-"use client"
+"use client";
 
 import { fetchData } from "@/services/apiService";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 
 const HospitalContext = createContext();
 
 export const HospitalProvider = ({ children }) => {
-    const [hospitalInfo, setHospitalInfo] = useState({});
+    const [hospitalInfo, setHospitalInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const getHospitalInfo = async () => {
         try {
+            setLoading(true);
             const response = await fetchData("/admin/hospital");
-            setHospitalInfo(response?.data || {});
+            if (response?.data && JSON.stringify(response.data) !== JSON.stringify(hospitalInfo)) {
+                setHospitalInfo(response.data);
+            }
         } catch (error) {
             console.error("Error fetching hospital data:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -21,8 +27,10 @@ export const HospitalProvider = ({ children }) => {
         getHospitalInfo();
     }, []);
 
+    const value = useMemo(() => ({ hospitalInfo, setHospitalInfo, loading }), [hospitalInfo, loading]);
+
     return (
-        <HospitalContext.Provider value={{ hospitalInfo, setHospitalInfo }}>
+        <HospitalContext.Provider value={value}>
             {children}
         </HospitalContext.Provider>
     );

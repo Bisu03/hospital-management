@@ -1,4 +1,5 @@
 import { FaCartPlus, FaClinicMedical, FaMoneyBill, FaRegistered, FaXRay } from "react-icons/fa";
+import { ImLab } from "react-icons/im";
 import {
   MdAdminPanelSettings,
   MdBed,
@@ -68,39 +69,23 @@ export const NavLinks = [
     ],
   },
   {
-    icon: < MdGraphicEq />,
-    category: "Pathology",
+    icon: < ImLab />,
+    category: "Labtest",
     routes: [
       {
-        name: "Pathology Test",
-        path: "/pathology/create",
+        name: "Labtest Test",
+        path: "/labtest/create",
+      },
+      {
+        name: "Labtest Record",
+        path: "/labtest/record",
       },
       {
         name: "Pathology Reading",
-        path: "/pathology/reading",
+        path: "/labtest/reading",
       },
-      {
-        name: "Pathology Record",
-        path: "/pathology/record",
-      },
-
     ],
   },
-  // {
-  //   icon: < FaXRay />,
-  //   category: "Radiology",
-  //   routes: [
-  //     {
-  //       name: "Radiology Test",
-  //       path: "/radiology/create",
-  //     },
-  //     {
-  //       name: "Radiology Record",
-  //       path: "/radiology/record",
-  //     },
-
-  //   ],
-  // },
   {
     icon: < FaMoneyBill />,
     category: "Billing",

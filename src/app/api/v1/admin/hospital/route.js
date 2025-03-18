@@ -4,35 +4,33 @@ import HospitalConfig from "@/models/Hospitalinformation.models"; // Import the 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
-export async function GET() {
-  // Connect to the database
-  await connectDB();
-
+export async function GET(req) {
   try {
-    // Check if a document with hid: "hospitalinfo" exists
-    let hospitalConfig = await HospitalConfig.findOne({ hid: "hospitalinfo" });
+    // Ensure database is connected
+    await connectDB();
+    const hospitalConfig = await HospitalConfig.findOneAndUpdate(
+      { hid: "hospitalinfo" },
+      {
+        $setOnInsert: {
+          hid: "hospitalinfo",
+          hospital_name: "Default Hospital",
+          address: "Default Address",
+          phone: "1234567890",
+          email: "default@hospital.com",
+          hospitalCode: "HOSP123",
+          gst_number: "GST123456",
+          reg_number: "REG123456",
+          licence_number: "LIC123456",
+          logo: "default-logo.png",
+          language: "English",
+          timezone: "UTC",
+          currency: "USD",
+          currency_symbol: "$",
+        },
+      },
+      { new: true, upsert: true, lean: true } // Returns updated document if exists or inserts a new one
+    );
 
-    // If not found, create a new document
-    if (!hospitalConfig) {
-      hospitalConfig = await HospitalConfig.create({
-        hid: "hospitalinfo",
-        hospital_name: "Default Hospital",
-        address: "Default Address",
-        phone: "1234567890",
-        email: "default@hospital.com",
-        hospitalCode: "HOSP123",
-        gst_number: "GST123456",
-        reg_number: "REG123456",
-        licence_number: "LIC123456",
-        logo: "default-logo.png",
-        language: "English",
-        timezone: "UTC",
-        currency: "USD",
-        currency_symbol: "$",
-      });
-    }
-
-    // Return the hospital configuration data
     return NextResponse.json(
       { success: true, data: hospitalConfig },
       { status: 200 }
@@ -44,8 +42,6 @@ export async function GET() {
       { status: 500 }
     );
   }
-
-
 }
 
 export async function PUT(req) {

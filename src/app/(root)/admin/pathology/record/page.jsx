@@ -4,7 +4,8 @@ import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import Tab from "@/components/Tab";
 import FixedLayout from "@/components/ui/FixedLayout";
-import { createData, deleteData, fetchData } from "@/services/apiService";
+import Spinner from "@/components/ui/Spinner";
+import { createData, deleteData, fetchData, updateData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
@@ -21,7 +22,7 @@ const PathologyRecords = () => {
     pathology_category: "",
     pathology_testname: "",
     unit: "",
-    ref_value: ""
+    ref_value: "",
   });
   const [isModalOpen, setModalOpen] = useState(false);
 
@@ -32,14 +33,19 @@ const PathologyRecords = () => {
   });
 
   // Fetch services
-  const { data: services, isLoading, error } = useQuery({
+  const {
+    data: services,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["pathologyservices"],
     queryFn: () => fetchData("/admin/pathology/record"),
   });
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: (newService) => createData("/admin/pathology/record", newService),
+    mutationFn: (newService) =>
+      createData("/admin/pathology/record", newService),
     onSuccess: () => {
       queryClient.invalidateQueries(["pathologyservices"]);
       SuccessHandling("Service created successfully");
@@ -48,12 +54,28 @@ const PathologyRecords = () => {
         pathology_category: "",
         pathology_testname: "",
         unit: "",
-        ref_value: ""
+        ref_value: "",
       });
     },
-    onError: (error) => ErrorHandeling(error)
+    onError: (error) => ErrorHandeling(error),
   });
 
+  // Delete mutation
+  const updateMutation = useMutation({
+    mutationFn: (newdata) => updateData("/admin/pathology/record", newdata._id, newdata),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["pathologyservices"]);
+      SuccessHandling(data.message);
+      setModalOpen(false);
+      setFormData({
+        pathology_category: "",
+        pathology_testname: "",
+        unit: "",
+        ref_value: "",
+      });
+    },
+    onError: (error) => ErrorHandeling(error),
+  });
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteData("/admin/pathology/record", id),
@@ -61,13 +83,13 @@ const PathologyRecords = () => {
       queryClient.invalidateQueries(["pathologyservices"]);
       SuccessHandling("Test deleted successfully");
     },
-    onError: (error) => ErrorHandeling(error)
+    onError: (error) => ErrorHandeling(error),
   });
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -84,6 +106,19 @@ const PathologyRecords = () => {
       deleteMutation.mutate(id);
     }
   };
+
+  const handleEdit = (item) => {
+    setFormData({
+      ...item,
+      pathology_category: item.pathology_category._id,
+      isEditing: true,
+    });
+    setModalOpen(true);
+  };
+
+  const handleUpdate = () => {
+    updateMutation.mutate(formData);
+  }
 
   return (
     <>
@@ -122,7 +157,8 @@ const PathologyRecords = () => {
                         </div>
                         <div className="space-y-1">
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Pathology Test<span className="text-red-500">*</span>
+                            Pathology Test
+                            <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="text"
@@ -158,12 +194,21 @@ const PathologyRecords = () => {
                         </div>
                       </div>
                       <div className="flex justify-end">
-                        <button
-                          onClick={handleSubmit}
-                          className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
-                        >
-                          Submit
-                        </button>
+                        {formData.isEditing ? (
+                          <button
+                            onClick={handleUpdate}
+                            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
+                          >
+                            Update {updateMutation.isPending && <Spinner />}{" "}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleSubmit}
+                            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
+                          >
+                            Submit {createMutation.isPending && <Spinner />}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -191,16 +236,21 @@ const PathologyRecords = () => {
                         </td>
                       </tr>
                     )}
-                    {services?.data?.map(service => (
+                    {services?.data?.map((service) => (
                       <tr key={service._id} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
                           {service.pathology_category?.pathology_category}
                         </td>
-                        <td className="px-4 py-3">{service.pathology_testname}</td>
+                        <td className="px-4 py-3">
+                          {service.pathology_testname}
+                        </td>
                         <td className="px-4 py-3">{service.unit}</td>
                         <td className="px-4 py-3">{service.ref_value}</td>
                         <td className="px-4 py-3 flex space-x-2">
-                          <button className="text-blue-500 hover:text-blue-700">
+                          <button
+                            onClick={() => handleEdit(service)}
+                            className="text-blue-500 hover:text-blue-700"
+                          >
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button

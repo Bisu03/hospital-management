@@ -7,6 +7,7 @@ import Heading from '@/components/Heading'
 import Loading from '@/components/Loading'
 import Tab from '@/components/Tab';
 import Spinner from '@/components/ui/Spinner';
+import { getCompactAge } from '@/lib/ageCount';
 import { getDate } from '@/lib/currentDate';
 import { formattedTime } from '@/lib/timeGenerate';
 import { createData, fetchData, updateData } from '@/services/apiService';
@@ -15,8 +16,9 @@ import { ErrorHandeling } from '@/utils/errorHandling';
 import { SuccessHandling } from '@/utils/successHandling';
 import { TabLinks } from '@/utils/tablinks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import React, { lazy, Suspense, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useState } from 'react'
 import { FaPlus } from 'react-icons/fa';
 import Select from "react-select";
 
@@ -24,17 +26,31 @@ const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const IpdAdmission = () => {
     const queryClient = useQueryClient();
-
+    const { data: session } = useSession();
     const router = useRouter()
     const initialState = {
         reg_id: "",
         mrd_id: "",
+        fullname: "",
+        phone_number: "",
+        age: "",
+        dob: "",
+        gender: "",
+        marital_status: "",
+        occupation: "",
+        blood_group: "",
+        address: "",
+        aadhar: "",
+        guardian_name: "",
+        religion: "",
+        guardian_phone: "",
+        referr_by: "",
         patient: "",
         hight: "",
         weight: "",
         bp: "",
         admited_in: "IPD",
-        consultant: "",
+        consultant: {},
         admission_charge: "200",
         paidby: "",
         admit_date: getDate(),
@@ -42,40 +58,20 @@ const IpdAdmission = () => {
         present_complain: "",
         medical_case: "",
         provisional_diagnosis: "",
+        admited_by: session?.user?.username,
     }
-
+    const [selectDob, setSelectDob] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
     const [formData, setFormData] = useState(initialState);
     const [consultant, setConsultant] = useState({});
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handlePatientSelection = (patient) => {
-        if (patient?.ipd_id) {
-            fetchData(`/ipd?id=${patient.ipd_id}`).then((data) => {
-                setFormData({
-                    ...data.data,
-                    fullname: data?.data?.patient?.fullname,
-                    phone_number: data?.data?.patient?.phone_number,
-                    referr_by: data?.data?.patient?.referr_by,
-                });
-                setConsultant({
-                    value: data?.data?.consultant?._id,
-                    label: data?.data?.consultant?.drname,
-                });
-            }).catch((error) => {
-                ErrorHandeling(error);
-            });
 
-        } else {
+    const handlemrdIdSearch = async () => {
+    }
 
-            setFormData({
-                ...formData, ...patient, patient: patient._id,
-            });
-
-        }
-
-    };
     const {
         data: doctorrecord,
     } = useQuery({
@@ -84,9 +80,19 @@ const IpdAdmission = () => {
     });
 
     const doctorOptions = doctorrecord?.data?.map((doctor) => ({
-        value: doctor._id,
+        value: doctor,
         label: doctor.drname,
     }));
+
+    useEffect(() => {
+        setFormData(prev => ({ ...prev, age: getCompactAge(selectDob || ""), dob: selectDob }));
+    }, [selectDob]);
+
+    useEffect(() => {
+        if (consultant) {
+            setFormData({ ...formData, consultant: consultant.value });
+        }
+    }, [consultant]);
 
     const mutation = useMutation({
         mutationFn: (newItem) => createData("/ipd", newItem),
@@ -94,7 +100,7 @@ const IpdAdmission = () => {
             queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
             setFormData(initialState);
             SuccessHandling(data.message);
-            router.push(`/ipd/print/${data?.data?._id}`);
+            router.push(`/ipd/print/${data?.data?.reg_id}`);
         },
         onError: (error) => {
             ErrorHandeling(error);
@@ -130,52 +136,204 @@ const IpdAdmission = () => {
                     <MiddleSection>
                         <div className="w-full">
                             <Heading heading="IPD Admission">
-                                <div className='flex items-center space-x-2'>
-                                    <PatientDropdown onSelectPatient={handlePatientSelection} />
-                                    <PatientRegistration admitedin="IPD" />
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Enter MRD ID"
+                                        className="p-2 border rounded"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    <button
+                                        onClick={handlemrdIdSearch}
+                                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    >
+                                        Search
+                                    </button>
                                 </div>
                             </Heading>
 
-                            <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
-                                <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 truncate">
-                                    {formData?.fullname || "No Patient Selected"}
-                                </h1>
-                                <div className="grid grid-cols-2 sm:grid-cols-1 lg:grid-cols-4 gap-2 md:gap-4 ">
-                                    {formData?.mrd_id && (
-                                        <div className="space-y-0.5 min-w-[200px]">
-                                            <p className="text-xs md:text-sm font-medium text-gray-500">MRD ID</p>
-                                            <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                                {formData.mrd_id}
-                                            </p>
+                            <div className="w-full p-4 bg-gray-100 rounded-xl border border-gray-200 shadow-sm mb-4">
+                                <div className="space-y-8">
+                                    {/* Personal Information Section */}
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {/* Personal Details */}
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Full Name <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="fullname"
+                                                    value={formData.fullname}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Phone Number <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="phone_number"
+                                                    value={formData.phone_number}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Date of Birth
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    name="selectDob"
+                                                    value={selectDob}
+                                                    onChange={(e) => setSelectDob(e.target.value)}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Age
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="age"
+                                                    value={formData.age}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Gender
+                                                </label>
+                                                <select
+                                                    name="gender"
+                                                    value={formData.gender}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="">Select</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Marital Status
+                                                </label>
+                                                <select
+                                                    name="marital_status"
+                                                    value={formData.marital_status}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="">Select</option>
+                                                    <option value="Single">Single</option>
+                                                    <option value="Married">Married</option>
+                                                    <option value="Divorced">Divorced</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Occupation
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="occupation"
+                                                    value={formData.occupation}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Blood Group
+                                                </label>
+                                                <select
+                                                    name="blood_group"
+                                                    value={formData.blood_group}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="">Select</option>
+                                                    <option value="A+">A+</option>
+                                                    <option value="A-">A-</option>
+                                                    <option value="B+">B+</option>
+                                                    <option value="B-">B-</option>
+                                                    <option value="O+">O+</option>
+                                                    <option value="O-">O-</option>
+                                                    <option value="AB+">AB+</option>
+                                                    <option value="AB-">AB-</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Aadhar Number
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="aadhar"
+                                                    value={formData.aadhar}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Guardian Name
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="guardian_name"
+                                                    value={formData.guardian_name}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Religion
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="religion"
+                                                    value={formData.religion}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Guardian Phone
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="guardian_phone"
+                                                    value={formData.guardian_phone}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Referred By
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="referr_by"
+                                                    value={formData.referr_by}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
                                         </div>
-                                    )}
-
-                                    {formData?.reg_id && (
-                                        <div className="space-y-0.5 min-w-[200px]">
-                                            <p className="text-xs md:text-sm font-medium text-gray-500">REG ID</p>
-                                            <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                                {formData.reg_id}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {formData?.phone_number && (
-                                        <div className="space-y-0.5 min-w-[200px]">
-                                            <p className="text-xs md:text-sm font-medium text-gray-500">Phone Number</p>
-                                            <p className="text-gray-700 text-sm md:text-base truncate">
-                                                {formData.phone_number}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {formData?.referr_by && (
-                                        <div className="space-y-0.5 min-w-[200px]">
-                                            <p className="text-xs md:text-sm font-medium text-gray-500">Referred By</p>
-                                            <p className="text-gray-700 text-sm md:text-base truncate">
-                                                {formData.referr_by}
-                                            </p>
-                                        </div>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -349,8 +507,10 @@ const IpdAdmission = () => {
                                             >
                                                 <option value="">Select</option>
                                                 <option value="Cash">Cash</option>
-                                                <option value="Card">Card</option>
-                                                <option value="Online">Online</option>
+                                                <option value="Upi">Upi</option>
+                                                <option value="Cashless">Cashless</option>
+                                                <option value="Sasthyasathi">Sasthyasathi</option>
+                                                <option value="Cancel">Cancel</option>
                                             </select>
                                         </div>
                                     </div>

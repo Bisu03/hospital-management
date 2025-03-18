@@ -7,7 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import Ipd from "@/models/Ipd.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
 import Patient from "@/models/Patient.models"
-import "@/models/Doctor.models"
+import Billinng from "@/models/Billing.models"
 
 
 export async function GET(req) {
@@ -101,43 +101,106 @@ export async function POST(req) {
     try {
         const body = await req.json();
 
+        let regid = null;
+        let mrdid = null;
+
+        regid = await Counter.findOneAndUpdate(
+            { id: "regid" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        if (!body.mrd_id) {
+            mrdid = await Counter.findOneAndUpdate(
+                { id: "mrdid" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+        }
+
         const {
-            uh_id,
-            reg_id,
-            mrd_id,
-            patient,
+            fullname,
+            phone_number,
+            age,
+            dob,
+            gender,
+            marital_status,
+            occupation,
+            blood_group,
+            address,
+            aadhar,
+            guardian_name,
+            religion,
+            guardian_phone,
+            referr_by,
             hight,
             weight,
             bp,
+            admited_in,
+            consultant,
             admission_charge,
             paidby,
-            consultant,
             admit_date,
             admit_time,
             present_complain,
             medical_case,
             provisional_diagnosis,
+            admited_by,
         } = body;
 
-        const data = await Ipd.create({
-            // Use spread operator to simplify
-            ...body,
-            patient,
-            consultant
+        const data = Patient.create({
+            fullname,
+            phone_number,
+            age,
+            dob,
+            gender,
+            marital_status,
+            occupation,
+            blood_group,
+            address,
+            aadhar,
+            guardian_name,
+            religion,
+            guardian_phone,
+            referr_by,
+            reg_id: regid.seq,
+            mrd_id: mrdid.seq,
         });
 
         if (data) {
-            await Patient.findByIdAndUpdate(patient, {
-                ipd_id: data._id,
-                admited_in: "IPD"
+            const ipddata = await Ipd.create({
+                mrd_id: mrdid.seq,
+                reg_id: regid.seq,
+                hight,
+                weight,
+                bp,
+                admission_charge,
+                paidby,
+                admit_date,
+                admit_time,
+                present_complain,
+                medical_case,
+                provisional_diagnosis,
+                admited_by,
+                admited_in,
+                patient: data._id,
+                consultant: consultant._id
+            });
+
+           await Billinng.create({
+                reg_id: regid.seq,
+                mrd_id: mrdid.seq,
+                consultant_cart: consultant,
+                patient: data._id,
+                ipd: ipddata._id
+            })
+
+            return NextResponse.json({
+                success: true,
+                message: "Patient Admitted Successfully",
+                data,
             });
         }
-
-        return NextResponse.json({
-            success: true,
-            message: "Patient Admitted Successfully",
-            data,
-        });
 
     } catch (error) {
         return NextResponse.json(

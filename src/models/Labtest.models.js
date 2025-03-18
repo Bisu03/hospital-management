@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-const pathologySchema = new Schema({
+const labtestSchema = new Schema({
     mrd_id: {
         type: String,
         required: true,
@@ -26,7 +26,10 @@ const pathologySchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "doctors",
     },
-    test_cart: {
+    pathology_test_cart: {
+        type: Object
+    },
+    radiology_test_cart: {
         type: Object
     },
     amount: {
@@ -42,4 +45,4 @@ const pathologySchema = new Schema({
     timestamps: true
 });
 
-export default mongoose.models.pathology || mongoose.model("pathology", pathologySchema);
+export default mongoose.models.lab_test || mongoose.model("lab_test", labtestSchema);

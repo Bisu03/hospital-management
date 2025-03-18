@@ -1,14 +1,12 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createData, fetchData } from "@/services/apiService";
-import PatientDropdown from "@/components/component/PatientDropdown";
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import React, { lazy, Suspense, useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
-import PatientRegistration from "@/components/component/PatientRegistration";
 import { getDate } from "@/lib/currentDate";
 import { formattedTime } from "@/lib/timeGenerate";
 import { SuccessHandling } from "@/utils/successHandling";
@@ -22,14 +20,14 @@ import { useSession } from "next-auth/react";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
-const CreatePathology = () => {
+const CreateLabtest = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: session } = useSession();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchTest, setSearchTest] = useState("");
-  const [PatientSearch, setPatientSearch] = useState({ fullname: "" });
+  const [ToggleTest, setToggleTest] = useState(true);
   const [consultant, setConsultant] = useState({});
   const [ServiceData, setServiceData] = useState({
     mrd_id: "",
@@ -44,7 +42,10 @@ const CreatePathology = () => {
     consultant: "",
     paydby: "",
     reporting_date: getDate(),
-    test_cart: {
+    pathology_test_cart: {
+      services: [],
+    },
+    radiology_test_cart: {
       services: [],
     },
     amount: {
@@ -52,59 +53,67 @@ const CreatePathology = () => {
       discount: 0,
       paid: 0,
       due: 0,
-      netTotal: 0
+      netTotal: 0,
     },
-    admited_by: session?.user?.username
+    admited_by: session?.user?.username,
   });
   const [Times, setTimes] = useState(formattedTime());
   const [selectDob, setSelectDob] = useState("");
 
   useEffect(() => {
-    setServiceData(prev => ({
+    setServiceData((prev) => ({
       ...prev,
       age: getCompactAge(selectDob || ""),
-      dob: selectDob
+      dob: selectDob,
     }));
   }, [selectDob]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name.startsWith('amount.')) {
-      const field = name.split('.')[1];
-      setServiceData(prev => {
+    if (name.startsWith("amount.")) {
+      const field = name.split(".")[1];
+      setServiceData((prev) => {
         const updatedAmount = {
           ...prev.amount,
-          [field]: Math.max(parseFloat(value) || 0, 0)
+          [field]: Math.max(parseFloat(value) || 0, 0),
         };
 
         // Recalculate values
         updatedAmount.netTotal = updatedAmount.total - updatedAmount.discount;
-        updatedAmount.due = Math.max(updatedAmount.netTotal - updatedAmount.paid, 0);
+        updatedAmount.due = Math.max(
+          updatedAmount.netTotal - updatedAmount.paid,
+          0
+        );
 
         // Ensure paid doesn't exceed netTotal
-        if (field === 'paid') {
-          updatedAmount.paid = Math.min(updatedAmount.paid, updatedAmount.netTotal);
+        if (field === "paid") {
+          updatedAmount.paid = Math.min(
+            updatedAmount.paid,
+            updatedAmount.netTotal
+          );
         }
 
         // Ensure discount doesn't exceed total
-        if (field === 'discount') {
-          updatedAmount.discount = Math.min(updatedAmount.discount, updatedAmount.total);
+        if (field === "discount") {
+          updatedAmount.discount = Math.min(
+            updatedAmount.discount,
+            updatedAmount.total
+          );
         }
 
         return {
           ...prev,
-          amount: updatedAmount
+          amount: updatedAmount,
         };
       });
     } else {
-      setServiceData(prev => ({
+      setServiceData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
-
 
   const handlemrdIdSearch = async () => {
     try {
@@ -148,20 +157,25 @@ const CreatePathology = () => {
     queryFn: () => fetchData("/admin/pathology/record"),
   });
 
+  const { data: radiologytest } = useQuery({
+    queryKey: ["radiologytest"],
+    queryFn: () => fetchData("/admin/radiology"),
+  });
+
   const mutation = useMutation({
     mutationFn: (newRecord) =>
-      createData("/pathology", {
+      createData("/labtest", {
         ...newRecord,
         reporting_time: Times,
         amount: {
           ...newRecord.amount,
-          netTotal: newRecord.amount.total - newRecord.amount.discount
-        }
+          netTotal: newRecord.amount.total - newRecord.amount.discount,
+        },
       }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries(["pathologyrecords"]);
+      queryClient.invalidateQueries(["labtestrecord"]);
       SuccessHandling(data.message);
-      router.push(`/pathology/printreceipt/${data?.data?.bill_no}`);
+      router.push(`/labtest/printreceipt/${data?.data?.bill_no}`);
     },
     onError: (error) => ErrorHandeling(error),
   });
@@ -173,62 +187,114 @@ const CreatePathology = () => {
     mutation.mutate({ ...ServiceData, consultant: consultant.value._id });
   };
 
-  const addToCart = (test) => {
-    setServiceData(prev => {
-      const newTotal = prev.amount.total + Number(test.pathology_charge);
-      const newNetTotal = newTotal - prev.amount.discount;
-      const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
+  const addToCart = (test, test_type) => {
+    setServiceData((prev) => {
 
-      const relatedTests = pathologytests.data
-        .filter((pt) => pt.pathology_category?._id === test._id)
-        .map((pt) => ({ ...pt, reading_unit: "" }));
+      if (test_type === "pathology") {
+        const newTotal = prev.amount.total + Number(test.pathology_charge);
+        const newNetTotal = newTotal - prev.amount.discount;
+        const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
 
-      return {
-        ...prev,
-        test_cart: {
-          services: [...prev.test_cart.services, { ...test, related_tests: relatedTests }]
-        },
-        amount: {
-          ...prev.amount,
-          total: newTotal,
-          netTotal: newNetTotal,
-          due: newDue
-        }
-      };
+        const relatedTests = pathologytests.data
+          .filter((pt) => pt.pathology_category?._id === test._id)
+          .map((pt) => ({ ...pt, reading_unit: "" }));
+
+        return {
+          ...prev,
+          pathology_test_cart: {
+            services: [
+              ...prev.pathology_test_cart.services,
+              { ...test, related_tests: relatedTests },
+            ],
+          },
+          amount: {
+            ...prev.amount,
+            total: newTotal,
+            netTotal: newNetTotal,
+            due: newDue,
+          },
+        };
+      } else {
+        const newTotal = prev.amount.total + Number(test.test_charge);
+        const newNetTotal = newTotal - prev.amount.discount;
+        const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
+
+        return {
+          ...prev,
+          radiology_test_cart: {
+            services: [
+              ...prev.radiology_test_cart.services,
+              test
+            ],
+          },
+          amount: {
+            ...prev.amount,
+            total: newTotal,
+            netTotal: newNetTotal,
+            due: newDue,
+          },
+        };
+      }
+
     });
   };
 
-  const removeFromCart = (test) => {
-    setServiceData(prev => {
-      const updatedServices = prev.test_cart.services.filter(
-        service => service._id !== test._id
-      );
-      const newTotal = prev.amount.total - Number(test.pathology_charge);
-      const newNetTotal = newTotal - prev.amount.discount;
-      const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
+  const removeFromCart = (test,test_type) => {
 
-      return {
-        ...prev,
-        test_cart: {
-          services: updatedServices
-        },
-        amount: {
-          ...prev.amount,
-          total: newTotal,
-          netTotal: newNetTotal,
-          due: newDue
-        }
-      };
-    });
+    if (test_type === "pathology") {
+      setServiceData((prev) => {
+        const updatedServices = prev.pathology_test_cart.services.filter(
+          (service) => service._id !== test._id
+        );
+        const newTotal = prev.amount.total - Number(test.pathology_charge);
+        const newNetTotal = newTotal - prev.amount.discount;
+        const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
+  
+        return {
+          ...prev,
+          pathology_test_cart: {
+            services: updatedServices,
+          },
+          amount: {
+            ...prev.amount,
+            total: newTotal,
+            netTotal: newNetTotal,
+            due: newDue,
+          },
+        };
+      });
+    } else {
+      setServiceData((prev) => {
+        const updatedServices = prev.radiology_test_cart.services.filter(
+          (service) => service._id !== test._id
+        );
+        const newTotal = prev.amount.total - Number(test.test_charge);
+        const newNetTotal = newTotal - prev.amount.discount;
+        const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
+  
+        return {
+          ...prev,
+          radiology_test_cart: {
+            services: updatedServices,
+          },
+          amount: {
+            ...prev.amount,
+            total: newTotal,
+            netTotal: newNetTotal,
+            due: newDue,
+          },
+        };
+      });
+    }
   };
 
   return (
     <Suspense fallback={<Loading />}>
       <div className="flex flex-wrap w-full justify-between">
-        <Tab tabs={TabLinks} category="Pathology Patient" />
+        <Tab tabs={TabLinks} category="Labtest" />
         <MiddleSection>
           <div className="w-full">
-            <Heading heading="Pathology Admission">
+            <Heading heading="Lab Admission">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -305,7 +371,6 @@ const CreatePathology = () => {
                   </label>
                   <input
                     type="date"
-
                     name="selectDob"
                     value={selectDob}
                     onChange={(e) => setSelectDob(e.target.value)}
@@ -380,14 +445,24 @@ const CreatePathology = () => {
                     className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
                   />
                 </div>
-
               </div>
             </div>
           </div>
 
           <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Available Tests</h2>
+              <div className="w-full flex justify-between">
+                <h2 className="text-xl font-semibold">Available Tests</h2>
+                <div className="flex space-x-2">
+                  <button className={` ${ToggleTest ? "btn-error text-white" : "btn-secondary"} btn `} onClick={() => setToggleTest(true)}>
+                    Pathology
+                  </button>
+                  <button className={` ${!ToggleTest ? "btn-error text-white" : "btn-secondary"} btn `} onClick={() => setToggleTest(false)}>
+                    {" "}
+                    Radiology
+                  </button>
+                </div>
+              </div>
               <input
                 type="text"
                 placeholder="Search tests..."
@@ -395,9 +470,11 @@ const CreatePathology = () => {
                 value={searchTest}
                 onChange={(e) => setSearchTest(e.target.value)}
               />
-              {categories?.data
+            {ToggleTest ?  categories?.data
                 ?.filter((test) =>
-                  test.pathology_category.toLowerCase().includes(searchTest.toLowerCase())
+                  test.pathology_category
+                    .toLowerCase()
+                    .includes(searchTest.toLowerCase())
                 )
                 .map((test) => (
                   <div
@@ -409,7 +486,31 @@ const CreatePathology = () => {
                       ₹{Number(test.pathology_charge)}
                     </p>
                     <button
-                      onClick={() => addToCart(test)}
+                      onClick={() => addToCart(test, "pathology")}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      Add
+                    </button>
+                  </div>
+                ))
+              :
+              radiologytest?.data
+                ?.filter((test) =>
+                  test.test_name
+                    .toLowerCase()
+                    .includes(searchTest.toLowerCase())
+                )
+                .map((test) => (
+                  <div
+                    key={test._id}
+                    className="flex justify-between items-center p-3 border border-black rounded"
+                  >
+                    <p className="font-semibold">{test.test_name}</p>
+                    <p className="text-sm font-bold text-gray-500">
+                      ₹{Number(test.test_charge)}
+                    </p>
+                    <button
+                      onClick={() => addToCart(test, "radiology")}
                       className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
                       Add
@@ -418,10 +519,9 @@ const CreatePathology = () => {
                 ))}
             </div>
 
-
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Test Cart</h2>
-              {ServiceData.test_cart.services.map((test, index) => (
+              {ServiceData?.pathology_test_cart?.services.map((test, index) => (
                 <div
                   key={index}
                   className="flex justify-between items-center p-3 border rounded"
@@ -431,7 +531,24 @@ const CreatePathology = () => {
                     ₹{Number(test.pathology_charge)}
                   </p>
                   <button
-                    onClick={() => removeFromCart(test)}
+                    onClick={() => removeFromCart(test,"pathology")}
+                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              ))}
+              {ServiceData?.radiology_test_cart?.services.map((test, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 border rounded"
+                >
+                  <p className="font-semibold">{test.test_name}</p>
+                  <p className="text-sm font-bold text-gray-500">
+                    ₹{Number(test.test_charge)}
+                  </p>
+                  <button
+                    onClick={() => removeFromCart(test,"radiology")}
                     className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                   >
                     <FaTrash />
@@ -446,7 +563,6 @@ const CreatePathology = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       Discount Amount
@@ -478,10 +594,8 @@ const CreatePathology = () => {
                       step="0.01"
                     />
                   </div>
-
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700">
                       Due Amount
@@ -515,8 +629,6 @@ const CreatePathology = () => {
                   </div>
                 </div>
 
-
-
                 <div className="flex justify-between font-semibold">
                   <span>Net Total:</span>
                   <span>₹{ServiceData.amount.netTotal}</span>
@@ -531,15 +643,17 @@ const CreatePathology = () => {
                     <span className="flex items-center justify-center gap-2">
                       <Spinner /> Submitting...
                     </span>
-                  ) : "Submit"}
+                  ) : (
+                    "Submit"
+                  )}
                 </button>
               </div>
             </div>
           </div>
         </MiddleSection>
-      </div >
-    </Suspense >
+      </div>
+    </Suspense>
   );
 };
 
-export default withAuth(CreatePathology);
+export default withAuth(CreateLabtest);
