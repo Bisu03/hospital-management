@@ -104,6 +104,12 @@ const BedAllotment = () => {
                                     >
                                         Create Bill
                                     </button>
+                                    <Link
+                                        className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors"
+                                        href={`/bedmanagement/bedallotment/${patientData._id}?reg_id=${patientData.reg_id}`}
+                                    >
+                                        Sift Bed
+                                    </Link>
                                 </div>
                             </div>
                         </FixedLayout>

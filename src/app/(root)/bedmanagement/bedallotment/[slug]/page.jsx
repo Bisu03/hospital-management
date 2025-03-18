@@ -2,14 +2,27 @@
 
 import Heading from '@/components/Heading';
 import Loading from '@/components/Loading';
-import { fetchData } from '@/services/apiService';
+import Spinner from '@/components/ui/Spinner';
+import { fetchData, updateData } from '@/services/apiService';
 import { withAuth } from '@/services/withAuth'
+import { ErrorHandeling } from '@/utils/errorHandling';
+import { SuccessHandling } from '@/utils/successHandling';
 import { useQuery } from '@tanstack/react-query';
-import React, { lazy, Suspense } from 'react'
+import { useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import React, { lazy, Suspense, useState } from 'react'
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const BedAllotment = () => {
+
+    const searchParams = useSearchParams()
+    const search = searchParams.get('reg_id')
+    const { slug } = useParams();
+    const router = useRouter()
+    const [loading, setLoading] = useState();
+
     const {
         data: bedrecord,
         error,
@@ -20,9 +33,17 @@ const BedAllotment = () => {
         queryFn: () => fetchData("/bed/bed"),
     });
 
-    const handleBedSelect = (bedId) => {
-        // Handle bed selection logic
-        console.log("Selected bed ID:", bedId);
+    const handleBedSelect = async (bedId) => {
+        setLoading(bedId)
+        try {
+            const data = await updateData(`/bed/sift`, bedId, { ipdid: slug });
+            SuccessHandling(data.message);
+            router.push(`/ipd/print/${search}`);
+            setLoading("")
+        } catch (error) {
+            setLoading("")
+            ErrorHandeling(error)
+        }
     };
 
     // Group beds by category
@@ -51,7 +72,16 @@ const BedAllotment = () => {
                                 </h3>
                                 <div className="flex flex-wrap gap-3 p-2 bg-gray-50 rounded-b">
                                     {beds?.map((bed) => (
-                                        <button
+                                        bed?.isAllocated ? <button
+                                            key={bed._id}
+                                            disabled
+                                            className="px-4 py-2 bg-red-300 hover:bg-red-200 border border-blue-200 rounded-md 
+                                            text-sm font-medium transition-all
+                                            min-w-[80px] sm:min-w-[100px] 
+                                            hover:shadow-sm hover:border-blue-300"
+                                        >
+                                            {bed?.bed_number}
+                                        </button> : <button
                                             key={bed._id}
                                             className="px-4 py-2 bg-white hover:bg-blue-50 border border-blue-200 rounded-md 
                                                 text-sm font-medium transition-all
@@ -59,7 +89,7 @@ const BedAllotment = () => {
                                                 hover:shadow-sm hover:border-blue-300"
                                             onClick={() => handleBedSelect(bed._id)}
                                         >
-                                            {bed?.bed_number}
+                                            {bed?.bed_number} {loading === bed._id ? <Spinner /> : ""}
                                         </button>
                                     ))}
                                 </div>

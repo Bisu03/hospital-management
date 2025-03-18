@@ -99,12 +99,16 @@ const IpdAdmission = () => {
     }, [consultant]);
 
     const mutation = useMutation({
-        mutationFn: (newItem) => createData(`/ipd?bedid=${search}`, newItem),
+        mutationFn: (newItem) => createData(`/ipd?bedid=${search || ""}`, newItem),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
             setFormData(initialState);
             SuccessHandling(data.message);
-            router.push(`/ipd/print/${data?.data?.reg_id}`);
+            if (search) {
+                router.push(`/ipd/print/${data?.data?.reg_id}`);
+            } else {
+                router.push(`/bedmanagement/bedallotment/${data?.data?._id}?reg_id=${data?.data?.reg_id}`);
+            }
         },
         onError: (error) => {
             ErrorHandeling(error);

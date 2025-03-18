@@ -7,7 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import Ipd from "@/models/Ipd.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
 import Patient from "@/models/Patient.models"
-import Billinng from "@/models/Billing.models"
+import Billing from "@/models/Billing.models"
 import Bed from '@/models/Bed.models'; // Mongoose User model
 
 export async function GET(req) {
@@ -191,27 +191,27 @@ export async function POST(req) {
             });
 
             if (ipddata) {
+                let beddata
                 if (searchTerm) {
-                    await Bed.findByIdAndUpdate(searchTerm, {
+                    beddata = await Bed.findByIdAndUpdate(searchTerm, {
                         patitentID: ipddata._id, isAllocated: true
                     })
                 }
-                await Billinng.create({
+                await Billing.create({
                     reg_id: regid.seq,
                     mrd_id: mrdid.seq,
                     consultant_cart: consultant,
                     patient: data._id,
-                    ipd: ipddata._id
+                    ipd: ipddata._id,
+                    acomodation_cart: beddata || []
                 })
+                return NextResponse.json({
+                    success: true,
+                    message: "Patient Admitted Successfully",
+                    data: ipddata,
+                });
             }
 
-
-
-            return NextResponse.json({
-                success: true,
-                message: "Patient Admitted Successfully",
-                data: ipddata,
-            });
         }
 
     } catch (error) {

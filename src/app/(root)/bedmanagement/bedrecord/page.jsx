@@ -11,7 +11,7 @@ import { SuccessHandling } from "@/utils/successHandling";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { createData, deleteData, fetchData, updateData } from "@/services/apiService";
 import { FaEdit } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
+import { MdDelete, MdLockReset } from "react-icons/md";
 import Spinner from "@/components/ui/Spinner";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
@@ -21,6 +21,7 @@ const BedRecord = () => {
 
     const [formData, setFormData] = useState({});
     const [isModalOpen, setModalOpen] = useState(false);
+    const [loading, setLoading] = useState({});
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,6 +63,7 @@ const BedRecord = () => {
             queryClient.invalidateQueries({ queryKey: ["bedrecord"] }); // Refetch data after adding
             setFormData({});
             refetch()
+            setLoading("")
             SuccessHandling(data.message);
             setModalOpen(false);
         },
@@ -89,6 +91,11 @@ const BedRecord = () => {
         setFormData({ ...item, bed_category: item.bed_category._id, isEditing: true });
         setModalOpen(true);
     };
+
+    const handleReset = (item) => {
+        setLoading(item._id)
+        mutationUpdate.mutate({ ...item, isAllocated: false, patitentID: "" });
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault(); // Prevents default form submission
@@ -204,9 +211,9 @@ const BedRecord = () => {
                                         <th className="px-4 py-3">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className={`bg-white divide-y divide-gray-200`}>
                                     {bedrecord?.data?.map((bed, index) => (
-                                        <tr key={bed._id} className="hover:bg-gray-50">
+                                        <tr key={bed._id} className={` ${bed?.isAllocated && `bg-red-100`}`}>
                                             <td className="px-4 py-3">{index + 1}</td>
                                             <td className="px-4 py-3">
                                                 {bed?.bed_category?.bed_category}
@@ -214,6 +221,12 @@ const BedRecord = () => {
                                             <td className="px-4 py-3">{bed?.bed_number}</td>
                                             <td className="px-4 py-3">{bed?.bed_charge}</td>
                                             <td className="px-4 py-3 space-x-2 flex">
+                                                <button
+                                                    onClick={() => handleReset(bed)}
+                                                    className="btn btn-warning "
+                                                >
+                                                    <MdLockReset /> {loading._id === bed._id && <Spinner />}
+                                                </button>
                                                 <button
                                                     onClick={() => handleEdit(bed)}
                                                     className="btn btn-secondary "
