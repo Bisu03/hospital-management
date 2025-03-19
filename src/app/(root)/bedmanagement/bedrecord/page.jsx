@@ -41,6 +41,7 @@ const BedRecord = () => {
         queryFn: () => fetchData("/bed/bed"), // Function to fetch data
     });
 
+
     const mutationCreate = useMutation({
         mutationFn: (newItem) => createData("/bed/bed", newItem),
         onSuccess: (data) => {

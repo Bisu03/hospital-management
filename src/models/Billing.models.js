@@ -13,12 +13,6 @@ const billingSchema = new Schema({
     bill_no: {
         type: String,
     },
-    billing_date: {
-        type: String,
-    },
-    billing_time: {
-        type: String,
-    },
     patient: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "patient_registration",
@@ -33,7 +27,9 @@ const billingSchema = new Schema({
     acomodation_cart: {
         type: Object
     },
-
+    medicine_cart: {
+        type: Object
+    },
     service_cart: {
         type: Object
     },

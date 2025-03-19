@@ -17,7 +17,7 @@ const Menu = () => {
         { href: "/patient/record", icon: <FaRegistered size={60} />, label: "Patient Record" },
         { href: "/ipd/admit", icon: <MdBedroomParent size={60} />, label: "IPD" },
         { href: "/opd/admit", icon: <FaClinicMedical size={60} />, label: "OPD" },
-        { href: "/billing/makebills", icon: <FaMoneyBill size={60} />, label: "Bill" },
+        { href: "/ipd/ipdservice", icon: <FaMoneyBill size={60} />, label: "Bill" },
         { href: "/labtest/create", icon: <ImLab size={60} />, label: "Lab Test" },
     ];
 

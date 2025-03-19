@@ -49,6 +49,10 @@ export const NavLinks = [
         path: "/ipd/ipdservice",
       },
       {
+        name: "Billing Record",
+        path: "/ipd/billrecord",
+      },
+      {
         name: "Discharge",
         path: "/discharge/create",
       },
@@ -125,6 +129,10 @@ export const NavLinks = [
       {
         name: "Hospital Information",
         path: "/admin/settings/hospital/information",
+      },
+      {
+        name: "Medicine",
+        path: "/admin/medicine",
       },
       {
         name: "Services",

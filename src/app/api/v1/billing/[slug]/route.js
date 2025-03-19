@@ -45,10 +45,35 @@ export async function PUT(req, context) {
         const { slug } = context.params;
         const body = await req.json();
 
-        const updatedBill = await Billing.findOneAndUpdate(
-            { reg_id: slug },
-            body,
-        )
+        let updatedBill
+        if (body.isDone === true) {
+            if (body.bill_no) {
+                updatedBill = await Billing.findOneAndUpdate(
+                    { reg_id: slug },
+                    { ...body},
+                )
+            } else {
+                let billno = null;
+
+                billno = await Counter.findOneAndUpdate(
+                    { id: "billno" },
+                    { $inc: { seq: 1 } },
+                    { new: true, upsert: true, setDefaultsOnInsert: true }
+                );
+
+                updatedBill = await Billing.findOneAndUpdate(
+                    { reg_id: slug },
+                    { ...body, bill_no: billno.seq },
+                )
+            }
+
+        } else {
+            updatedBill = await Billing.findOneAndUpdate(
+                { reg_id: slug },
+                body,
+            )
+        }
+
         return NextResponse.json({
             success: true,
             message: "Billing Updated Successfully",

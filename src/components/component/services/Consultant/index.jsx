@@ -192,7 +192,7 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2"
         >
           <BiSolidPlusSquare className="text-xl" />
-          Add Doctor
+          Add
         </button>
         
         <div className="text-xl font-semibold">

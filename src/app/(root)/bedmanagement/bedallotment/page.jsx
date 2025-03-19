@@ -91,19 +91,13 @@ const BedAllotment = () => {
                                 </div>
 
                                 <div className="flex gap-4 mt-6">
-                                    <button
+                                    <Link href={`/ipd/ipdservice?regid=${patientData?.reg_id}`}
                                         className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                                        onClick={() => {/* Add service logic */ }}
+
                                     >
                                         Add Service
-                                    </button>
+                                    </Link>
 
-                                    <button
-                                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-                                        onClick={() => {/* Create bill logic */ }}
-                                    >
-                                        Create Bill
-                                    </button>
                                     <Link
                                         className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors"
                                         href={`/bedmanagement/bedallotment/${patientData._id}?reg_id=${patientData.reg_id}`}

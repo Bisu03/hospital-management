@@ -14,13 +14,15 @@ import QRCode from "react-qr-code";
 import { amountToWords } from "@/lib/numberToWord";
 import Image from "next/image";
 
-const IpdBill = () => {
+const IpsEstimate = () => {
     const { slug } = useParams();
     const { data: session } = useSession();
     const { hospitalInfo } = useHospital();
 
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(false);
+    console.log(formData);
+
 
     const [Acomodation, setAcomodation] = useState({ items: [], total: 0 });
     const [DoctorCharge, setDoctorCharge] = useState({ items: [], total: 0 });
@@ -88,39 +90,28 @@ const IpdBill = () => {
             {loading && <Loading />}
             <div className="mx-auto bg-white p-2 print:p-1">
                 {/* Compact Patient Details */}
-                <div>
-                    <h2 className="text-lg font-bold text-center mb-2">Money Receipt</h2>
-                    <div className="grid grid-cols-3 gap-2 mb-2 print:grid-cols-3">
-                        <div>
-                            <h3 className="text-xs font-semibold border-b border-black">Patient Details</h3>
-                            <div className="text-[10px] space-y-0.5 print:text-[9px]">
-                                <p>{formData?.patient?.fullname} ({formData?.patient?.gender}/{formData?.patient?.age})</p>
-                                <p>{formData?.patient?.phone_number}</p>
-                                <p className="truncate">{formData?.patient?.address}</p>
-                            </div>
+                <h2 className="text-lg font-bold text-center mb-2">Estimate Receipt</h2>
+                <div className="grid grid-cols-3 gap-1 mb-2 print:grid-cols-3">
+                    <div className="col-span-2">
+                        <h3 className="text-xs font-semibold border-b border-black">Patient Details</h3>
+                        <div className="text-[10px] space-y-0.5 print:text-[9px]">
+                            <p>Name:- {formData?.patient?.fullname} ({formData?.patient?.gender}/{formData?.patient?.age})</p>
+                            <p>Phone Number:- {formData?.patient?.phone_number}</p>
+                            <p className="truncate">Address:- {formData?.patient?.address}</p>
                         </div>
+                    </div>
 
-                        <div>
-                            <h3 className="text-xs font-semibold border-b border-black">Admission</h3>
-                            <div className="text-[10px] space-y-0.5 print:text-[9px]">
-                                <p>Admit Date/Time: {formatDate(formData?.ipd?.admit_date)} {formData?.ipd?.admit_time}</p>
-                                <p>MRD: {formData?.mrd_id}</p>
-                                <p>Reg: {formData?.reg_id}</p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 className="text-xs font-semibold border-b border-black">Billing Details</h3>
-                            <div className="text-[10px] space-y-0.5 print:text-[9px]">
-                                <p>Discharge Date/Time: {formatDate(formData?.billing_date)}/{formData?.billing_time}</p>
-                                <p>Bill: {formData?.bill_no}</p>
-                            </div>
+                    <div>
+                        <h3 className="text-xs font-semibold border-b border-black">Admission</h3>
+                        <div className="text-[10px] space-y-0.5 print:text-[9px]">
+                            <p>{formatDate(formData?.ipd?.admit_date)} {formData?.ipd?.admit_time}</p>
+                            <p>MRD: {formData?.mrd_id}</p>
+                            <p>Reg: {formData?.reg_id}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Compact Tables */}
-
                 <div className="space-y-1">
                     <h3 className="text-xs font-semibold border-b border-black">Bed Charges</h3>
                     <table className="w-full text-[10px] print:text-[8px]">
@@ -144,7 +135,6 @@ const IpdBill = () => {
                         </tbody>
                     </table>
                 </div>
-
                 <div className="space-y-1">
                     <h3 className="text-xs font-semibold border-b border-black">Doctor Charges</h3>
                     <table className="w-full text-[10px] print:text-[8px]">
@@ -205,7 +195,7 @@ const IpdBill = () => {
 
                 <div className="mt-1">
                     <h3 className="text-xs font-semibold border-b border-black">Medicines</h3>
-                    <table className="w-full text-[10px] print:text-[10px]">
+                    <table className="w-full text-[10px] print:text-[8px]">
                         <thead>
                             <tr className="bg-gray-100">
                                 <th className="p-0.5 text-left border">Medicine</th>
@@ -267,8 +257,8 @@ const IpdBill = () => {
                     <div className="flex justify-between items-center text-[10px] text-gray-600">
                         <p>Thank you for choosing {hospitalInfo?.hospital_name}</p>
                         <div className="text-center">
-                            <div className="mt-4 w-32 border-b border-black"></div>
-                            <p>E.&O.E: {formData?.patient?.admited_by}</p>
+                            {/* <div className="mb-0.5 w-32 border-b border-black"></div>
+                            <p>E.&O.E: {formData?.patient?.admited_by}</p> */}
                         </div>
                     </div>
                 </div>
@@ -277,4 +267,4 @@ const IpdBill = () => {
     );
 };
 
-export default withAuth(IpdBill);
+export default withAuth(IpsEstimate);

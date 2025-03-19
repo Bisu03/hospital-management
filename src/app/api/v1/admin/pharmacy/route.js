@@ -4,21 +4,6 @@ import PharmacyConfig from "@/models/Pharmacyinformation.models"; // Import the 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
-/**
- * Handles GET requests to the pharmacy configuration API endpoint.
- *
- * If a session is found, it attempts to retrieve the pharmacy configuration
- * document from the database. If the document does not exist, it creates a new
- * document with default values.
- *
- * In case of success, it returns the pharmacy configuration data in JSON
- * format with a 200 status code. If an error occurs, it returns an error
- * message in JSON format with a 500 status code. If the user is not
- * authenticated, it returns an "Unauthorized" message with a 401 status code.
- *
- * @returns Promise<NextResponse> A promise that resolves to a NextResponse
- *   object containing the pharmacy configuration data or an error message.
- */
 export async function GET() {
   // Connect to the database
   await connectDB();

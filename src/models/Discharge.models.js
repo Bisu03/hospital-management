@@ -14,6 +14,17 @@ const dischargeSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "patient_registration",
     },
+    bill_no: {
+        type: String,
+    },
+    patient: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "patient_registration",
+    },
+    ipd: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ipd",
+    },
     final_diagnosis: {
         type: String,
     },

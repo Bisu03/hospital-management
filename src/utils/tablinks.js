@@ -11,6 +11,22 @@ export const TabLinks = [
         name: "IPD Record",
         path: "/ipd/record",
       },
+      {
+        name: "IPD Service & Billing",
+        path: "/ipd/ipdservice",
+      },
+      {
+        name: "Billing Record",
+        path: "/ipd/billrecord",
+      },
+      {
+        name: "Discharge",
+        path: "/discharge/create",
+      },
+      {
+        name: "Discharge Record",
+        path: "/discharge/record",
+      },
     ],
   },
   {

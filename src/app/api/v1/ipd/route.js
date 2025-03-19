@@ -6,10 +6,10 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
 import Ipd from "@/models/Ipd.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
-import Patient from "@/models/Patient.models"
-import Billing from "@/models/Billing.models"
-import Bed from '@/models/Bed.models'; // Mongoose User model
-import "@/models/BedCategory.models"
+import Patient from "@/models/Patient.models";
+import Billing from "@/models/Billing.models";
+import Bed from "@/models/Bed.models"; // Mongoose User model
+import "@/models/BedCategory.models";
 
 export async function GET(req) {
     try {
@@ -38,13 +38,16 @@ export async function GET(req) {
             const matchConditions = {};
 
             if (searchTerm) {
-                matchConditions["patient.fullname"] = { $regex: searchTerm, $options: "i" };
+                matchConditions["patient.fullname"] = {
+                    $regex: searchTerm,
+                    $options: "i",
+                };
             }
 
             if (startDate && endDate) {
                 matchConditions["admit_date"] = {
                     $gte: startDate,
-                    $lte: endDate
+                    $lte: endDate,
                 };
             } else if (startDate) {
                 matchConditions["admit_date"] = { $gte: startDate };
@@ -58,8 +61,8 @@ export async function GET(req) {
                         from: "patient_registrations",
                         localField: "patient",
                         foreignField: "_id",
-                        as: "patient"
-                    }
+                        as: "patient",
+                    },
                 },
                 { $unwind: "$patient" },
                 {
@@ -67,19 +70,18 @@ export async function GET(req) {
                         from: "doctors",
                         localField: "consultant",
                         foreignField: "_id",
-                        as: "consultant"
-                    }
+                        as: "consultant",
+                    },
                 },
                 { $unwind: { path: "$consultant", preserveNullAndEmptyArrays: true } },
                 { $match: matchConditions },
-              
             ];
 
             const data = await Ipd.aggregate(pipeline).sort("-createdAt");
 
             return NextResponse.json({
                 success: true,
-                data
+                data,
             });
         }
     } catch (error) {
@@ -103,7 +105,6 @@ export async function POST(req) {
         const body = await req.json();
         const url = new URL(req.url);
         const searchTerm = url.searchParams.get("bedid");
-
 
         let regid = null;
         let mrdid = null;
@@ -165,6 +166,7 @@ export async function POST(req) {
             aadhar,
             guardian_name,
             religion,
+            admited_by,
             guardian_phone,
             referr_by,
             reg_id: regid.seq,
@@ -188,33 +190,62 @@ export async function POST(req) {
                 admited_by,
                 admited_in,
                 patient: data._id,
-                consultant: consultant._id
+                consultant: consultant._id,
             });
 
             if (ipddata) {
-                let beddata
+                let beddata;
                 if (searchTerm) {
                     beddata = await Bed.findByIdAndUpdate(searchTerm, {
-                        patitentID: ipddata._id, isAllocated: true
+                        patitentID: ipddata._id,
+                        isAllocated: true,
                     }).populate("bed_category");
                 }
-                await Billing.create({
-                    reg_id: regid.seq,
-                    mrd_id: mrdid.seq,
-                    consultant_cart: { items: [{ ...consultant }], total: 0 },
-                    patient: data._id,
-                    ipd: ipddata._id,
-                    acomodation_cart: { items: [{ ...beddata, dateofadd: admit_date }] }
-                })
-                return NextResponse.json({
-                    success: true,
-                    message: "Patient Admitted Successfully",
-                    data: ipddata,
-                });
+                if (beddata) {
+                    const bdata = {
+                        bed_category: beddata.bed_category.bed_category,
+                        bed_number: beddata.bed_number,
+                        bed_charge: beddata.bed_charge,
+                        dateofadd: admit_date,
+                    };
+                    await Billing.create({
+                        reg_id: regid.seq,
+                        mrd_id: mrdid.seq,
+                        consultant_cart: {
+                            items: [{ ...consultant }],
+                            total: consultant.charge,
+                        },
+                        patient: data._id,
+                        ipd: ipddata._id,
+                        acomodation_cart: {
+                            items: [bdata],
+                        },
+                    });
+                    return NextResponse.json({
+                        success: true,
+                        message: "Patient Admitted Successfully",
+                        data: ipddata,
+                    });
+                } else {
+                    await Billing.create({
+                        reg_id: regid.seq,
+                        mrd_id: mrdid.seq,
+                        consultant_cart: {
+                            items: [{ ...consultant }],
+                            total: consultant.charge,
+                        },
+                        patient: data._id,
+                        ipd: ipddata._id,
+                        acomodation_cart: { items: [], total: 0 },
+                    });
+                    return NextResponse.json({
+                        success: true,
+                        message: "Patient Admitted Successfully",
+                        data: ipddata,
+                    });
+                }
             }
-
         }
-
     } catch (error) {
         return NextResponse.json(
             { success: false, message: "Server error", error: error.message },
