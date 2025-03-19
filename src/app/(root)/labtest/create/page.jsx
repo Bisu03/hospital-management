@@ -239,7 +239,7 @@ const CreateLabtest = () => {
     });
   };
 
-  const removeFromCart = (test,test_type) => {
+  const removeFromCart = (test, test_type) => {
 
     if (test_type === "pathology") {
       setServiceData((prev) => {
@@ -249,7 +249,7 @@ const CreateLabtest = () => {
         const newTotal = prev.amount.total - Number(test.pathology_charge);
         const newNetTotal = newTotal - prev.amount.discount;
         const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
-  
+
         return {
           ...prev,
           pathology_test_cart: {
@@ -271,7 +271,7 @@ const CreateLabtest = () => {
         const newTotal = prev.amount.total - Number(test.test_charge);
         const newNetTotal = newTotal - prev.amount.discount;
         const newDue = Math.max(newNetTotal - prev.amount.paid, 0);
-  
+
         return {
           ...prev,
           radiology_test_cart: {
@@ -305,7 +305,7 @@ const CreateLabtest = () => {
                 />
                 <button
                   onClick={handlemrdIdSearch}
-                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  className="px-3 py-1 bg-primary text-white rounded hover:bg-blue-600"
                 >
                   Search
                 </button>
@@ -470,51 +470,52 @@ const CreateLabtest = () => {
                 value={searchTest}
                 onChange={(e) => setSearchTest(e.target.value)}
               />
-            {ToggleTest ?  categories?.data
-                ?.filter((test) =>
-                  test.pathology_category
-                    .toLowerCase()
-                    .includes(searchTest?.toLowerCase())
-                )?.map((test) => (
-                  <div
-                    key={test._id}
-                    className="flex justify-between items-center p-3 border border-black rounded"
-                  >
-                    <p className="font-semibold">{test?.pathology_category}</p>
-                    <p className="text-sm font-bold text-gray-500">
-                      ₹{Number(test?.pathology_charge)}
-                    </p>
-                    <button
-                      onClick={() => addToCart(test, "pathology")}
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              {ToggleTest ?
+                categories?.data
+                  ?.filter((test) =>
+                    test.pathology_category.toLowerCase().includes(searchTest?.toLowerCase())
+                  )?.map((test) => (
+                    <div
+                      key={test._id}
+                      className="flex justify-between items-center p-3 border border-black rounded"
                     >
-                      Add
-                    </button>
-                  </div>
-                ))
-              :
-              radiologytest?.data
-                ?.filter((test) =>
-                  test?.test_name
-                    .toLowerCase()
-                    .includes(searchTest.toLowerCase())
-                )?.map((test) => (
-                  <div
-                    key={test._id}
-                    className="flex justify-between items-center p-3 border border-black rounded"
-                  >
-                    <p className="font-semibold">{test?.test_name}</p>
-                    <p className="text-sm font-bold text-gray-500">
-                      ₹{Number(test?.test_charge)}
-                    </p>
-                    <button
-                      onClick={() => addToCart(test, "radiology")}
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      <p className="font-semibold">{test?.pathology_category}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-gray-500">₹{Number(test?.pathology_charge)}</p>
+                        <button
+                          onClick={() => addToCart(test, "pathology")}
+                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                :
+                radiologytest?.data
+                  ?.filter((test) =>
+                    test?.test_name.toLowerCase().includes(searchTest.toLowerCase())
+                  )?.map((test) => (
+                    <div
+                      key={test._id}
+                      className="flex justify-between items-center p-3 border border-black rounded"
                     >
-                      Add
-                    </button>
-                  </div>
-                ))}
+                      <p className="font-semibold">{test?.test_name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-gray-500">₹{Number(test?.test_charge)}</p>
+                        <button
+                          onClick={() => addToCart(test, "radiology")}
+                          className="px-3 py-1 bg-primary text-white rounded hover:bg-blue-600"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  ))
+              }
+
+
+
             </div>
 
             <div className="space-y-4">
@@ -529,7 +530,7 @@ const CreateLabtest = () => {
                     ₹{Number(test.pathology_charge)}
                   </p>
                   <button
-                    onClick={() => removeFromCart(test,"pathology")}
+                    onClick={() => removeFromCart(test, "pathology")}
                     className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                   >
                     <FaTrash />
@@ -546,7 +547,7 @@ const CreateLabtest = () => {
                     ₹{Number(test.test_charge)}
                   </p>
                   <button
-                    onClick={() => removeFromCart(test,"radiology")}
+                    onClick={() => removeFromCart(test, "radiology")}
                     className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                   >
                     <FaTrash />

@@ -82,6 +82,19 @@ export const TabLinks = [
     ],
   },
   {
+    category: "Services",
+    routes: [
+      {
+        name: "Service Category",
+        path: "/admin/services/categoryrecord",
+      },
+      {
+        name: "Service Record",
+        path: "/admin/services",
+      },
+    ],
+  },
+  {
     category: "Billing",
     routes: [
       {

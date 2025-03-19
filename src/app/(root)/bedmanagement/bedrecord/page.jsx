@@ -1,7 +1,6 @@
 "use client";
 
 import React, { lazy, Suspense, useState } from "react";
-
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import FixedLayout from "@/components/ui/FixedLayout";

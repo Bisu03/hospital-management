@@ -45,6 +45,10 @@ export const NavLinks = [
         path: "/ipd/record",
       },
       {
+        name: "IPD Service",
+        path: "/ipd/ipdservice",
+      },
+      {
         name: "Discharge",
         path: "/discharge/create",
       },

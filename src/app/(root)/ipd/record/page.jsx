@@ -129,7 +129,7 @@ const IpdRecord = () => {
                                                 <td className="px-4 py-3">{patient?.admit_date}/{patient?.admit_time}</td>
                                                 <td className="px-4 py-3">{patient?.consultant?.drname}</td>
                                                 <td className="px-4 py-3 space-x-2 flex">
-                                                    <Link href={`/ipd/print/${patient._id}`} className="btn btn-primary">
+                                                    <Link href={`/ipd/print/${patient.reg_id}`} className="btn btn-primary">
                                                         <FaPrint />
                                                     </Link>
                                                     <button onClick={() => handleDelete(patient._id)} className="btn btn-error">

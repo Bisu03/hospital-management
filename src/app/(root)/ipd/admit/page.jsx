@@ -282,6 +282,18 @@ const IpdAdmission = () => {
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="block text-sm font-medium text-gray-700">
+                                                    Address
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="address"
+                                                    value={formData.address}
+                                                    onChange={handleChange}
+                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-700">
                                                     Aadhar Number
                                                 </label>
                                                 <input
@@ -470,7 +482,7 @@ const IpdAdmission = () => {
 
                                         <div className="space-y-2">
                                             <label className="block text-sm font-medium text-gray-700">
-                                                Consultant
+                                                Consultant <span className="text-red-500">*</span>
                                             </label>
                                             <div className="flex items-center space-x-2">
 

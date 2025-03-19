@@ -9,6 +9,7 @@ import Counter from "@/models/Counter.models";
 import Patient from "@/models/Patient.models"
 import Billing from "@/models/Billing.models"
 import Bed from '@/models/Bed.models'; // Mongoose User model
+import "@/models/BedCategory.models"
 
 export async function GET(req) {
     try {
@@ -195,15 +196,15 @@ export async function POST(req) {
                 if (searchTerm) {
                     beddata = await Bed.findByIdAndUpdate(searchTerm, {
                         patitentID: ipddata._id, isAllocated: true
-                    })
+                    }).populate("bed_category");
                 }
                 await Billing.create({
                     reg_id: regid.seq,
                     mrd_id: mrdid.seq,
-                    consultant_cart: consultant,
+                    consultant_cart: { items: [{ ...consultant }], total: 0 },
                     patient: data._id,
                     ipd: ipddata._id,
-                    acomodation_cart: beddata || []
+                    acomodation_cart: { items: [{ ...beddata, dateofadd: admit_date }] }
                 })
                 return NextResponse.json({
                     success: true,

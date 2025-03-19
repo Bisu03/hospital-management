@@ -125,31 +125,36 @@ const IpdPrint = () => {
                             <span>GUARDIAN:</span>
                             <input type="text" value={formData?.patient?.guardian_name} className="border-b border-black flex-1" readOnly />
                         </div>
-                        <div className="grid grid-cols-4 gap-4">
-                            <div className="flex items-center gap-2">
-                                <span>VILL:</span>
-                                <input type="text" value={formData?.patient?.city_vill} className="border-b border-black flex-1" readOnly />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span>P.O:</span>
-                                <input type="text" value={formData?.patient?.po} className="border-b border-black flex-1" readOnly />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span>P.S:</span>
-                                <input type="text" value={formData?.patient?.ps} className="border-b border-black flex-1" readOnly />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span>DIST:</span>
-                                <input type="text" value={formData?.patient?.dist} className="border-b border-black flex-1" readOnly />
-                            </div>
+
+                        <div className="flex justify-between">
+                            <span>Address:</span>
+                            <input type="text" value={formData?.patient?.address} className="border-b border-black flex-1" readOnly />
                         </div>
                     </div>
 
                     {/* Doctor Information */}
-                    <div className="text-sm border-b pb-4 pt-4">
+                    <div className="text-sm border-b">
                         <div className="flex justify-between">
                             <span>CONSULTANT:</span>
                             <input type="text" value={formData?.consultant?.drname} className="border-b border-black flex-1" readOnly />
+                        </div>
+                    </div>
+                    <div className="text-sm border-b ">
+                        <div className="flex justify-between">
+                            <span>Present Complaint:</span>
+                            <input type="text" value={formData?.present_complain} className="border-b border-black flex-1" readOnly />
+                        </div>
+                    </div>
+                    <div className="text-sm ">
+                        <div className="flex justify-between">
+                            <span>Medical Case:</span>
+                            <input type="text" value={formData?.medical_case} className="border-b border-black flex-1" readOnly />
+                        </div>
+                    </div>
+                    <div className="text-sm ">
+                        <div className="flex justify-between">
+                            <span>Provisional Diagnosis:</span>
+                            <input type="text" value={formData?.provisional_diagnosis} className="border-b border-black flex-1" readOnly />
                         </div>
                     </div>
 

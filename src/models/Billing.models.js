@@ -31,7 +31,7 @@ const billingSchema = new Schema({
         type: Object
     },
     acomodation_cart: {
-        type: Array
+        type: Object
     },
    
     service_cart: {

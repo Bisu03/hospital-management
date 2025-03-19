@@ -3,6 +3,7 @@
 import Heading from '@/components/Heading';
 import Loading from '@/components/Loading';
 import Spinner from '@/components/ui/Spinner';
+import { getDate } from '@/lib/currentDate';
 import { fetchData, updateData } from '@/services/apiService';
 import { withAuth } from '@/services/withAuth'
 import { ErrorHandeling } from '@/utils/errorHandling';
@@ -36,7 +37,7 @@ const BedAllotment = () => {
     const handleBedSelect = async (bedId) => {
         setLoading(bedId)
         try {
-            const data = await updateData(`/bed/sift`, bedId, { ipdid: slug });
+            const data = await updateData(`/bed/sift`, bedId, { ipdid: slug, siftdate: getDate() });
             SuccessHandling(data.message);
             router.push(`/ipd/print/${search}`);
             setLoading("")

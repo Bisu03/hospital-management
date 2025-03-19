@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const serviceSchema = new Schema({
+    categoryid: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "service_category",
+    },
     servicename: {
         type: String,
         required: true,

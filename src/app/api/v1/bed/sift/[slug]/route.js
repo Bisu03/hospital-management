@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import Billing from "@/models/Billing.models"
 import Bed from '@/models/Bed.models'; // Mongoose model
+import "@/models/BedCategory.models"
 
 export async function PUT(req, context) {
     // Connect to the database
@@ -28,11 +29,12 @@ export async function PUT(req, context) {
             slug,
             { isAllocated: true, patitentID: body?.ipdid },
             { new: true }
-        );
+        ).populate("bed_category");
+
         if (bdata) {
             await Billing.updateOne({ patient: body?.ipdid }, {
                 $push: {
-                    acomodation_cart: { ...bdata },
+                    acomodation_cart: { item: [{ ...bdata, dateofadd: body?.siftdate }] },
                 },
             })
             return NextResponse.json(

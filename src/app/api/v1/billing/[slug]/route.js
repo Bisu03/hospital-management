@@ -7,6 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import Billing from "@/models//Billing.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
 import "@/models/Patient.models"
+import "@/models/Ipd.models"
 
 export async function GET(req, context) {
     // Connect to the database
@@ -24,7 +25,7 @@ export async function GET(req, context) {
         const { slug } = await context.params;
         const data = await Billing.findOne({
             reg_id: slug,
-        }).populate("patient");
+        }).populate("patient").populate("ipd");
         // Return the message
         return NextResponse.json({ success: true, data }, { status: 200 });
     } catch (error) {
@@ -44,36 +45,10 @@ export async function PUT(req, context) {
         const { slug } = context.params;
         const body = await req.json();
 
-        const updateData = {
-            uh_id: body.uh_id,
-            reg_id: body.reg_id,
-            mrd_id: body.mrd_id,
-            service_cart: body.service_cart,
-            billing_date: body.billing_date,
-            billing_time: body.billing_time,
-            discount: body.discount,
-            gst: body.gst,
-            due: body.due,
-            paidby: body.paidby,
-            patient: body.patient?._id // Ensure patient reference is maintained
-        };
-
-        // Handle bill number generation
-        if (!body.bill_no) {
-            const counter = await Counter.findOneAndUpdate(
-                { id: "billno" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true }
-            );
-            updateData.bill_no = counter.seq;
-        }
-
-        const updatedBill = await Billing.findByIdAndUpdate(
-            slug,
-            updateData,
-            { new: true, runValidators: true }
-        ).populate('patient');
-
+        const updatedBill = await Billing.findOneAndUpdate(
+            { reg_id: slug },
+            body,
+        )
         return NextResponse.json({
             success: true,
             message: "Billing Updated Successfully",
@@ -84,6 +59,7 @@ export async function PUT(req, context) {
         return NextResponse.serverError(error);
     }
 }
+
 export async function DELETE(req, context) {
     await connectDB();
     const session = await getServerSession(authOptions);

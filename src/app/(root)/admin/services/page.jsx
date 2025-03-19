@@ -2,11 +2,13 @@
 
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
+import Tab from "@/components/Tab";
 import FixedLayout from "@/components/ui/FixedLayout";
 import { createData, deleteData, fetchData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
+import { TabLinks } from "@/utils/tablinks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { lazy, Suspense, useEffect, useReducer, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
@@ -27,7 +29,17 @@ const Services = () => {
     const { data, error, isLoading, refetch } = useQuery({
         queryKey: ["servicerecord"], // Unique query key
         queryFn: () => fetchData("/admin/service"), // Function to fetch data
+
+
     });
+
+    console.log(data);
+    
+    const { data: servicecategory } = useQuery({
+        queryKey: ["servicecategory"], // Unique query key
+        queryFn: () => fetchData("/admin/service/category"), // Function to fetch data
+    });
+
 
     const handleSubmit = async () => {
         try {
@@ -62,7 +74,7 @@ const Services = () => {
         <>
             <Suspense fallback={<Loading />}>
                 <div className="flex flex-wrap w-full justify-between">
-                    {/* <Tab tabs={TabLinks} category="Setting" /> */}
+                    <Tab tabs={TabLinks} category="Services" />
                     <MiddleSection>
                         <div className="w-full">
                             <Heading heading="Service List  ">
@@ -75,6 +87,28 @@ const Services = () => {
                                     <div className="w-full  p-6">
                                         <div className="space-y-6">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="space-y-1">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Service Category
+                                                        <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <select
+                                                        name="categoryid"
+                                                        value={ServiceInfor.categoryid}
+                                                        onChange={handleChange}
+                                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                   transition-all duration-200 shadow-sm"
+                                                        required
+                                                    >
+                                                        <option>Select Category</option>
+                                                        {servicecategory?.data?.map((item) => (
+                                                            <option key={item._id} value={item._id}>
+                                                                {item.category_name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
                                                 <div className="space-y-1">
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                                         Service Name
@@ -144,6 +178,7 @@ const Services = () => {
                                 <table className="w-full">
                                     <thead>
                                         <tr className="bg-secondary text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                            <th className="px-4 py-3">Service Category</th>
                                             <th className="px-4 py-3">Service Name</th>
                                             <th className="px-4 py-3">Unit Type</th>
                                             <th className="px-4 py-3 ">Unit Charge</th>
@@ -153,6 +188,7 @@ const Services = () => {
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {data?.data?.map((service) => (
                                             <tr key={service._id} className="hover:bg-gray-50">
+                                                <td className="px-4 py-3">{service?.categoryid?.category_name}</td>
                                                 <td className="px-4 py-3">{service?.servicename}</td>
                                                 <td className="px-4 py-3">{service?.unittype}</td>
                                                 <td className="px-4 py-3">{service?.unitcharge}</td>
