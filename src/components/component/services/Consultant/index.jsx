@@ -11,7 +11,7 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
     doctor_id: "",
     doctor_name: "",
     doctor_charge: "",
-    doctor_visit: "1", // Default to 1 visit
+    doctor_visit: "1",
   });
 
   const { data: doctorrecord } = useQuery({
@@ -26,15 +26,18 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
   const handleAddItem = () => {
     if (!AddDoctor.doctor_id || !AddDoctor.doctor_charge) return;
 
+    const charge = Number(AddDoctor.doctor_charge) || 0;
+    const visit = Math.max(Number(AddDoctor.doctor_visit) || 1, 1);
+
     const newDoctor = {
       itemID: AddDoctor.u_ID,
       drname: AddDoctor.doctor_name,
-      charge: parseInt(AddDoctor.doctor_charge),
-      visit: parseInt(AddDoctor.doctor_visit) || 1,
+      charge: charge,
+      visit: visit,
     };
 
     setDoctorCharge((prev) => ({
-      total: (prev?.total || 0) + newDoctor.charge * newDoctor.visit,
+      total: (prev?.total || 0) + charge * visit,
       items: [...(prev?.items || []), newDoctor],
     }));
 
@@ -56,27 +59,31 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
   };
 
   const handleEditItem = (index, field, value) => {
-    const numericValue = parseInt(value) || 0;
-    
+    const numericValue = Number(value);
+    let safeValue = numericValue;
+
+    if (field === "visit") {
+      safeValue = Math.max(isNaN(numericValue) ? 1 : numericValue, 1);
+    } else {
+      safeValue = isNaN(numericValue) ? 0 : numericValue;
+    }
+
     setDoctorCharge((prev) => {
       const updatedItems = prev.items.map((item, i) =>
-        i === index ? { ...item, [field]: numericValue } : item
+        i === index ? { ...item, [field]: safeValue } : item
       );
       
       const total = updatedItems.reduce((sum, item) => sum + item.charge * item.visit, 0);
       
       return { 
         total: total > 0 ? total : 0,
-        items: updatedItems.map(item => ({
-          ...item,
-          total: item.charge * item.visit
-        }))
+        items: updatedItems
       };
     });
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md">
+    <div className="p-4">
       <div className="overflow-x-auto mt-4">
         <table className="table-auto w-full border-collapse">
           <thead className="bg-gray-100">
@@ -90,12 +97,12 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
           </thead>
           <tbody>
             {DoctorCharge?.items?.map((data, index) => (
-              <tr key={data.itemID} className="hover:bg-gray-50">
+              <tr key={index} className="hover:bg-gray-50">
                 <td className="p-3 border-t">{data.drname}</td>
                 <td className="p-3 border-t text-center">
                   <input
                     type="number"
-                    value={data.charge}
+                    value={data.charge || 0}
                     onChange={(e) => handleEditItem(index, "charge", e.target.value)}
                     className="w-20 px-2 py-1 border rounded text-center"
                   />
@@ -103,14 +110,14 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
                 <td className="p-3 border-t text-center">
                   <input
                     type="number"
-                    value={data.visit}
+                    value={data.visit || 1}
                     onChange={(e) => handleEditItem(index, "visit", e.target.value)}
                     className="w-20 px-2 py-1 border rounded text-center"
                     min="1"
                   />
                 </td>
                 <td className="p-3 border-t text-center">
-                  ₹{data.charge * data.visit}
+                  ₹{(data.charge || 0) * (data.visit || 1)}
                 </td>
                 <td className="p-3 border-t text-center">
                   <MdDelete
@@ -136,7 +143,7 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
               ...AddDoctor,
               doctor_id: e.target.value,
               doctor_name: selectedDoctor?.drname || "",
-              doctor_charge: selectedDoctor?.charge || "",
+              doctor_charge: selectedDoctor?.charge?.toString() || "",
             });
           }}
           className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -165,6 +172,7 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
           onChange={handleInputChange}
           placeholder="Charge"
           className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
+          min="0"
         />
 
         <input
@@ -184,7 +192,7 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2"
         >
           <BiSolidPlusSquare className="text-xl" />
-          Add 
+          Add Doctor
         </button>
         
         <div className="text-xl font-semibold">

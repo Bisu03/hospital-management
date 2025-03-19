@@ -33,7 +33,7 @@ const billingSchema = new Schema({
     acomodation_cart: {
         type: Object
     },
-   
+
     service_cart: {
         type: Object
     },
@@ -41,6 +41,12 @@ const billingSchema = new Schema({
         type: Object
     },
     paidby: {
+        type: String,
+    },
+    billing_date: {
+        type: String,
+    },
+    billing_time: {
         type: String,
     },
     isDone: {

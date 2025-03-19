@@ -72,10 +72,10 @@ export async function GET(req) {
                 },
                 { $unwind: { path: "$consultant", preserveNullAndEmptyArrays: true } },
                 { $match: matchConditions },
-                { $sort: { admit_date: -1 } }
+              
             ];
 
-            const data = await Ipd.aggregate(pipeline);
+            const data = await Ipd.aggregate(pipeline).sort("-createdAt");
 
             return NextResponse.json({
                 success: true,

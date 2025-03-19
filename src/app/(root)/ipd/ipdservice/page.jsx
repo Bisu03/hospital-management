@@ -9,8 +9,9 @@ import { formatDate } from '@/lib/formateDate';
 import { fetchData, updateData } from '@/services/apiService';
 import { withAuth } from '@/services/withAuth';
 import { ErrorHandeling } from '@/utils/errorHandling';
-import { SuccessHandling } from '@/utils/successHandling';
+import { SuccessHandeling, SuccessHandling } from '@/utils/successHandling';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import React, { lazy, Suspense, useEffect, useState } from 'react';
 
@@ -18,6 +19,7 @@ const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const IpdService = () => {
     const { data: session } = useSession();
+    const router = useRouter()
     const searchParams = useSearchParams();
     const search = searchParams.get('regid');
 
@@ -58,18 +60,23 @@ const IpdService = () => {
 
     useEffect(() => {
         calculateTotals();
-    }, [Acomodation, DoctorCharge, ServiceCharges, TotalAmount.amount.discount, TotalAmount.amount.paid]);
+    }, [Acomodation, DoctorCharge, ServiceCharges, TotalAmount?.amount?.discount, TotalAmount?.amount?.paid]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        const parsedValue = parseFloat(value) || 0;
+
         if (name === "paidby") {
-            setTotalAmount(prev => ({ ...prev, paidby: value }));
+            setTotalAmount(prev => ({
+                ...prev,
+                paidby: value || ""
+            }));
         } else {
             setTotalAmount(prev => ({
                 ...prev,
                 amount: {
                     ...prev.amount,
-                    [name]: parseFloat(value) || 0,
+                    [name]: parsedValue,
                 },
             }));
         }
@@ -82,19 +89,21 @@ const IpdService = () => {
             const { data } = await fetchData(`/billing/${searchTerm}`);
             if (data) {
                 setFormData(data);
-                setAcomodation(data?.acomodation_cart || { items: [], total: 0 });
                 setDoctorCharge(data?.consultant_cart || { items: [], total: 0 });
                 setServiceCharges(data?.service_cart || { items: [], total: 0 });
-                setTotalAmount({ amount: data?.amount, paidby: data?.paidby } || {
+
+                // Ensure all amount fields have valid numbers
+                setTotalAmount({
                     amount: {
-                        total: 0,
-                        discount: 0,
-                        netTotal: 0,
-                        paid: 0,
-                        due: 0,
+                        total: data?.amount?.total || 0,
+                        discount: data?.amount?.discount || 0,
+                        netTotal: data?.amount?.netTotal || 0,
+                        paid: data?.amount?.paid || 0,
+                        due: data?.amount?.due || 0,
                     },
-                    paidby: ""
+                    paidby: data?.paidby || ""
                 });
+                calculateTotals();
             }
         } catch (error) {
             ErrorHandeling(error);
@@ -118,14 +127,12 @@ const IpdService = () => {
                 amount: TotalAmount.amount,
                 paidby: TotalAmount.paidby
             });
+            router.push(`/ipd/billprint/${searchTerm}`);
             SuccessHandling("Service Updated Successfully");
         } catch (error) {
             ErrorHandeling(error)
         }
     };
-
-    console.log(DoctorCharge);
-    
 
     return (
         <>
@@ -228,15 +235,13 @@ const IpdService = () => {
 
                             <div className="mt-8 p-6 bg-white rounded-lg shadow-md border border-gray-100">
                                 <div className="max-w-md ml-auto space-y-6 ">
-                                    {/* Total Amount */}
                                     <div className="flex justify-between items-center pb-4 border-b">
                                         <span className="text-gray-600 font-medium">Total:</span>
                                         <span className="text-lg font-semibold text-blue-600">
-                                            ₹{TotalAmount.amount.total}
+                                            ₹{TotalAmount?.amount?.total}
                                         </span>
                                     </div>
 
-                                    {/* Discount and Paid Amount */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
                                             <label className="block text-sm font-medium text-gray-600">Discount</label>
@@ -260,7 +265,6 @@ const IpdService = () => {
                                         </div>
                                     </div>
 
-                                    {/* Net Total */}
                                     <div className="flex justify-between items-center pt-4 border-t">
                                         <span className="text-gray-600 font-medium">Net Total:</span>
                                         <span className="text-lg font-semibold text-green-600">
@@ -274,7 +278,6 @@ const IpdService = () => {
                                         </span>
                                     </div>
 
-                                    {/* Payment Method */}
                                     <div className="space-y-1">
                                         <label className="block text-sm font-medium text-gray-600">Payment Method</label>
                                         <select
@@ -291,7 +294,7 @@ const IpdService = () => {
                                             <option value="Cancel">Cancel</option>
                                         </select>
                                     </div>
-                                    <button onClick={handleSubmit} className='btn btn-primary w-full'>Submit</button>
+                                    <button onClick={handleSubmit} className='btn btn-primary w-full'>Submit & Get Estimate</button>
                                 </div>
                             </div>
                         </div>

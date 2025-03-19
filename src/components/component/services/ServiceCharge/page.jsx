@@ -10,30 +10,28 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
         u_ID: generateUnique(),
         category_name: "",
         servicename: "",
-        unitcharge: "",
-        unit: 1, // Default to 1
-        unittype: "",
+        unitcharge: "0",
+        unit: "1", // Default to 1 as string to maintain control
+        unittype: "pcs",
     });
 
-    const { data: servicerecord, error, isLoading, refetch } = useQuery({
+    const { data: servicerecord, error, isLoading } = useQuery({
         queryKey: ["servicerecord"],
         queryFn: () => fetchData("/admin/service"),
     });
 
-    // **Handle Category Change**
     const handleCategoryChange = (e) => {
         const selectedCategory = e.target.value;
         setServices({
             ...Services,
             category_name: selectedCategory,
             servicename: "",
-            unitcharge: "",
-            unit: 1,
-            unittype: "",
+            unitcharge: "0",
+            unit: "1",
+            unittype: "pcs",
         });
     };
 
-    // **Handle Service Name Change**
     const handleServiceChange = (e) => {
         const selectedService = servicerecord?.data?.find(
             (service) => service.servicename === e.target.value
@@ -42,23 +40,20 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
         if (selectedService) {
             setServices({
                 ...Services,
-                servicename: selectedService.servicename,
-                unitcharge: selectedService.unitcharge,
-                unit: 1, // Default unit
-                unittype: selectedService.unittype || "pcs", // Default unit type
+                servicename: selectedService.servicename || "",
+                unitcharge: String(selectedService.unitcharge || "0"),
+                unit: "1",
+                unittype: selectedService.unittype || "pcs",
             });
         }
     };
 
-    // **Handle Input Change**
     const handleInputChange = (e) => {
-        setServices({ ...Services, [e.target.name]: e.target.value });
+        setServices({ ...Services, [e.target.name]: e.target.value || "" });
     };
 
-    // **Add Service**
     const handleAddItem = () => {
-        if (!Services.category_name || !Services.servicename || !Services.unitcharge || !Services.unit)
-            return;
+        if (!Services.category_name || !Services.servicename || !Services.unitcharge || !Services.unit) return;
 
         const newService = {
             itemID: Services.u_ID,
@@ -78,13 +73,12 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
             u_ID: generateUnique(),
             category_name: "",
             servicename: "",
-            unitcharge: "",
-            unit: 1,
-            unittype: "",
+            unitcharge: "0",
+            unit: "1",
+            unittype: "pcs",
         });
     };
 
-    // **Edit Service Item (Unit or Charge)**
     const handleEditItem = (index, field, value) => {
         setServiceCharges((prev) => {
             const updatedItems = prev.items.map((item, i) =>
@@ -95,7 +89,6 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
         });
     };
 
-    // **Remove Service**
     const handleRemoveItem = (itemID) => {
         setServiceCharges((prev) => {
             const updatedItems = prev.items.filter((item) => item.itemID !== itemID);
@@ -150,9 +143,7 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
                 </table>
             </div>
 
-            {/* FORM TO ADD SERVICE */}
             <div className="flex flex-wrap gap-4 my-4">
-                {/* Service Category */}
                 <select
                     name="category_name"
                     value={Services.category_name}
@@ -161,13 +152,10 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
                 >
                     <option value="">Select Category</option>
                     {[...new Set(servicerecord?.data?.map((s) => s.categoryid.category_name))]?.map((category, index) => (
-                        <option key={index} value={category}>
-                            {category}
-                        </option>
+                        <option key={index} value={category}>{category}</option>
                     ))}
                 </select>
 
-                {/* Service Name */}
                 <select
                     name="servicename"
                     value={Services.servicename}
@@ -176,38 +164,13 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
                     disabled={!Services.category_name}
                 >
                     <option value="">Select Service</option>
-                    {servicerecord?.data
-                        ?.filter((s) => s.categoryid.category_name === Services.category_name)
+                    {servicerecord?.data?.filter((s) => s.categoryid.category_name === Services.category_name)
                         .map((service, index) => (
-                            <option key={index} value={service.servicename}>
-                                {service.servicename}
-                            </option>
+                            <option key={index} value={service.servicename}>{service.servicename}</option>
                         ))}
                 </select>
-
-                {/* Unit Charge */}
-                <input
-                    type="number"
-                    name="unitcharge"
-                    value={Services.unitcharge}
-                    onChange={handleInputChange}
-                    placeholder="Charge"
-                    className="input input-bordered w-full max-w-sm"
-                    disabled
-                />
-
-                {/* Unit */}
-                <input
-                    type="number"
-                    name="unit"
-                    value={Services.unit}
-                    onChange={handleInputChange}
-                    placeholder="Enter Units"
-                    className="input input-bordered w-full max-w-sm"
-                />
             </div>
 
-            {/* Add Button & Total */}
             <div className="flex w-full justify-between">
                 <button className="btn btn-primary flex items-center gap-2" onClick={handleAddItem}>
                     <BiSolidPlusSquare className="text-xl" /> Add

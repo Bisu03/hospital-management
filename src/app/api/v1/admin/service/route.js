@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/mongoConnection'; // MongoDB connection utility
 import Service from '@/models/Service.models';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
+import "@/models/ServiceCategory.models"
 
 // Get all users (admin only) or single user
 export async function GET(req) {

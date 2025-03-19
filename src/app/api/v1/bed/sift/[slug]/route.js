@@ -34,7 +34,7 @@ export async function PUT(req, context) {
         if (bdata) {
             await Billing.updateOne({ patient: body?.ipdid }, {
                 $push: {
-                    acomodation_cart: { item: [{ ...bdata, dateofadd: body?.siftdate }] },
+                    acomodation_cart: { items: [{ ...bdata, dateofadd: body?.siftdate }] },
                 },
             })
             return NextResponse.json(
