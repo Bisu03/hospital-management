@@ -4,11 +4,9 @@ const { Schema } = mongoose;
 const dischargeSchema = new Schema({
     reg_id: {
         type: String,
-        required: true,
     },
     mrd_id: {
         type: String,
-        required: true,
     },
     patient: {
         type: mongoose.Schema.Types.ObjectId,
@@ -17,13 +15,13 @@ const dischargeSchema = new Schema({
     bill_no: {
         type: String,
     },
-    patient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "patient_registration",
-    },
     ipd: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "ipd",
+    },
+    consultant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "doctors",
     },
     final_diagnosis: {
         type: String,

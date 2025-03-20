@@ -123,6 +123,10 @@ const IpdService = () => {
                 setDoctorCharge(data?.consultant_cart || { items: [], total: 0 });
                 setServiceCharges(data?.service_cart || { items: [], total: 0 });
                 setMedicineCharge(data?.medicine_cart || { items: [], total: 0 });
+                setBillDetails({
+                    billing_date: data?.billing_date || getDate(),
+                    billing_time: data?.billing_time || formattedTime(),
+                });
 
                 // Ensure all amount fields have valid numbers
                 setTotalAmount({
@@ -187,6 +191,8 @@ const IpdService = () => {
     const handleSubmitBill = async () => {
         mutationUpdateBilling.mutate({
             ...BillDetails,
+            ipd: formData?.ipd,
+            patient: formData?.patient,
             bill_no: formData?.bill_no,
             acomodation_cart: Acomodation,
             consultant_cart: DoctorCharge,
@@ -305,7 +311,10 @@ const IpdService = () => {
 
                             {loading && <Loading />}
 
-                            <AcomodationForm Acomodation={Acomodation} setAcomodation={setAcomodation} />
+                            <AcomodationForm
+                                Acomodation={Acomodation}
+                                setAcomodation={setAcomodation}
+                            />
                             <h1 className="border-b-2 border-black text-lg">Doctor Charge</h1>
                             <DoctorForm
                                 DoctorCharge={DoctorCharge}

@@ -9,6 +9,7 @@ import { withAuth } from '@/services/withAuth'
 import { ErrorHandeling } from '@/utils/errorHandling';
 import { SuccessHandling } from '@/utils/successHandling';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
@@ -63,7 +64,11 @@ const BedAllotment = () => {
                 <div className="flex flex-wrap w-full justify-between">
                     <MiddleSection>
                         <div className="w-full">
-                            <Heading heading="Bed Allotment" />
+                            <Heading heading="Bed Allotment" >
+                                <Link className='btn btn-warning' href={`/ipd/print/${search}`}>
+                                    Skip
+                                </Link>
+                            </Heading>
                         </div>
 
                         {Object?.entries(groupedBeds || {}).map(([category, beds]) => (

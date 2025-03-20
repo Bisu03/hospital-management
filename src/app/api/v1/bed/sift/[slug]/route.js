@@ -23,7 +23,12 @@ export async function PUT(req, context) {
 
   try {
     const body = await req.json();
-    const { slug } = context.params;
+    const { slug } =await context.params;
+
+    await Bed.findOneAndUpdate(
+      { patitentID: body?.ipdid },
+      { isAllocated: false, patitentID: "" }
+    )
 
     // Find and update the bed allocation
     const bdata = await Bed.findByIdAndUpdate(

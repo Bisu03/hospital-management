@@ -1,12 +1,14 @@
 "use client";
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
+import Tab from "@/components/Tab";
 import Spinner from "@/components/ui/Spinner";
 import { getDate } from "@/lib/currentDate";
 import { deleteData, fetchData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
+import { TabLinks } from "@/utils/tablinks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import React, { lazy, Suspense, useEffect, useState } from "react";
@@ -56,6 +58,7 @@ const DischargeRecord = () => {
 
     return (
         <Suspense fallback={<Loading />}>
+            <Tab tabs={TabLinks} category="IPD" />
             <div className="flex flex-wrap w-full justify-between">
                 <MiddleSection>
                     <div className="w-full">
@@ -93,7 +96,8 @@ const DischargeRecord = () => {
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient Name</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">MRD</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">REG ID</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Discharge Date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bill No</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Discharge Date/Time</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                         </tr>
                                     </thead>
@@ -103,7 +107,8 @@ const DischargeRecord = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap">{record.patient?.fullname}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap">{record.mrd_id}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap">{record.reg_id}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap">{record.discharge_date}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">{record.bill_no}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">{record.discharge_date}/{record.discharge_time}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap flex space-x-2">
                                                     <Link
                                                         href={`/discharge/print/${record.reg_id}`}

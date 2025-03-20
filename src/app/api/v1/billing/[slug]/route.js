@@ -6,8 +6,10 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
 import Billing from "@/models//Billing.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
-import "@/models/Patient.models"
-import "@/models/Ipd.models"
+import Discharge from "@/models/Discharge.models";
+import Bed from "@/models/Bed.models";
+import "@/models/Patient.models";
+import "@/models/Ipd.models";
 
 export async function GET(req, context) {
     // Connect to the database
@@ -25,7 +27,9 @@ export async function GET(req, context) {
         const { slug } = await context.params;
         const data = await Billing.findOne({
             reg_id: slug,
-        }).populate("patient").populate("ipd");
+        })
+            .populate("patient")
+            .populate("ipd");
         // Return the message
         return NextResponse.json({ success: true, data }, { status: 200 });
     } catch (error) {
@@ -42,46 +46,57 @@ export async function PUT(req, context) {
     if (!session) return NextResponse.unauthorized();
 
     try {
-        const { slug } = context.params;
+        const { slug } = await context.params;
         const body = await req.json();
-
-        let updatedBill
+        let updatedBill;
         if (body.isDone === true) {
             if (body.bill_no) {
                 updatedBill = await Billing.findOneAndUpdate(
                     { reg_id: slug },
-                    { ...body},
-                )
+                    { ...body }
+                );
             } else {
                 let billno = null;
-
                 billno = await Counter.findOneAndUpdate(
                     { id: "billno" },
                     { $inc: { seq: 1 } },
                     { new: true, upsert: true, setDefaultsOnInsert: true }
                 );
 
+                await Bed.findOneAndUpdate(
+                    { patitentID: body?.ipdid },
+                    { isAllocated: false, patitentID: "" }
+                )
                 updatedBill = await Billing.findOneAndUpdate(
                     { reg_id: slug },
-                    { ...body, bill_no: billno.seq },
-                )
-            }
+                    { ...body, bill_no: billno.seq }
+                );
+                if (updatedBill) {
+                    await Discharge.findOneAndUpdate({
+                        reg_id: slug
+                    }, {
+                        bill_no: billno.seq,
+                        discharge_date: body?.billing_date || null,
+                        discharge_time: body?.billing_time || null,
+                    }
+                    );
+                }
 
+            }
         } else {
-            updatedBill = await Billing.findOneAndUpdate(
-                { reg_id: slug },
-                body,
-            )
+            updatedBill = await Billing.findOneAndUpdate({ reg_id: slug }, body);
         }
 
         return NextResponse.json({
             success: true,
             message: "Billing Updated Successfully",
-            data: updatedBill
+            data: updatedBill,
         });
-
     } catch (error) {
-        return NextResponse.serverError(error);
+        return NextResponse.json(
+            { success: false, message: "Server error", error: error.message },
+            { status: 500 }
+        )
     }
 }
 
@@ -93,14 +108,16 @@ export async function DELETE(req, context) {
     try {
         const { slug } = context.params;
 
-        const updatedBill = await Billing.findByIdAndDelete(slug)
+        const updatedBill = await Billing.findByIdAndDelete(slug);
 
         return NextResponse.json({
             success: true,
             message: "Billing Deleted Successfully",
         });
-
     } catch (error) {
-        return NextResponse.serverError(error);
+        return NextResponse.json(
+            { success: false, message: "Server error", error: error.message },
+            { status: 500 }
+        )
     }
 }

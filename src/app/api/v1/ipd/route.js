@@ -8,7 +8,9 @@ import Ipd from "@/models/Ipd.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
 import Patient from "@/models/Patient.models";
 import Billing from "@/models/Billing.models";
-import Bed from "@/models/Bed.models"; // Mongoose User model
+import Bed from "@/models/Bed.models"; 
+import Discharge from "@/models/Discharge.models"; 
+
 import "@/models/BedCategory.models";
 
 export async function GET(req) {
@@ -221,6 +223,14 @@ export async function POST(req) {
                             items: [bdata],
                         },
                     });
+
+                    await Discharge.create({
+                        reg_id: regid.seq,
+                        mrd_id: mrdid.seq,
+                        patient: data._id,
+                        ipd: ipddata._id,
+                    })
+
                     return NextResponse.json({
                         success: true,
                         message: "Patient Admitted Successfully",
@@ -238,6 +248,13 @@ export async function POST(req) {
                         ipd: ipddata._id,
                         acomodation_cart: { items: [], total: 0 },
                     });
+
+                    await Discharge.create({
+                        reg_id: regid.seq,
+                        mrd_id: mrdid.seq,
+                        patient: data._id,
+                        ipd: ipddata._id,
+                    })
                     return NextResponse.json({
                         success: true,
                         message: "Patient Admitted Successfully",
