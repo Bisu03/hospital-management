@@ -139,13 +139,13 @@ const IpdBillRecord = () => {
                                                     >
                                                         <FaPrint />
                                                     </Link>
-                                                    <button
+                                                    {session?.user?.role === "Admin" && <button
                                                         onClick={() => handleDelete(bill._id)}
                                                         className="btn btn-error"
                                                     >
                                                         <MdDelete />
                                                         {deleteMutation?.isPending && <Spinner />}
-                                                    </button>
+                                                    </button>}
                                                 </td>
                                             </tr>
                                         ))}

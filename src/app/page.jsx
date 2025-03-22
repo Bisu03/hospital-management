@@ -2,7 +2,6 @@
 
 import Loading from "@/components/Loading";
 import { useHospital } from "@/context/setting/HospitalInformation";
-import { fetchData } from "@/services/apiService";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,6 +14,7 @@ export default function Home() {
   return (
     <>
       {loading && <Loading />}
+      
 
       <div className="w-full min-h-screen flex items-center justify-center bg-slate-50 p-4 sm:p-6">
         <div className="w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-6xl p-6 sm:p-8 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100">

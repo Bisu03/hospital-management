@@ -22,16 +22,6 @@ export const NavLinks = [
       },
     ],
   },
-  // {
-  //   icon: <FaRegistered />,
-  //   category: "Patient",
-  //   routes: [
-  //     {
-  //       name: "Patient Record",
-  //       path: "/patient/record",
-  //     },
-  //   ],
-  // },
   {
     icon: <MdBedroomParent />,
     category: "IPD",
@@ -94,20 +84,7 @@ export const NavLinks = [
       },
     ],
   },
-  {
-    icon: < FaMoneyBill />,
-    category: "Billing",
-    routes: [
-      {
-        name: "Billing",
-        path: "/billing/makebills",
-      },
-      {
-        name: "Bill Record",
-        path: "/billing/record",
-      },
-    ],
-  },
+
   {
     icon: <MdBed />,
     category: "Bed",

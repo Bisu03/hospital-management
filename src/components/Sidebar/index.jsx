@@ -17,6 +17,7 @@ import { FaBed } from "react-icons/fa";
 export default function ResponsiveSidebar({ children }) {
   const { data: session } = useSession();
 
+
   const { hospitalInfo } = useHospital();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
@@ -72,7 +73,7 @@ export default function ResponsiveSidebar({ children }) {
 
             {/* Right Section */}
             <div className="flex items-center space-x-6">
-              <Link  href="/bedmanagement/bedallotment"  className="flex items-center space-x-2 group focus:outline-none">
+              <Link href="/bedmanagement/bedallotment" className="flex items-center space-x-2 group focus:outline-none">
                 <FaBed className="h-6 w-6 text-white" />
               </Link>
               <Link href="/dashboard/menu" className="flex items-center space-x-2 group focus:outline-none">
@@ -151,30 +152,65 @@ export default function ResponsiveSidebar({ children }) {
             </div>
             <ul className="space-y-1">
               {NavLinks.map((item, index) => (
-                <li key={index}>
-                  <details className="group">
-                    <summary className="flex cursor-pointer items-center px-4 py-3 hover:bg-teal-700 transition-colors">
-                      <span className="text-xl">{item.icon}</span>
-                      <span className={`ml-3 ${isOpen ? "" : "md:hidden"}`}>
-                        {item.category}
-                      </span>
-                      <MdExpandMore className={`ml-auto transform transition-transform ${isOpen ? "" : "md:hidden"
-                        } group-open:rotate-180`} />
-                    </summary>
-                    <ul className="mt-1 ml-4 border-l-2 border-teal-600">
-                      {item.routes.map((subItem, subIndex) => (
-                        <li key={subIndex}>
-                          <Link
-                            href={subItem.path}
-                            className="block px-4 py-2.5 text-sm hover:bg-teal-700 transition-colors"
-                          >
-                            {subItem.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                </li>
+                item.category === "Admin" ? (
+                  // ADMIN SECTION - Only show for admins
+                  session?.user?.role === "Admin" && (
+                    <li key={index}>
+                      <details className="group">
+                        <summary className="flex cursor-pointer items-center px-4 py-3 hover:bg-teal-700 transition-colors">
+                          <span className="text-xl">{item.icon}</span>
+                          <span className={`ml-3 ${isOpen ? "" : "md:hidden"}`}>
+                            {item.category}
+                          </span>
+                          <MdExpandMore
+                            className={`ml-auto transform transition-transform ${isOpen ? "" : "md:hidden"
+                              } group-open:rotate-180`}
+                          />
+                        </summary>
+                        <ul className="mt-1 ml-4 border-l-2 border-teal-600">
+                          {item.routes.map((subItem, subIndex) => (
+                            <li key={subIndex}>
+                              <Link
+                                href={subItem.path}
+                                className="block px-4 py-2.5 text-sm hover:bg-teal-700 transition-colors"
+                              >
+                                {subItem.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    </li>
+                  )
+                ) : (
+                  // NON-ADMIN SECTIONS - Show to all users
+                  <li key={index}>
+                    <details className="group">
+                      <summary className="flex cursor-pointer items-center px-4 py-3 hover:bg-teal-700 transition-colors">
+                        <span className="text-xl">{item.icon}</span>
+                        <span className={`ml-3 ${isOpen ? "" : "md:hidden"}`}>
+                          {item.category}
+                        </span>
+                        <MdExpandMore
+                          className={`ml-auto transform transition-transform ${isOpen ? "" : "md:hidden"
+                            } group-open:rotate-180`}
+                        />
+                      </summary>
+                      <ul className="mt-1 ml-4 border-l-2 border-teal-600">
+                        {item.routes.map((subItem, subIndex) => (
+                          <li key={subIndex}>
+                            <Link
+                              href={subItem.path}
+                              className="block px-4 py-2.5 text-sm hover:bg-teal-700 transition-colors"
+                            >
+                              {subItem.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </li>
+                )
               ))}
             </ul>
           </nav>

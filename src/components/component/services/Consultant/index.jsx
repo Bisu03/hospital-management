@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BiSolidPlusSquare } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
+import Select from "react-select";
 import { fetchData } from "@/services/apiService";
 import { generateUnique } from "@/lib/uniqueNumber";
 
@@ -14,10 +15,44 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
     doctor_visit: "1",
   });
 
+  const selectRef = useRef(null);
+
+  // Keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key === '2') {
+        e.preventDefault();
+        if (selectRef.current) {
+          selectRef.current.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const { data: doctorrecord } = useQuery({
     queryKey: ["doctorrecord"],
     queryFn: () => fetchData("/doctor"),
   });
+
+  const doctorOptions = doctorrecord?.data?.map(doctor => ({
+    value: doctor._id,
+    label: doctor.drname,
+    data: doctor
+  })) || [];
+
+  const handleDoctorSelect = (selectedOption) => {
+    if (selectedOption) {
+      setAddDoctor({
+        ...AddDoctor,
+        doctor_id: selectedOption.value,
+        doctor_name: selectedOption.data.drname,
+        doctor_charge: selectedOption.data.charge?.toString() || ""
+      });
+    }
+  };
 
   const handleInputChange = (e) => {
     setAddDoctor({ ...AddDoctor, [e.target.name]: e.target.value });
@@ -72,10 +107,10 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
       const updatedItems = prev.items.map((item, i) =>
         i === index ? { ...item, [field]: safeValue } : item
       );
-      
+
       const total = updatedItems.reduce((sum, item) => sum + item.charge * item.visit, 0);
-      
-      return { 
+
+      return {
         total: total > 0 ? total : 0,
         items: updatedItems
       };
@@ -132,29 +167,27 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <select
-          name="doctor_id"
-          value={AddDoctor.doctor_id}
-          onChange={(e) => {
-            const selectedDoctor = doctorrecord?.data?.find(
-              (doc) => doc._id === e.target.value
-            );
-            setAddDoctor({
-              ...AddDoctor,
-              doctor_id: e.target.value,
-              doctor_name: selectedDoctor?.drname || "",
-              doctor_charge: selectedDoctor?.charge?.toString() || "",
-            });
-          }}
-          className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Select Doctor</option>
-          {doctorrecord?.data?.map((data) => (
-            <option key={data._id} value={data._id}>
-              {data.drname}
-            </option>
-          ))}
-        </select>
+        <div className="w-full">
+          <Select
+            ref={selectRef}
+            options={doctorOptions}
+            value={doctorOptions.find(opt => opt.value === AddDoctor.doctor_id)}
+            onChange={handleDoctorSelect}
+            placeholder="Search or select doctor..."
+            isSearchable
+            isClearable
+            classNamePrefix="react-select"
+            menuPortalTarget={document.body}
+            styles={{
+              menuPortal: base => ({ ...base, zIndex: 9999 }),
+              control: (base) => ({
+                ...base,
+                padding: '2px',
+                borderRadius: '6px'
+              })
+            }}
+          />
+        </div>
 
         <input
           type="text"
@@ -189,12 +222,12 @@ const DoctorForm = ({ DoctorCharge, setDoctorCharge }) => {
       <div className="mt-6 flex justify-between items-center">
         <button
           onClick={handleAddItem}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2"
+          className="btn btn-primary"
         >
           <BiSolidPlusSquare className="text-xl" />
           Add
         </button>
-        
+
         <div className="text-xl font-semibold">
           Grand Total: ₹{DoctorCharge?.total?.toLocaleString() || 0}
         </div>

@@ -19,7 +19,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import React, { lazy, Suspense, useEffect, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { FaPlus } from 'react-icons/fa';
 import Select from "react-select";
 
@@ -68,6 +68,20 @@ const IpdAdmission = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [formData, setFormData] = useState(initialState);
     const [consultant, setConsultant] = useState({});
+
+    // Refs to track latest state
+    const formDataRef = useRef(formData);
+    const consultantRef = useRef(consultant);
+
+    useEffect(() => {
+        formDataRef.current = formData;
+    }, [formData]);
+
+    useEffect(() => {
+        consultantRef.current = consultant;
+    }, [consultant]);
+
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -134,6 +148,19 @@ const IpdAdmission = () => {
     const handleUpdate = () => {
         mutationUpdate.mutate({ ...formData, consultant: consultant.value });
     };
+
+
+    useEffect(() => {
+        const handleKeyPress = (event) => {
+            if (event.key === 'F5') {
+                event.preventDefault();
+                mutation.mutate({ ...formDataRef.current, consultant: consultantRef.current?.value });
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [mutation]);
 
 
     return (
@@ -569,7 +596,7 @@ const IpdAdmission = () => {
 
                                                     </>
                                                 ) : (
-                                                    "Admit Patient"
+                                                    "Admit Patient 0r F5"
                                                 )}
                                             </button>}
                                     </div>

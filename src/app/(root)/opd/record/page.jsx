@@ -159,14 +159,14 @@ const OpdRecord = () => {
                                                         {" "}
                                                         <FaEdit />{" "}
                                                     </Link>
-                                                    <button
+                                                    {session?.user?.role === "Admin" && <button
                                                         onClick={() => handleDelete(patient._id)}
                                                         className="btn btn-error "
                                                     >
                                                         {" "}
                                                         <MdDelete />{" "}
                                                         {deleteMutation?.isPending && <Spinner />}{" "}
-                                                    </button>
+                                                    </button>}
                                                 </td>
                                             </tr>
                                         ))}

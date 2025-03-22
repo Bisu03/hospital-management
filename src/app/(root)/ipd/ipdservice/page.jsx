@@ -4,7 +4,7 @@ import AcomodationForm from "@/components/component/services/Bedcharge";
 import BedChargeForm from "@/components/component/services/Bedcharge";
 import DoctorForm from "@/components/component/services/Consultant";
 import MedicineForm from "@/components/component/services/Medicine";
-import ServiceForm from "@/components/component/services/ServiceCharge/page";
+import ServiceForm from "@/components/component/services/ServiceCharge";
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import Tab from "@/components/Tab";
@@ -15,7 +15,7 @@ import { formattedTime } from "@/lib/timeGenerate";
 import { fetchData, updateData } from "@/services/apiService";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
-import { SuccessHandeling, SuccessHandling } from "@/utils/successHandling";
+import { SuccessHandling } from "@/utils/successHandling";
 import { TabLinks } from "@/utils/tablinks";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -311,6 +311,7 @@ const IpdService = () => {
 
                             {loading && <Loading />}
 
+                            <h1 className="border-b-2 border-black text-lg">Bed Charge</h1>
                             <AcomodationForm
                                 Acomodation={Acomodation}
                                 setAcomodation={setAcomodation}

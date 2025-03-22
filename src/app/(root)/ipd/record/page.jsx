@@ -11,6 +11,7 @@ import { ErrorHandeling } from "@/utils/errorHandling";
 import { SuccessHandling } from "@/utils/successHandling";
 import { TabLinks } from "@/utils/tablinks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { FaPrint } from "react-icons/fa";
@@ -18,6 +19,7 @@ import { MdDelete } from "react-icons/md";
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const IpdRecord = () => {
+    const { data: session } = useSession();
     const queryClient = useQueryClient();
     const [startDate, setStartDate] = useState(getDate());
     const [endDate, setEndDate] = useState(getDate());
@@ -132,9 +134,9 @@ const IpdRecord = () => {
                                                     <Link href={`/ipd/print/${patient.reg_id}`} className="btn btn-primary">
                                                         <FaPrint />
                                                     </Link>
-                                                    <button onClick={() => handleDelete(patient._id)} className="btn btn-error">
+                                                    {session?.user?.role === "Admin" && <button onClick={() => handleDelete(patient._id)} className="btn btn-error">
                                                         <MdDelete /> {deleteMutation?.isPending && <Spinner />}
-                                                    </button>
+                                                    </button>}
                                                 </td>
                                             </tr>
                                         ))}

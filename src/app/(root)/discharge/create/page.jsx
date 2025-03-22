@@ -1,6 +1,6 @@
 "use client";
 
-import PatientDropdown from "@/components/component/PatientDropdown";
+import { useRef, useEffect } from 'react';
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import Tab from "@/components/Tab";
@@ -16,7 +16,7 @@ import { TabLinks } from "@/utils/tablinks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import React, { lazy, Suspense, useEffect, useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import Select from "react-select";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
@@ -28,6 +28,10 @@ const CreateDischarge = () => {
     const search = searchParams.get("regid");
     const [searchTerm, setSearchTerm] = useState(search || "");
     const [loading, setLoading] = useState(false);
+
+    // Refs for F5 key handling
+    const formDataRef = useRef(null);
+    const consultantRef = useRef(null);
 
     const initialState = {
         reg_id: "",
@@ -42,14 +46,22 @@ const CreateDischarge = () => {
         discharge_time: formattedTime(),
         consultant: "",
     };
+
     const [consultant, setConsultant] = useState({});
     const [formData, setFormData] = useState(initialState);
 
-    const {
-        data: doctorrecord,
-    } = useQuery({
-        queryKey: ["doctorrecord"], // Unique query key
-        queryFn: () => fetchData("/doctor"), // Function to fetch data
+    // Update refs when state changes
+    useEffect(() => {
+        formDataRef.current = formData;
+    }, [formData]);
+
+    useEffect(() => {
+        consultantRef.current = consultant;
+    }, [consultant]);
+
+    const { data: doctorrecord } = useQuery({
+        queryKey: ["doctorrecord"],
+        queryFn: () => fetchData("/doctor"),
     });
 
     const doctorOptions = doctorrecord?.data?.map((doctor) => ({
@@ -63,14 +75,12 @@ const CreateDischarge = () => {
             const { data } = await fetchData(`/discharge/${searchTerm}`);
             setFormData(data);
             setConsultant({ value: data?.consultant, label: data?.consultant?.drname });
-            setLoading(false);
         } catch (error) {
             ErrorHandeling(error);
         } finally {
             setLoading(false);
         }
     };
-
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -79,20 +89,34 @@ const CreateDischarge = () => {
     const mutation = useMutation({
         mutationFn: (newItem) => updateData("/discharge", searchTerm, newItem),
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["dischargerecord"], searchTerm }); // Refetch data after adding
-            setFormData(initialState);
+            queryClient.invalidateQueries(["dischargerecord"]);
             SuccessHandling(data.message);
             router.push(`/discharge/print/${searchTerm}`);
         },
-        onError: (error) => {
-            ErrorHandeling(error);
-        },
+        onError: ErrorHandeling,
     });
 
-
     const handleSubmit = () => {
-        mutation.mutate({ ...formData, consultant: consultant.value._id });
+        mutation.mutate({
+            ...formDataRef.current,
+            consultant: consultantRef.current?.value?._id
+        });
     };
+
+    // F5 Key Handler
+    useEffect(() => {
+        const handleKeyPress = (event) => {
+            if (event.key === 'F5') {
+                event.preventDefault();
+                if (!mutation.isPending) {
+                    handleSubmit();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [mutation.isPending]);
 
     return (
         <Suspense fallback={<Loading />}>
@@ -108,121 +132,84 @@ const CreateDischarge = () => {
                                     className="p-2 border rounded"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleGetPatient()}
                                 />
                                 <button
                                     onClick={handleGetPatient}
                                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                                     disabled={loading}
                                 >
-                                    Search
+                                    {loading ? <Spinner size="sm" /> : "Search"}
                                 </button>
                             </div>
                         </Heading>
 
+                        {/* Patient Summary Section */}
                         <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
                             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 truncate">
                                 {formData?.patient?.fullname || "Enter Reg ID"}
                             </h1>
-                            <div className="grid grid-cols-2 sm:grid-cols-1 lg:grid-cols-4 gap-2 md:gap-4 ">
-                                {formData?.mrd_id && (
+                            <div className="grid grid-cols-2 sm:grid-cols-1 lg:grid-cols-4 gap-2 md:gap-4">
+                                {formData.mrd_id && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
                                             MRD ID
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formData?.mrd_id}
+                                            {formData.mrd_id}
                                         </p>
                                     </div>
                                 )}
-                                {formData?.reg_id && (
+                                {formData.reg_id && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
                                             Reg ID
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formData?.reg_id}
+                                            {formData.reg_id}
                                         </p>
                                     </div>
                                 )}
-                                {formData?.bill_no && (
-                                    <div className="space-y-0.5 min-w-[200px]">
-                                        <p className="text-xs md:text-sm font-medium text-gray-500">
-                                            Bill No.{" "}
-                                        </p>
-                                        <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formData?.bill_no}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {formData?.patient?.age && (
+                                {formData.patient?.age && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
                                             Age
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formData?.patient?.age}
+                                            {formData.patient.age}
                                         </p>
                                     </div>
                                 )}
-                                {formData?.ipd?.admit_date && (
+                                {formData.ipd?.admit_date && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
                                             Admit Date
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formatDate(formData?.ipd?.admit_date)}
-                                        </p>
-                                    </div>
-                                )}
-                                {formData?.ipd?.admit_time && (
-                                    <div className="space-y-0.5 min-w-[200px]">
-                                        <p className="text-xs md:text-sm font-medium text-gray-500">
-                                            Admit Time
-                                        </p>
-                                        <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formData?.ipd?.admit_time}
-                                        </p>
-                                    </div>
-                                )}
-                                {formData?.referr_by && (
-                                    <div className="space-y-0.5 min-w-[200px]">
-                                        <p className="text-xs md:text-sm font-medium text-gray-500">
-                                            Referred By
-                                        </p>
-                                        <p className="text-gray-700 text-sm md:text-base truncate">
-                                            {formData?.patient?.referr_by}
+                                            {formatDate(formData.ipd.admit_date)}
                                         </p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-
+                        {/* Discharge Form Section */}
                         <div className="w-full p-4 bg-gray-100 rounded-xl border border-gray-200 shadow-sm">
-
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Consultant <span className="text-red-500">*</span>
-                                </label>
-                                <div className="flex items-center space-x-2">
-
-                                    <Select
-                                        options={doctorOptions}
-                                        value={consultant}
-                                        name="consultant"
-                                        onChange={(selectedOption) =>
-                                            setConsultant(selectedOption)
-                                        }
-                                        isClearable
-                                        placeholder="Select Doctor"
-                                        className="w-full max-w-sm text-lg"
-                                    />
-                                </div>
-                            </div>
-
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Consultant <span className="text-red-500">*</span>
+                                        </label>
+                                        <Select
+                                            options={doctorOptions}
+                                            value={consultant}
+                                            onChange={setConsultant}
+                                            isClearable
+                                            placeholder="Select Doctor"
+                                            className="w-full text-lg"
+                                        />
+                                    </div>
 
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-gray-700">
@@ -239,8 +226,6 @@ const CreateDischarge = () => {
                                     </div>
                                 </div>
 
-
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-gray-700">
@@ -252,7 +237,6 @@ const CreateDischarge = () => {
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                             rows="3"
-
                                             placeholder="Enter final diagnosis"
                                         />
                                     </div>
@@ -267,7 +251,6 @@ const CreateDischarge = () => {
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                             rows="3"
-
                                             placeholder="Enter discharge summary"
                                         />
                                     </div>
@@ -284,7 +267,6 @@ const CreateDischarge = () => {
                                             value={formData.condition}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
-
                                             placeholder="Patient's condition"
                                         />
                                     </div>
@@ -299,8 +281,7 @@ const CreateDischarge = () => {
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                             rows="2"
-
-                                            placeholder="Enter post-discharge instructions"
+                                            placeholder="Enter instructions"
                                         />
                                     </div>
                                 </div>
@@ -316,7 +297,6 @@ const CreateDischarge = () => {
                                             value={formData.discharge_date}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
-
                                         />
                                     </div>
 
@@ -330,17 +310,22 @@ const CreateDischarge = () => {
                                             value={formData.discharge_time}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
-
                                         />
                                     </div>
                                 </div>
-
-                                <button
-                                    onClick={handleSubmit}
-                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center disabled:opacity-50"
-                                >
-                                    {mutation.isPending ? <Spinner /> : "Submit Discharge"}
-                                </button>
+                                <div className="flex w-full  justify-end">
+                                    <button
+                                        onClick={handleSubmit}
+                                        className="bg-secondary text-black px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center disabled:opacity-50"
+                                        disabled={mutation.isPending}
+                                    >
+                                        {mutation.isPending ? (
+                                            <Spinner className="text-black" />
+                                        ) : (
+                                            "Submit Discharge (F5)"
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

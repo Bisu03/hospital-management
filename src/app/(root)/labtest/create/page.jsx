@@ -25,6 +25,8 @@ const CreateLabtest = () => {
   const router = useRouter();
   const { data: session } = useSession();
 
+
+
   const [searchTerm, setSearchTerm] = useState("");
   const [searchTest, setSearchTest] = useState("");
   const [ToggleTest, setToggleTest] = useState(true);
@@ -59,6 +61,29 @@ const CreateLabtest = () => {
   });
   const [Times, setTimes] = useState(formattedTime());
   const [selectDob, setSelectDob] = useState("");
+
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Alt+1 for Pathology
+      if (e.altKey && e.key === '1') {
+        e.preventDefault();
+        setToggleTest(true);
+      }
+      // Alt+2 for Radiology
+      if (e.altKey && e.key === '2') {
+        e.preventDefault();
+        setToggleTest(false);
+      }
+      // F5 for Submit
+      if (e.key === 'F5') {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [ServiceData]);
 
   useEffect(() => {
     setServiceData((prev) => ({
@@ -454,12 +479,19 @@ const CreateLabtest = () => {
               <div className="w-full flex justify-between">
                 <h2 className="text-xl font-semibold">Available Tests</h2>
                 <div className="flex space-x-2">
-                  <button className={` ${ToggleTest ? "btn-error text-white" : "btn-secondary"} btn `} onClick={() => setToggleTest(true)}>
-                    Pathology
+                  <button
+                    className={` ${ToggleTest ? "btn-error text-white" : "btn-secondary"} btn `}
+                    onClick={() => setToggleTest(true)}
+                    title="Alt+1"
+                  >
+                    Pathology (Alt+1)
                   </button>
-                  <button className={` ${!ToggleTest ? "btn-error text-white" : "btn-secondary"} btn `} onClick={() => setToggleTest(false)}>
-                    {" "}
-                    Radiology
+                  <button
+                    className={` ${!ToggleTest ? "btn-error text-white" : "btn-secondary"} btn `}
+                    onClick={() => setToggleTest(false)}
+                    title="Alt+2"
+                  >
+                    Radiology (Alt+2)
                   </button>
                 </div>
               </div>
@@ -637,13 +669,14 @@ const CreateLabtest = () => {
                   onClick={handleSubmit}
                   className="btn btn-primary w-full mt-4"
                   disabled={mutation.isPending || !ServiceData.paydby}
+                  title="F5"
                 >
                   {mutation.isPending ? (
                     <span className="flex items-center justify-center gap-2">
                       <Spinner /> Submitting...
                     </span>
                   ) : (
-                    "Submit"
+                    "Submit (F5)"
                   )}
                 </button>
               </div>

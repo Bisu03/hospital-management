@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BiSolidPlusSquare } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
+import Select from "react-select";
 import { fetchData } from "@/services/apiService";
 import { generateUnique } from "@/lib/uniqueNumber";
 
@@ -11,46 +12,76 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
         category_name: "",
         servicename: "",
         unitcharge: "0",
-        unit: "1", // Default to 1 as string to maintain control
+        unit: "1",
         unittype: "pcs",
     });
 
-    const { data: servicerecord, error, isLoading } = useQuery({
+    const categoryRef = useRef(null);
+    const serviceRef = useRef(null);
+    const unitRef = useRef(null);
+
+    // Keyboard shortcut handler
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.altKey && e.key === '3') {
+                e.preventDefault();
+                categoryRef.current.focus();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    const { data: servicerecord } = useQuery({
         queryKey: ["servicerecord"],
         queryFn: () => fetchData("/admin/service"),
     });
 
-    const handleCategoryChange = (e) => {
-        const selectedCategory = e.target.value;
+    // Category options
+    const categoryOptions = [...new Set(servicerecord?.data?.map(s => s.categoryid?.category_name))]
+        .filter(Boolean)
+        .map(category => ({
+            value: category,
+            label: category
+        }));
+
+    // Service options
+    const serviceOptions = servicerecord?.data
+        ?.filter(s => s.categoryid?.category_name === Services.category_name)
+        .map(service => ({
+            value: service.servicename,
+            label: service.servicename,
+            data: service
+        })) || [];
+
+    const handleCategoryChange = (selectedOption) => {
         setServices({
             ...Services,
-            category_name: selectedCategory,
+            category_name: selectedOption?.value || "",
             servicename: "",
             unitcharge: "0",
             unit: "1",
             unittype: "pcs",
         });
+        serviceRef.current.focus();
     };
 
-    const handleServiceChange = (e) => {
-        const selectedService = servicerecord?.data?.find(
-            (service) => service.servicename === e.target.value
-        );
-
-        if (selectedService) {
+    const handleServiceChange = (selectedOption) => {
+        if (selectedOption) {
             setServices({
                 ...Services,
-                servicename: selectedService.servicename || "",
-                unitcharge: String(selectedService.unitcharge || "0"),
-                unit: "1",
-                unittype: selectedService.unittype || "pcs",
+                servicename: selectedOption.value,
+                unitcharge: String(selectedOption.data.unitcharge || "0"),
+                unittype: selectedOption.data.unittype || "pcs"
             });
         }
+        unitRef.current.focus();
     };
 
     const handleInputChange = (e) => {
-        setServices({ ...Services, [e.target.name]: e.target.value || "" });
+        setServices({ ...Services, [e.target.name]: e.target.value });
     };
+
 
     const handleAddItem = () => {
         if (!Services.category_name || !Services.servicename || !Services.unitcharge || !Services.unit) return;
@@ -144,31 +175,61 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
             </div>
 
             <div className="flex flex-wrap gap-4 my-4">
-                <select
-                    name="category_name"
-                    value={Services.category_name}
-                    onChange={handleCategoryChange}
-                    className="select select-bordered w-full max-w-sm"
-                >
-                    <option value="">Select Category</option>
-                    {[...new Set(servicerecord?.data?.map((s) => s.categoryid.category_name))]?.map((category, index) => (
-                        <option key={index} value={category}>{category}</option>
-                    ))}
-                </select>
+                <div className="w-full max-w-sm">
+                    <Select
+                        ref={categoryRef}
+                        options={categoryOptions}
+                        value={categoryOptions.find(opt => opt.value === Services.category_name)}
+                        onChange={handleCategoryChange}
+                        placeholder="Search category..."
+                        isSearchable
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{
+                            menuPortal: base => ({ ...base, zIndex: 9999 }),
+                            control: (base) => ({
+                                ...base,
+                                minHeight: '44px',
+                                borderRadius: '6px'
+                            })
+                        }}
+                    />
+                </div>
 
-                <select
-                    name="servicename"
-                    value={Services.servicename}
-                    onChange={handleServiceChange}
-                    className="select select-bordered w-full max-w-sm"
-                    disabled={!Services.category_name}
-                >
-                    <option value="">Select Service</option>
-                    {servicerecord?.data?.filter((s) => s.categoryid.category_name === Services.category_name)
-                        .map((service, index) => (
-                            <option key={index} value={service.servicename}>{service.servicename}</option>
-                        ))}
-                </select>
+                <div className="w-full max-w-sm">
+                    <Select
+                        ref={serviceRef}
+                        options={serviceOptions}
+                        value={serviceOptions.find(opt => opt.value === Services.servicename)}
+                        onChange={handleServiceChange}
+                        placeholder="Search service..."
+                        isSearchable
+                        isDisabled={!Services.category_name}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{
+                            menuPortal: base => ({ ...base, zIndex: 9999 }),
+                            control: (base) => ({
+                                ...base,
+                                minHeight: '44px',
+                                borderRadius: '6px'
+                            })
+                        }}
+                    />
+                </div>
+
+                <input
+                    ref={unitRef}
+                    type="number"
+                    name="unit"
+                    value={Services.unit}
+                    onChange={handleInputChange}
+                    placeholder="Units"
+                    className="p-2 border rounded focus:ring-2 focus:ring-blue-500 w-full max-w-[200px]"
+                    min="1"
+                />
             </div>
 
             <div className="flex w-full justify-between">
