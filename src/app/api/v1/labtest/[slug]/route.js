@@ -11,20 +11,12 @@ import "@/models/Doctor.models"
 export async function GET(req, context) {
     // Connect to the database
     await connectDB();
-
-    // Get the session
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return NextResponse.json(
-            { success: false, message: "Unauthorized" },
-            { status: 401 }
-        );
-    }
     try {
         const { slug } = await context.params;
+        
         const data = await Labtest.findOne({
             bill_no: slug
-        }).populate("patient").populate("consultant").sort({ createdAt: -1 });
+        }).populate("patient").populate("consultant")
         // Return the message
         return NextResponse.json(
             { success: true, data },
@@ -63,6 +55,7 @@ export async function PUT(req, context) {
             dob,
             age,
             address,
+            reg_id,
         } = body
 
         const data = await Labtest.findOneAndUpdate({
@@ -78,6 +71,7 @@ export async function PUT(req, context) {
                 dob,
                 age,
                 address,
+                reg_id,
             })
         }
         // Return the message
@@ -93,6 +87,7 @@ export async function PUT(req, context) {
         );
     }
 }
+
 export async function DELETE(req, context) {
     // Connect to the database
     await connectDB();

@@ -1,15 +1,15 @@
 "use client";
 
-import Loading from '@/components/Loading';
-import PrintUi from '@/components/ui/PrintUi';
-import { useHospital } from '@/context/setting/HospitalInformation';
-import { withAuth } from '@/services/withAuth';
-import { useSession } from 'next-auth/react';
-import Image from 'next/image';
-import { useParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { formatDate } from '@/lib/formateDate';
-import { fetchData } from '@/services/apiService';
+import Loading from "@/components/Loading";
+import PrintUi from "@/components/ui/PrintUi";
+import { useHospital } from "@/context/setting/HospitalInformation";
+import { withAuth } from "@/services/withAuth";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { formatDate } from "@/lib/formateDate";
+import { fetchData } from "@/services/apiService";
 
 const DischargePrint = () => {
   const { data: session } = useSession();
@@ -26,8 +26,8 @@ const DischargePrint = () => {
         setFormData(data);
         setError(null);
       } catch (err) {
-        console.error('Error fetching discharge:', err);
-        setError('Failed to load discharge details');
+        console.error("Error fetching discharge:", err);
+        setError("Failed to load discharge details");
       } finally {
         setIsLoading(false);
       }
@@ -53,7 +53,9 @@ const DischargePrint = () => {
             className="h-auto"
           />
           <div>
-            <h1 className="text-3xl font-bold text-blue-900">{hospitalInfo?.hospital_name}</h1>
+            <h1 className="text-3xl font-bold text-blue-900">
+              {hospitalInfo?.hospital_name}
+            </h1>
             <p className="bg-blue-900 text-white px-2 py-1 text-sm font-semibold rounded-md w-fit mt-1">
               Lic No: {hospitalInfo?.licence_number}
             </p>
@@ -64,10 +66,12 @@ const DischargePrint = () => {
         <div className="text-right text-sm text-gray-700 leading-tight">
           <p>{hospitalInfo?.address}</p>
           <p>
-            <span className="font-semibold">Helpline:</span> {hospitalInfo?.phone}
+            <span className="font-semibold">Helpline:</span>{" "}
+            {hospitalInfo?.phone}
           </p>
           <p>
-            <span className="font-semibold">GST:</span> {hospitalInfo?.gst_number}
+            <span className="font-semibold">GST:</span>{" "}
+            {hospitalInfo?.gst_number}
           </p>
           <p className="text-blue-900">{hospitalInfo?.email}</p>
         </div>
@@ -76,24 +80,41 @@ const DischargePrint = () => {
       {/* Compact Main Content */}
       <main className="p-2 space-y-3 text-xs">
         <section className="space-y-2">
-          <h2 className="text-lg font-bold border-b border-black pb-1">Discharge Summary</h2>
+          <h2 className="text-lg font-bold border-b border-black pb-1">
+            Discharge Summary
+          </h2>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="p-1 border rounded">
-              <h3 className="font-semibold text-[11px] border-b pb-1">Patient Details</h3>
+              <h3 className="font-semibold text-[11px] border-b pb-1">
+                Patient Details
+              </h3>
               <div className="text-[11px] space-y-0.5 mt-1">
-                <p><span className="font-medium">Name:</span> {formData.patient?.fullname}</p>
-                <p><span className="font-medium">Contact:</span> {formData.patient?.phone_number}</p>
+                <p>
+                  <span className="font-medium">Name:</span>{" "}
+                  {formData.patient?.fullname}
+                </p>
+                <p>
+                  <span className="font-medium">Contact:</span>{" "}
+                  {formData.patient?.phone_number}
+                </p>
                 <div className="grid grid-cols-2 gap-1">
-                  <p><span className="font-medium">MRD:</span> {formData.mrd_id}</p>
-                  <p><span className="font-medium">REG ID:</span> {formData.reg_id}</p>
+                  <p>
+                    <span className="font-medium">MRD:</span> {formData?.mrd_id}
+                  </p>
+                  <p>
+                    <span className="font-medium">REG ID:</span>{" "}
+                    {formData?.reg_id}
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="p-1 border rounded">
-              <h3 className="font-semibold text-[11px] border-b pb-1">Address</h3>
-              <p className="text-[11px] mt-1">{formData.patient?.address}</p>
+              <h3 className="font-semibold text-[11px] border-b pb-1">
+                Address
+              </h3>
+              <p className="text-[11px] mt-1">{formData?.patient?.address}</p>
             </div>
           </div>
         </section>
@@ -102,7 +123,7 @@ const DischargePrint = () => {
           <div className="space-y-1">
             <h3 className="font-semibold text-sm">Consultant</h3>
             <p className="whitespace-pre-wrap border rounded p-1 text-[11px]">
-              {formData.consultant.drname}
+              {formData?.consultant?.drname}
             </p>
           </div>
 
@@ -110,13 +131,13 @@ const DischargePrint = () => {
             <div className="space-y-1">
               <h3 className="font-semibold text-sm">Final Diagnosis</h3>
               <p className="whitespace-pre-wrap border rounded p-1 text-[11px]">
-                {formData.final_diagnosis}
+                {formData?.final_diagnosis}
               </p>
             </div>
             <div className="space-y-1">
               <h3 className="font-semibold text-sm">Discharge Summary</h3>
               <p className="whitespace-pre-wrap border rounded p-1 text-[11px]">
-                {formData.discharge_summary}
+                {formData?.discharge_summary}
               </p>
             </div>
           </div>
@@ -124,15 +145,17 @@ const DischargePrint = () => {
           <div className="grid grid-cols-3 gap-2">
             <div className="p-1 border rounded">
               <h4 className="font-medium text-[11px]">Condition</h4>
-              <p className="text-[11px]">{formData.condition || 'N/A'}</p>
+              <p className="text-[11px]">{formData?.condition || "N/A"}</p>
             </div>
             <div className="p-1 border rounded">
               <h4 className="font-medium text-[11px]">Surgery</h4>
-              <p className="text-[11px]">{formData.surgery || 'N/A'}</p>
+              <p className="text-[11px]">{formData?.surgery || "N/A"}</p>
             </div>
             <div className="p-1 border rounded">
               <h4 className="font-medium text-[11px]">Discharge Date</h4>
-              <p className="text-[11px]">{formatDate(formData.discharge_date)} {formData.discharge_time}</p>
+              <p className="text-[11px]">
+                {formatDate(formData?.discharge_date)} {formData?.discharge_time}
+              </p>
             </div>
           </div>
 
@@ -150,7 +173,7 @@ const DischargePrint = () => {
             <p>Thank you for choosing {hospitalInfo?.hospital_name}</p>
             <div className="text-center">
               <div className="mt-4 w-32 border-b border-black"></div>
-              <p>E.&O.E: {formData?.patient?.admited_by}</p>
+              <p> Signature by Staff</p>
             </div>
           </div>
         </div>

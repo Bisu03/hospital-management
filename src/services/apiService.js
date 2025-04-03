@@ -2,14 +2,14 @@ import axios from "axios";
 
 // Fetch data
 export const fetchData = async (endpoint) => {
-  const response = await axios.get(`/api/v1/${endpoint}`);
+  const response = await axios.get(`/api/v1${endpoint}`);
   return response.data;
 };
 
 
 // Create data
 export const createData = async (endpoint, newData) => {
-  const response = await axios.post(`/api/v1/${endpoint}`, newData);
+  const response = await axios.post(`/api/v1${endpoint}`, newData);
   return response.data;
 };
 
@@ -21,6 +21,6 @@ export const updateData = async (endpoint, id, updatedData) => {
 
 // Delete data
 export const deleteData = async (endpoint, id) => {
-  const response = await axios.delete(`/api/v1/${endpoint}/${id}`);
+  const response = await axios.delete(`/api/v1${endpoint}/${id}`);
   return response.data;
 };

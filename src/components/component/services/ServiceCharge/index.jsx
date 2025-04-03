@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BiSolidPlusSquare } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
@@ -6,26 +6,33 @@ import Select from "react-select";
 import { fetchData } from "@/services/apiService";
 import { generateUnique } from "@/lib/uniqueNumber";
 
-const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
+const ServiceForm = forwardRef(({ ServiceCharges, setServiceCharges }, ref) => {
+    const categoryRef = useRef(null);
+
+    useImperativeHandle(ref, () => ({
+        focus: () => {
+            categoryRef.current?.focus();
+        }
+    }));
     const [Services, setServices] = useState({
         u_ID: generateUnique(),
         category_name: "",
         servicename: "",
         unitcharge: "0",
         unit: "1",
-        unittype: "pcs",
     });
 
-    const categoryRef = useRef(null);
     const serviceRef = useRef(null);
     const unitRef = useRef(null);
 
-    // Keyboard shortcut handler
+    // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (e.altKey && e.key === '3') {
+            if (e.altKey) {
                 e.preventDefault();
-                categoryRef.current.focus();
+                if (e.key === '3') categoryRef.current?.focus();
+                if (e.key === '4') serviceRef.current?.focus();
+                if (e.key === '5') unitRef.current?.focus();
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -61,9 +68,8 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
             servicename: "",
             unitcharge: "0",
             unit: "1",
-            unittype: "pcs",
         });
-        serviceRef.current.focus();
+        serviceRef.current?.focus();
     };
 
     const handleServiceChange = (selectedOption) => {
@@ -72,19 +78,17 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
                 ...Services,
                 servicename: selectedOption.value,
                 unitcharge: String(selectedOption.data.unitcharge || "0"),
-                unittype: selectedOption.data.unittype || "pcs"
             });
         }
-        unitRef.current.focus();
+        unitRef.current?.focus();
     };
 
     const handleInputChange = (e) => {
         setServices({ ...Services, [e.target.name]: e.target.value });
     };
 
-
     const handleAddItem = () => {
-        if (!Services.category_name || !Services.servicename || !Services.unitcharge || !Services.unit) return;
+        if (!Services.category_name || !Services.servicename) return;
 
         const newService = {
             itemID: Services.u_ID,
@@ -92,7 +96,6 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
             servicename: Services.servicename,
             unitcharge: parseInt(Services.unitcharge) || 0,
             unit: parseInt(Services.unit) || 1,
-            unittype: Services.unittype,
         };
 
         setServiceCharges((prev) => ({
@@ -100,14 +103,15 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
             items: [...(prev?.items || []), newService],
         }));
 
+        // Reset form and focus
         setServices({
             u_ID: generateUnique(),
             category_name: "",
             servicename: "",
             unitcharge: "0",
             unit: "1",
-            unittype: "pcs",
         });
+        categoryRef.current?.focus();
     };
 
     const handleEditItem = (index, field, value) => {
@@ -129,43 +133,48 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
     };
 
     return (
-        <div className="p-4">
+        <div >
             <div className="overflow-x-auto mt-4">
-                <table className="table-auto w-full border-collapse border text-lg">
-                    <thead className="bg-gray-200">
+                <table className="table-auto w-full border-collapse border">
+                    <thead className="bg-gray-300">
                         <tr>
-                            <th className="border p-2">Service Category</th>
-                            <th className="border p-2">Service Name</th>
-                            <th className="border p-2">Charge</th>
-                            <th className="border p-2">Unit</th>
-                            <th className="border p-2">Action</th>
+                            <th className="p-3 text-left">Category</th>
+                            <th className="p-3 text-left">Service</th>
+                            <th className="p-3 text-center">Charge</th>
+                            <th className="p-3 text-center">Units</th>
+                            <th className="p-3 text-center">Total</th>
+                            <th className="p-3 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {ServiceCharges?.items?.map((data, index) => (
-                            <tr key={index} className="bg-gray-100 text-center">
-                                <td className="border p-2">{data.category_name}</td>
-                                <td className="border p-2">{data.servicename}</td>
-                                <td className="border p-2">
+                            <tr key={index} className="hover:bg-gray-50">
+                                <td className="p-3 border-t">{data.category_name}</td>
+                                <td className="p-3 border-t">{data.servicename}</td>
+                                <td className="p-3 border-t text-center">
                                     <input
                                         type="number"
                                         value={data.unitcharge}
                                         onChange={(e) => handleEditItem(index, "unitcharge", e.target.value)}
-                                        className="w-16 p-1 border rounded"
+                                        className="w-20 px-2 py-1 border rounded text-center"
                                     />
                                 </td>
-                                <td className="border p-2">
+                                <td className="p-3 border-t text-center">
                                     <input
                                         type="number"
                                         value={data.unit}
                                         onChange={(e) => handleEditItem(index, "unit", e.target.value)}
-                                        className="w-16 p-1 border rounded"
+                                        className="w-20 px-2 py-1 border rounded text-center"
+                                        min="1"
                                     />
                                 </td>
-                                <td className="border p-2 text-center">
+                                <td className="p-3 border-t text-center">
+                                    ₹{data.unitcharge * data.unit}
+                                </td>
+                                <td className="p-3 border-t text-center">
                                     <MdDelete
                                         onClick={() => handleRemoveItem(data.itemID)}
-                                        className="text-red-500 text-xl cursor-pointer"
+                                        className="text-red-500 text-xl cursor-pointer hover:text-red-700"
                                     />
                                 </td>
                             </tr>
@@ -174,46 +183,44 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
                 </table>
             </div>
 
-            <div className="flex flex-wrap gap-4 my-4">
-                <div className="w-full max-w-sm">
+            <div className="mt-6 flex gap-4 items-start">
+                <div className="flex-1">
                     <Select
                         ref={categoryRef}
                         options={categoryOptions}
                         value={categoryOptions.find(opt => opt.value === Services.category_name)}
                         onChange={handleCategoryChange}
-                        placeholder="Search category..."
+                        placeholder="Select Category (Alt+3)"
                         isSearchable
-                        className="react-select-container"
                         classNamePrefix="react-select"
                         menuPortalTarget={document.body}
                         styles={{
                             menuPortal: base => ({ ...base, zIndex: 9999 }),
                             control: (base) => ({
                                 ...base,
-                                minHeight: '44px',
+                                minHeight: '38px',
                                 borderRadius: '6px'
                             })
                         }}
                     />
                 </div>
 
-                <div className="w-full max-w-sm">
+                <div className="flex-1">
                     <Select
                         ref={serviceRef}
                         options={serviceOptions}
                         value={serviceOptions.find(opt => opt.value === Services.servicename)}
                         onChange={handleServiceChange}
-                        placeholder="Search service..."
+                        placeholder="Select Service (Alt+3)"
                         isSearchable
                         isDisabled={!Services.category_name}
-                        className="react-select-container"
                         classNamePrefix="react-select"
                         menuPortalTarget={document.body}
                         styles={{
                             menuPortal: base => ({ ...base, zIndex: 9999 }),
                             control: (base) => ({
                                 ...base,
-                                minHeight: '44px',
+                                minHeight: '38px',
                                 borderRadius: '6px'
                             })
                         }}
@@ -227,19 +234,24 @@ const ServiceForm = ({ ServiceCharges, setServiceCharges }) => {
                     value={Services.unit}
                     onChange={handleInputChange}
                     placeholder="Units"
-                    className="p-2 border rounded focus:ring-2 focus:ring-blue-500 w-full max-w-[200px]"
+                    className="p-2 border rounded focus:ring-2 focus:ring-blue-500 w-32"
                     min="1"
                 />
+
+                <button
+                    onClick={handleAddItem}
+                    className="btn btn-primary h-[38px]"
+                >
+                    <BiSolidPlusSquare className="text-xl" />
+                    Add
+                </button>
             </div>
 
-            <div className="flex w-full justify-between">
-                <button className="btn btn-primary flex items-center gap-2" onClick={handleAddItem}>
-                    <BiSolidPlusSquare className="text-xl" /> Add
-                </button>
-                <div className="text-xl font-semibold mt-4">Total: ₹{ServiceCharges?.total || 0}</div>
+            <div className="mt-4 text-right text-lg font-semibold">
+                Grand Total: ₹{ServiceCharges?.total || 0}
             </div>
         </div>
     );
-};
+});
 
 export default ServiceForm;

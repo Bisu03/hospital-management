@@ -13,18 +13,35 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
-import React, { lazy, Suspense, useState } from 'react'
+import React, { lazy, Suspense, useState, useEffect, useCallback } from 'react'
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
 const BedAllotment = () => {
-
     const searchParams = useSearchParams()
     const search = searchParams.get('reg_id')
     const { slug } = useParams();
     const router = useRouter()
     const [loading, setLoading] = useState();
 
+    // Add skip functionality handler
+    const handleSkip = useCallback(() => {
+        router.push(`/ipd/print/${search}`);
+    }, [router, search]);
+
+    // Add F6 key event listener
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'F6') {
+                e.preventDefault();
+                handleSkip();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleSkip]);
+
+    // Rest of the component remains the same
     const {
         data: bedrecord,
         error,
@@ -66,7 +83,7 @@ const BedAllotment = () => {
                         <div className="w-full">
                             <Heading heading="Bed Allotment" >
                                 <Link className='btn btn-warning' href={`/ipd/print/${search}`}>
-                                    Skip
+                                    Skip (F6)
                                 </Link>
                             </Heading>
                         </div>

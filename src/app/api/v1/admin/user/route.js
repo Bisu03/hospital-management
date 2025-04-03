@@ -6,7 +6,6 @@ import bcrypt from 'bcrypt';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { generateUnique } from '@/lib/uniqueNumber';
-import Mailjet from 'node-mailjet';
 
 // Get all users (admin only) or single user
 export async function GET(req) {

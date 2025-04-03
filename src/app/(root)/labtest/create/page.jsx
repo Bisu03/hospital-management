@@ -1,11 +1,11 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createData, fetchData } from "@/services/apiService";
+import { createData, fetchData, updateData } from "@/services/apiService";
 import Heading from "@/components/Heading";
 import Loading from "@/components/Loading";
 import { withAuth } from "@/services/withAuth";
 import { ErrorHandeling } from "@/utils/errorHandling";
-import React, { lazy, Suspense, useState, useEffect } from "react";
+import React, { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { FaTrash } from "react-icons/fa";
 import { getDate } from "@/lib/currentDate";
 import { formattedTime } from "@/lib/timeGenerate";
@@ -17,6 +17,7 @@ import { TabLinks } from "@/utils/tablinks";
 import { getCompactAge } from "@/lib/ageCount";
 import Select from "react-select";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
 
@@ -25,14 +26,19 @@ const CreateLabtest = () => {
   const router = useRouter();
   const { data: session } = useSession();
 
-
-
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchTest, setSearchTest] = useState("");
   const [ToggleTest, setToggleTest] = useState(true);
   const [consultant, setConsultant] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [AdmitType, setAdmitType] = useState("NEW");
+  const [Billdata, setBilldata] = useState("");
+  // Refs for keyboard navigation
+  const discountRef = useRef(null);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+
   const [ServiceData, setServiceData] = useState({
     mrd_id: "",
+    reg_id: "",
     fullname: "",
     phone_number: "",
     referr_by: "",
@@ -42,14 +48,11 @@ const CreateLabtest = () => {
     age: "",
     address: "",
     consultant: "",
-    paydby: "",
+    paidby: "Due",
     reporting_date: getDate(),
-    pathology_test_cart: {
-      services: [],
-    },
-    radiology_test_cart: {
-      services: [],
-    },
+    reporting_time: formattedTime(),
+    pathology_test_cart: { services: [] },
+    radiology_test_cart: { services: [] },
     amount: {
       total: 0,
       discount: 0,
@@ -59,32 +62,48 @@ const CreateLabtest = () => {
     },
     admited_by: session?.user?.username,
   });
+
+  const [loadingSearch, setLoadingSearch] = useState(false);
+
   const [Times, setTimes] = useState(formattedTime());
   const [selectDob, setSelectDob] = useState("");
 
+  // Enhanced keyboard controls
   useEffect(() => {
     const handleKeyPress = (e) => {
       // Alt+1 for Pathology
-      if (e.altKey && e.key === '1') {
+      if (e.altKey && e.key === "1") {
         e.preventDefault();
         setToggleTest(true);
+        setFocusedIndex(-1);
       }
       // Alt+2 for Radiology
-      if (e.altKey && e.key === '2') {
+      else if (e.altKey && e.key === "2") {
         e.preventDefault();
         setToggleTest(false);
+        setFocusedIndex(-1);
       }
       // F5 for Submit
-      if (e.key === 'F5') {
+      else if (e.key === "F5") {
         e.preventDefault();
         handleSubmit();
+      } else if (e.key === "F6") {
+        e.preventDefault();
+        handleUpdate();
+      }
+      // Alt+D for Discount
+      else if (e.altKey && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        discountRef.current?.focus();
+        discountRef.current?.select();
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [ServiceData]);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [ServiceData, focusedIndex, ToggleTest]);
 
+  // Existing useEffect for age calculation
   useEffect(() => {
     setServiceData((prev) => ({
       ...prev,
@@ -143,11 +162,9 @@ const CreateLabtest = () => {
   const handlemrdIdSearch = async () => {
     try {
       const { data: prevData } = await fetchData(`/patient/${searchTerm}`);
-
       setServiceData({
         ...ServiceData,
         fullname: prevData?.fullname,
-        patient: prevData?._id,
         mrd_id: prevData?.mrd_id,
         phone_number: prevData?.phone_number,
         referr_by: prevData?.referr_by,
@@ -187,34 +204,84 @@ const CreateLabtest = () => {
     queryFn: () => fetchData("/admin/radiology"),
   });
 
+  const handleDetailSearch = async () => {
+    setLoadingSearch(true);
+    try {
+      const { data: prevData } = await fetchData(`/labtest/${Billdata}`);
+      setServiceData({
+        fullname: prevData?.patient?.fullname,
+        patient: prevData?.patient?._id,
+        reg_id: prevData?.patient?.reg_id,
+        mrd_id: prevData?.patient?.mrd_id,
+        phone_number: prevData?.patient?.phone_number,
+        referr_by: prevData?.patient?.referr_by,
+        gender: prevData?.patient?.gender,
+        age: prevData?.patient?.age,
+        dob: prevData?.patient?.dob,
+        address: prevData?.patient?.address,
+        paidby: prevData?.paidby,
+        reporting_date: prevData?.reporting_date,
+        pathology_test_cart: prevData?.pathology_test_cart,
+        radiology_test_cart: prevData?.radiology_test_cart,
+        amount: prevData?.amount,
+        referr_by: prevData?.referr_by,
+        isEditing: true,
+      });
+      setSelectDob(prevData?.patient?.dob);
+      setConsultant({
+        value: prevData?.consultant,
+        label: prevData?.consultant?.drname,
+      });
+      setLoadingSearch(false);
+    } catch (error) {
+      setLoadingSearch(false);
+      ErrorHandeling(error);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!ServiceData.paidby) {
+      return toast.error("Please select payment method");
+    }
+    if (!consultant?.value?._id) {
+      return toast.error("Please select consultant");
+    }
+    setIsLoading(true);
+    try {
+      const { data } = await createData("/labtest", {
+        ...ServiceData,
+        consultant: consultant.value._id,
+        amount: {
+          ...ServiceData.amount,
+          netTotal: ServiceData.amount.total - ServiceData.amount.discount,
+        },
+      });
+      SuccessHandling("Patient Added Succesfully");
+      router.push(`/labtest/printreceipt/${data?.bill_no}`);
+    } catch (error) {
+      ErrorHandeling(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const mutation = useMutation({
     mutationFn: (newRecord) =>
-      createData("/labtest", {
-        ...newRecord,
-        reporting_time: Times,
-        amount: {
-          ...newRecord.amount,
-          netTotal: newRecord.amount.total - newRecord.amount.discount,
-        },
-      }),
+      updateData("/labtest", Billdata, { ...newRecord, reporting_time: Times }),
     onSuccess: (data) => {
       queryClient.invalidateQueries(["labtestrecord"]);
       SuccessHandling(data.message);
-      router.push(`/labtest/printreceipt/${data?.data?.bill_no}`);
+      router.push(`/labtest/printreceipt/${Billdata}`);
     },
     onError: (error) => ErrorHandeling(error),
   });
 
-  const handleSubmit = () => {
-    if (!ServiceData.paydby) {
-      return ErrorHandeling({ message: "Please select payment method" });
-    }
+  const handleUpdate = () => {
     mutation.mutate({ ...ServiceData, consultant: consultant.value._id });
   };
 
   const addToCart = (test, test_type) => {
     setServiceData((prev) => {
-
       if (test_type === "pathology") {
         const newTotal = prev.amount.total + Number(test.pathology_charge);
         const newNetTotal = newTotal - prev.amount.discount;
@@ -247,10 +314,7 @@ const CreateLabtest = () => {
         return {
           ...prev,
           radiology_test_cart: {
-            services: [
-              ...prev.radiology_test_cart.services,
-              test
-            ],
+            services: [...prev.radiology_test_cart.services, test],
           },
           amount: {
             ...prev.amount,
@@ -260,12 +324,10 @@ const CreateLabtest = () => {
           },
         };
       }
-
     });
   };
 
   const removeFromCart = (test, test_type) => {
-
     if (test_type === "pathology") {
       setServiceData((prev) => {
         const updatedServices = prev.pathology_test_cart.services.filter(
@@ -320,57 +382,96 @@ const CreateLabtest = () => {
         <MiddleSection>
           <div className="w-full">
             <Heading heading="Lab Admission">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter MRD ID"
-                  className="p-2 border rounded"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button
-                  onClick={handlemrdIdSearch}
-                  className="px-3 py-1 bg-primary text-white rounded hover:bg-blue-600"
+              <div className="flex flex-col md:flex-row gap-2">
+                <select
+                  className="p-2 border rounded w-full md:w-auto"
+                  value={AdmitType}
+                  onChange={(e) => setAdmitType(e.target.value)}
                 >
-                  Search
-                </button>
+                  <option value="NEW">New</option>
+                  <option value="UPDATE">Update</option>
+                </select>
+
+                {AdmitType === "NEW" ? (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Enter MRD ID"
+                      className="p-2 border rounded w-full md:w-48"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <button
+                      onClick={handlemrdIdSearch}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 w-full md:w-auto"
+                      disabled={loadingSearch}
+                    >
+                      {loadingSearch ? <Spinner /> : "Search"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Enter Bill No."
+                      className="p-2 border rounded w-full md:w-48"
+                      value={Billdata}
+                      onChange={(e) => setBilldata(e.target.value)}
+                    />
+                    <button
+                      onClick={handleDetailSearch}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 w-full md:w-auto"
+                      disabled={loadingSearch}
+                    >
+                      {loadingSearch ? <Spinner /> : "Get"}
+                    </button>
+                  </>
+                )}
               </div>
             </Heading>
-            <div className="w-full bg-gray-100 p-2 md:p-4 rounded-lg shadow-sm mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            {/* Patient Information Section */}
+            <div className="w-full bg-gray-100 p-4 rounded-lg shadow-sm mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Full Name */}
+
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
-                    Full Name<span className="text-red-500 text-lg">*</span>
+                    Full Name<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="fullname"
                     value={ServiceData?.fullname}
                     onChange={handleChange}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 border-black"
                   />
                 </div>
+
+                {/* Phone Number */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
-                    Phone Number<span className="text-red-500 text-lg">*</span>
+                    Phone Number<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="phone_number"
                     value={ServiceData?.phone_number}
                     onChange={handleChange}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 border-black"
                   />
                 </div>
+
+                {/* Gender */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
-                    Gender<span className="text-red-500 text-lg">*</span>
+                    Gender<span className="text-red-500">*</span>
                   </label>
                   <select
                     name="gender"
                     value={ServiceData?.gender}
                     onChange={handleChange}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 border-black"
                   >
                     <option value="">Select</option>
                     <option value="Male">Male</option>
@@ -378,18 +479,22 @@ const CreateLabtest = () => {
                     <option value="Other">Other</option>
                   </select>
                 </div>
+
+                {/* Age */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
-                    Age<span className="text-red-500 text-lg">*</span>
+                    Age<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="age"
                     value={ServiceData?.age}
                     onChange={handleChange}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 border-black"
                   />
                 </div>
+
+                {/* Date of Birth */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
                     Date of Birth
@@ -399,9 +504,11 @@ const CreateLabtest = () => {
                     name="selectDob"
                     value={selectDob}
                     onChange={(e) => setSelectDob(e.target.value)}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 border-black"
                   />
                 </div>
+
+                {/* Address */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
                     Address
@@ -411,53 +518,49 @@ const CreateLabtest = () => {
                     name="address"
                     value={ServiceData?.address}
                     onChange={handleChange}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 border-black"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
-                    Reporting Date
-                  </label>
-                  <input
-                    type="date"
-                    disabled
-                    name="reporting_date"
-                    value={ServiceData?.reporting_date}
-                    onChange={handleChange}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Reporting Time
+                    Reg No.
+                    <span className="text-red-500">
+                      (leave blank for opd patient)
+                    </span>
                   </label>
                   <input
                     type="text"
-                    name="Times"
-                    disabled
-                    value={Times}
-                    onChange={(e) => setTimes(e.target.value)}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    name="reg_id"
+                    value={ServiceData?.reg_id}
+                    onChange={handleChange}
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 border-black"
                   />
                 </div>
-                <div className="space-y-2">
+
+                {/* Consultant */}
+                <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
                     Consultant
                   </label>
-                  <div className="flex items-center space-x-2">
-                    <Select
-                      options={doctorOptions}
-                      value={consultant}
-                      name="consultant"
-                      onChange={(selectedOption) =>
-                        setConsultant(selectedOption)
-                      }
-                      isClearable
-                      placeholder="Select Doctor"
-                      className="w-full max-w-sm text-lg"
-                    />{" "}
-                  </div>
+                  <Select
+                    options={doctorOptions}
+                    value={consultant}
+                    onChange={(selectedOption) => setConsultant(selectedOption)}
+                    isClearable
+                    placeholder="Select Doctor"
+                    className="basic-single border-black"
+                    classNamePrefix="select"
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "42px",
+                        fontSize: "14px",
+                      }),
+                    }}
+                  />
                 </div>
+
+                {/* Referred By */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">
                     Referred By
@@ -467,218 +570,231 @@ const CreateLabtest = () => {
                     name="referr_by"
                     value={ServiceData?.referr_by}
                     onChange={handleChange}
-                    className="w-full max-w-sm py-1 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 border-black"
                   />
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="w-full flex justify-between">
-                <h2 className="text-xl font-semibold">Available Tests</h2>
-                <div className="flex space-x-2">
-                  <button
-                    className={` ${ToggleTest ? "btn-error text-white" : "btn-secondary"} btn `}
-                    onClick={() => setToggleTest(true)}
-                    title="Alt+1"
-                  >
-                    Pathology (Alt+1)
-                  </button>
-                  <button
-                    className={` ${!ToggleTest ? "btn-error text-white" : "btn-secondary"} btn `}
-                    onClick={() => setToggleTest(false)}
-                    title="Alt+2"
-                  >
-                    Radiology (Alt+2)
-                  </button>
+            {/* Tests Section */}
+            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Available Tests */}
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row justify-between gap-4">
+                  <h2 className="text-xl font-semibold">Available Tests</h2>
+                  <div className="flex flex-col md:flex-row gap-2">
+                    <button
+                      className={`${
+                        ToggleTest ? "bg-red-500" : "bg-gray-400"
+                      } text-white px-4 py-2 rounded`}
+                      onClick={() => setToggleTest(true)}
+                    >
+                      Pathology (Alt+1)
+                    </button>
+                    <button
+                      className={`${
+                        !ToggleTest ? "bg-red-500" : "bg-gray-400"
+                      } text-white px-4 py-2 rounded`}
+                      onClick={() => setToggleTest(false)}
+                    >
+                      Radiology (Alt+2)
+                    </button>
+                  </div>
                 </div>
+
+                {ToggleTest ? (
+                  <Select
+                    options={categories?.data}
+                    getOptionLabel={(option) =>
+                      `${option.pathology_category || ""} - ₹${
+                        option.pathology_charge
+                      }`
+                    }
+                    getOptionValue={(option) => option._id}
+                    onChange={(selectedOption) => {
+                      if (selectedOption)
+                        addToCart(selectedOption, "pathology");
+                    }}
+                    isSearchable
+                    placeholder="Search pathology tests..."
+                    className="basic-single border-black"
+                    classNamePrefix="select"
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "42px",
+                        fontSize: "14px",
+                      }),
+                    }}
+                  />
+                ) : (
+                  <Select
+                    options={radiologytest?.data}
+                    getOptionLabel={(option) =>
+                      `${option.test_name} - ₹${option.test_charge}`
+                    }
+                    getOptionValue={(option) => option._id}
+                    onChange={(selectedOption) => {
+                      if (selectedOption)
+                        addToCart(selectedOption, "radiology");
+                    }}
+                    isSearchable
+                    placeholder="Search radiology tests..."
+                    className="basic-single border-black"
+                    classNamePrefix="select"
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "42px",
+                        fontSize: "14px",
+                      }),
+                    }}
+                  />
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="Search tests..."
-                className="w-full p-2 border border-black rounded"
-                value={searchTest}
-                onChange={(e) => setSearchTest(e.target.value)}
-              />
-              {ToggleTest ?
-                categories?.data
-                  ?.filter((test) =>
-                    test.pathology_category.toLowerCase().includes(searchTest?.toLowerCase())
-                  )?.map((test) => (
-                    <div
-                      key={test._id}
-                      className="flex justify-between items-center p-3 border border-black rounded"
-                    >
-                      <p className="font-semibold">{test?.pathology_category}</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-gray-500">₹{Number(test?.pathology_charge)}</p>
-                        <button
-                          onClick={() => addToCart(test, "pathology")}
-                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                          Add
-                        </button>
+
+              {/* Test Cart */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Test Cart</h2>
+                <div className="space-y-2">
+                  {ServiceData?.pathology_test_cart?.services.map(
+                    (test, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border rounded gap-2"
+                      >
+                        <p className="font-semibold flex-1">
+                          {test.pathology_category}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-gray-500">
+                            ₹{Number(test.pathology_charge)}
+                          </p>
+                          <button
+                            onClick={() => removeFromCart(test, "pathology")}
+                            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
-                :
-                radiologytest?.data
-                  ?.filter((test) =>
-                    test?.test_name.toLowerCase().includes(searchTest.toLowerCase())
-                  )?.map((test) => (
-                    <div
-                      key={test._id}
-                      className="flex justify-between items-center p-3 border border-black rounded"
-                    >
-                      <p className="font-semibold">{test?.test_name}</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-gray-500">₹{Number(test?.test_charge)}</p>
-                        <button
-                          onClick={() => addToCart(test, "radiology")}
-                          className="px-3 py-1 bg-primary text-white rounded hover:bg-blue-600"
-                        >
-                          Add
-                        </button>
-                      </div>
-                    </div>
-                  ))
-              }
-
-
-
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Test Cart</h2>
-              {ServiceData?.pathology_test_cart?.services.map((test, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center p-3 border rounded"
-                >
-                  <p className="font-semibold">{test.pathology_category}</p>
-                  <p className="text-sm font-bold text-gray-500">
-                    ₹{Number(test.pathology_charge)}
-                  </p>
-                  <button
-                    onClick={() => removeFromCart(test, "pathology")}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              ))}
-              {ServiceData?.radiology_test_cart?.services.map((test, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center p-3 border rounded"
-                >
-                  <p className="font-semibold">{test.test_name}</p>
-                  <p className="text-sm font-bold text-gray-500">
-                    ₹{Number(test.test_charge)}
-                  </p>
-                  <button
-                    onClick={() => removeFromCart(test, "radiology")}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              ))}
-
-              <div className="border-t pt-4 space-y-4">
-                <div className="flex justify-between">
-                  <span className="font-semibold">Total:</span>
-                  <span>₹{ServiceData.amount.total}</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Discount Amount
-                    </label>
-                    <input
-                      type="number"
-                      name="amount.discount"
-                      value={ServiceData.amount.discount}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                      min="0"
-                      max={ServiceData.amount.total}
-                      step="0.01"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Paid Amount
-                    </label>
-                    <input
-                      type="number"
-                      name="amount.paid"
-                      value={ServiceData.amount.paid}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                      min="0"
-                      max={ServiceData.amount.netTotal}
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Due Amount
-                    </label>
-                    <input
-                      type="number"
-                      value={ServiceData.amount.due}
-                      readOnly
-                      className="w-full p-2 border rounded bg-gray-100"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Payment Method<span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="paydby"
-                      value={ServiceData.paydby}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                      required
-                    >
-                      <option value="">Select</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Upi">Upi</option>
-                      <option value="Cashless">Cashless</option>
-                      <option value="Sasthyasathi">Sasthyasathi</option>
-                      <option value="Cancel">Cancel</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-between font-semibold">
-                  <span>Net Total:</span>
-                  <span>₹{ServiceData.amount.netTotal}</span>
-                </div>
-
-                <button
-                  onClick={handleSubmit}
-                  className="btn btn-primary w-full mt-4"
-                  disabled={mutation.isPending || !ServiceData.paydby}
-                  title="F5"
-                >
-                  {mutation.isPending ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Spinner /> Submitting...
-                    </span>
-                  ) : (
-                    "Submit (F5)"
+                    )
                   )}
-                </button>
+
+                  {ServiceData?.radiology_test_cart?.services.map(
+                    (test, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border rounded gap-2"
+                      >
+                        <p className="font-semibold flex-1">{test.test_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-gray-500">
+                            ₹{Number(test.test_charge)}
+                          </p>
+                          <button
+                            onClick={() => removeFromCart(test, "radiology")}
+                            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {/* Payment Section */}
+                <div className="border-t pt-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Discount Amount (Alt+D)
+                      </label>
+                      <input
+                        ref={discountRef}
+                        type="number"
+                        name="amount.discount"
+                        value={ServiceData.amount.discount}
+                        onChange={handleChange}
+                        className="w-full p-2 border rounded"
+                        max={ServiceData.amount.total}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Paid Amount
+                      </label>
+                      <input
+                        type="number"
+                        name="amount.paid"
+                        value={ServiceData.amount.paid}
+                        onChange={handleChange}
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Due Amount
+                      </label>
+                      <input
+                        type="number"
+                        value={ServiceData.amount.due}
+                        readOnly
+                        className="w-full p-2 border rounded bg-gray-100"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Payment Method<span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="paidby"
+                        value={ServiceData.paidby}
+                        onChange={handleChange}
+                        className="w-full p-2 border rounded"
+                        required
+                      >
+                        <option value="">Select</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Upi">Upi</option>
+                        <option value="Cashless">Cashless</option>
+                        <option value="Sasthyasathi">Sasthyasathi</option>
+                        <option value="Cancel">Cancel</option>
+                        <option value="Due">Due</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex w-full justify-between">
+                    <h1>Payable Amount:-</h1>
+                    <h1>{ServiceData.amount.netTotal}</h1>
+                  </div>
+                  {/* Submit Button */}
+                  {ServiceData?.isEditing ? (
+                    <button
+                      onClick={handleUpdate}
+                      className="btn btn-primary w-full mt-4 py-2"
+                      disabled={mutation.isPending || !ServiceData.paidby}
+                    >
+                      Update <kbd className="kbd kbd-sm">F6</kbd>{" "}
+                      {mutation.isPending && <Spinner />}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSubmit}
+                      className="btn btn-primary w-full mt-4 py-2"
+                      disabled={isLoading || !ServiceData.paidby}
+                    >
+                      Submit <kbd className="kbd kbd-sm">F5</kbd>{" "}
+                      {isLoading && <Spinner />}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

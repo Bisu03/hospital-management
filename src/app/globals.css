@@ -22,3 +22,37 @@
 }
 
 
+@media print {
+  @page {
+    margin: 8mm;
+    size: A4 portrait;
+  }
+  
+  table { 
+    page-break-inside: avoid;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: white;
+  }
+  
+  .print-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: white;
+  }
+  
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

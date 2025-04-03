@@ -21,7 +21,6 @@ const IpsEstimate = () => {
 
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(false);
-    console.log(formData);
 
 
     const [Acomodation, setAcomodation] = useState({ items: [], total: 0 });
@@ -36,7 +35,7 @@ const IpsEstimate = () => {
             const { data } = await fetchData(`/billing/${slug}`);
             if (data) {
                 setFormData(data);
-                setAcomodation(data?.acomodation_cart || { items: [], total: 0 });
+                // setAcomodation(data?.acomodation_cart || { items: [], total: 0 });
                 setDoctorCharge(data?.consultant_cart || { items: [], total: 0 });
                 setServiceCharges(data?.service_cart || { items: [], total: 0 });
                 setMedicineCharge(data?.medicine_cart || { items: [], total: 0 });
@@ -112,7 +111,7 @@ const IpsEstimate = () => {
                 </div>
 
                 {/* Compact Tables */}
-                <div className="space-y-1">
+                {/* {Acomodation?.total > 0 && <div className="space-y-1">
                     <h3 className="text-xs font-semibold border-b border-black">Bed Charges</h3>
                     <table className="w-full text-[10px] print:text-[8px]">
                         <thead>
@@ -127,15 +126,16 @@ const IpsEstimate = () => {
                             {Acomodation?.items?.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-0.5 border">{item.bed_category} - {item.bed_number}</td>
-                                    <td className="p-0.5 text-right border">₹{(item.bed_charge / item.number_days).toFixed(2)}/Day</td>
+                                    <td className="p-0.5 text-right border">₹{parseInt(item?.bed_charge / item?.number_days)}/Day</td>
                                     <td className="p-0.5 text-right border">{item.number_days}</td>
-                                    <td className="p-0.5 text-right border">₹{item.bed_charge}</td>
+                                    <td className="p-0.5 text-right border">₹{item?.bed_charge}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </div>
-                <div className="space-y-1">
+                </div>} */}
+
+                {DoctorCharge?.total > 0 && <div className="space-y-1">
                     <h3 className="text-xs font-semibold border-b border-black">Doctor Charges</h3>
                     <table className="w-full text-[10px] print:text-[8px]">
                         <thead>
@@ -150,14 +150,14 @@ const IpsEstimate = () => {
                             {DoctorCharge?.items?.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-0.5 border">{item.drname}</td>
-                                    <td className="p-0.5 text-right border">₹{(item.charge / item.visit).toFixed(2)}/visit</td>
-                                    <td className="p-0.5 text-right border">{item.visit}</td>
+                                    <td className="p-0.5 text-right border">₹{(item.charge / item.doctor_visit).toFixed(2)}/visit</td>
+                                    <td className="p-0.5 text-right border">{item.doctor_visit}</td>
                                     <td className="p-0.5 text-right border">₹{item.charge}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </div>}
 
                 {Object.entries(
                     ServiceCharges?.items?.reduce((acc, item) => {
@@ -193,7 +193,7 @@ const IpsEstimate = () => {
                     </div>
                 ))}
 
-                <div className="mt-1">
+                {MedicineCharge.total > 0 && <div className="mt-1">
                     <h3 className="text-xs font-semibold border-b border-black">Medicines</h3>
                     <table className="w-full text-[10px] print:text-[8px]">
                         <thead>
@@ -215,7 +215,7 @@ const IpsEstimate = () => {
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </div>}
 
                 {/* Compact Billing Summary */}
                 <div className="mt-2 flex justify-between gap-2 text-[10px] print:text-[8px]">

@@ -8,6 +8,7 @@ import Opd from "@/models/Opd.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
 import Patient from "@/models/Patient.models"
 import "@/models/Doctor.models"
+import { formattedTime } from "@/lib/timeGenerate";
 
 
 export async function GET(req) {
@@ -117,7 +118,7 @@ export async function POST(req) {
             medical_case,
             opd_fees,
             paidby,
-            consultant_time,
+            admited_by,
             provisional_diagnosis,
         } = body
 
@@ -130,7 +131,7 @@ export async function POST(req) {
                 spo2,
                 jaundice,
                 pallor,
-                consultant_time,
+                consultant_time: formattedTime(),
                 patient,
                 cvs,
                 resp_system,
@@ -141,6 +142,7 @@ export async function POST(req) {
                 medical_case,
                 opd_fees,
                 paidby,
+                admited_by,
                 provisional_diagnosis,
             });
 
@@ -153,7 +155,7 @@ export async function POST(req) {
         else {
 
             let mrdid = null;
-  
+
             mrdid = await Counter.findOneAndUpdate(
                 { id: "mrdid" },
                 { $inc: { seq: 1 } },
@@ -172,7 +174,6 @@ export async function POST(req) {
                 age,
                 address,
             });
-            console.log("run");
 
 
             if (data) {
@@ -184,7 +185,7 @@ export async function POST(req) {
                     spo2,
                     jaundice,
                     pallor,
-                    consultant_time,
+                    consultant_time:formattedTime(),
                     patient: data._id,
                     cvs,
                     resp_system,
@@ -194,6 +195,7 @@ export async function POST(req) {
                     present_complain,
                     medical_case,
                     opd_fees,
+                    admited_by,
                     paidby,
                     provisional_diagnosis,
                 });

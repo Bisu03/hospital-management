@@ -1,26 +1,27 @@
 "use client";
 
-import DoctorForm from '@/components/component/Doctor';
-import PatientDropdown from '@/components/component/PatientDropdown';
-import PatientRegistration from '@/components/component/PatientRegistration'
-import Heading from '@/components/Heading'
-import Loading from '@/components/Loading'
-import Tab from '@/components/Tab';
-import Spinner from '@/components/ui/Spinner';
-import { getCompactAge } from '@/lib/ageCount';
-import { getDate } from '@/lib/currentDate';
-import { formattedTime } from '@/lib/timeGenerate';
-import { createData, fetchData, updateData } from '@/services/apiService';
-import { withAuth } from '@/services/withAuth'
-import { ErrorHandeling } from '@/utils/errorHandling';
-import { SuccessHandling } from '@/utils/successHandling';
-import { TabLinks } from '@/utils/tablinks';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
-import React, { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { FaPlus } from 'react-icons/fa';
+import DoctorForm from "@/components/component/Doctor";
+import PatientDropdown from "@/components/component/PatientDropdown";
+import PatientRegistration from "@/components/component/PatientRegistration";
+import Heading from "@/components/Heading";
+import Loading from "@/components/Loading";
+import Tab from "@/components/Tab";
+import Spinner from "@/components/ui/Spinner";
+import { getCompactAge } from "@/lib/ageCount";
+import { getDate } from "@/lib/currentDate";
+import { formattedTime } from "@/lib/timeGenerate";
+import { createData, fetchData, updateData } from "@/services/apiService";
+import { withAuth } from "@/services/withAuth";
+import { ErrorHandeling } from "@/utils/errorHandling";
+import { SuccessHandling } from "@/utils/successHandling";
+import { TabLinks } from "@/utils/tablinks";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
+import { FaPlus } from "react-icons/fa";
 import Select from "react-select";
 
 const MiddleSection = lazy(() => import("@/components/Middlesection"));
@@ -28,9 +29,9 @@ const MiddleSection = lazy(() => import("@/components/Middlesection"));
 const IpdAdmission = () => {
     const queryClient = useQueryClient();
     const { data: session } = useSession();
-    const router = useRouter()
-    const searchParams = useSearchParams()
-    const search = searchParams.get('bedid')
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const search = searchParams.get("bedid");
 
     const initialState = {
         reg_id: "",
@@ -53,21 +54,26 @@ const IpdAdmission = () => {
         hight: "",
         weight: "",
         bp: "",
-        admited_in: "IPD",
         consultant: {},
         admission_charge: "200",
         paidby: "",
+        admit_type: "",
         admit_date: getDate(),
-        admit_time: formattedTime(),
+        admittime: "",
         present_complain: "",
         medical_case: "",
         provisional_diagnosis: "",
         admited_by: session?.user?.username,
-    }
+    };
+
+    const [AdmitType, setAdmitType] = useState("NEW");
     const [selectDob, setSelectDob] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const [PatientSearch, setPatientSearch] = useState("");
     const [formData, setFormData] = useState(initialState);
     const [consultant, setConsultant] = useState({});
+    const [loadingSearch, setLoadingSearch] = useState(false); // Loading state for search buttons
+    const [loading, setLoading] = useState(false);
 
     // Refs to track latest state
     const formDataRef = useRef(formData);
@@ -81,20 +87,55 @@ const IpdAdmission = () => {
         consultantRef.current = consultant;
     }, [consultant]);
 
-
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleRedidSearch = async () => {
+        try {
+            setLoadingSearch(true); // Start loading
+            const { data } = await fetchData(`/ipd?id=${PatientSearch}`);
+            setFormData({ ...data, ipd_id: data._id, ...data.patient, pid: data.patient._id, isEditing: true });
+            setConsultant({ value: data?.consultant, label: data?.consultant?.drname });
+            setSelectDob(data?.dob);
+        } catch (error) {
+            ErrorHandeling(error);
+        } finally {
+            setLoadingSearch(false); // Stop loading
+        }
+    };
 
     const handlemrdIdSearch = async () => {
-    }
+        try {
+            setLoadingSearch(true); // Start loading
+            const response = await fetchData(`/patient/${searchTerm}`);
+            setFormData({
+                ...formData,
+                fullname: response?.data?.fullname,
+                phone_number: response?.data?.phone_number,
+                gender: response?.data?.gender,
+                marital_status: response?.data?.marital_status,
+                occupation: response?.data?.occupation,
+                blood_group: response?.data?.blood_group,
+                address: response?.data?.address,
+                aadhar: response?.data?.aadhar,
+                guardian_name: response?.data?.guardian_name,
+                religion: response?.data?.religion,
+                admited_by: session?.user?.username,
+                guardian_phone: response?.data?.guardian_phone,
+                referr_by: response?.data?.referr_by,
+            });
+            setSelectDob(response?.data?.dob);
+        } catch (error) {
+            ErrorHandeling(error);
+        } finally {
+            setLoadingSearch(false); // Stop loading
+        }
+    };
 
-    const {
-        data: doctorrecord,
-    } = useQuery({
-        queryKey: ["doctorrecord"], // Unique query key
-        queryFn: () => fetchData("/doctor"), // Function to fetch data
+    const { data: doctorrecord } = useQuery({
+        queryKey: ["doctorrecord"],
+        queryFn: () => fetchData("/doctor"),
     });
 
     const doctorOptions = doctorrecord?.data?.map((doctor) => ({
@@ -103,65 +144,97 @@ const IpdAdmission = () => {
     }));
 
     useEffect(() => {
-        setFormData(prev => ({ ...prev, age: getCompactAge(selectDob || ""), dob: selectDob }));
+        setFormData((prev) => ({
+            ...prev,
+            age: getCompactAge(selectDob || ""),
+            dob: selectDob,
+        }));
     }, [selectDob]);
+    ;
 
-    useEffect(() => {
-        if (consultant) {
-            setFormData({ ...formData, consultant: consultant.value });
-        }
-    }, [consultant]);
-
-    const mutation = useMutation({
-        mutationFn: (newItem) => createData(`/ipd?bedid=${search || ""}`, newItem),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
-            setFormData(initialState);
-            SuccessHandling(data.message);
-            if (search) {
-                router.push(`/ipd/print/${data?.data?.reg_id}`);
-            } else {
-                router.push(`/bedmanagement/bedallotment/${data?.data?._id}?reg_id=${data?.data?.reg_id}`);
-            }
-        },
-        onError: (error) => {
-            ErrorHandeling(error);
-        },
-    });
     const mutationUpdate = useMutation({
-        mutationFn: (newItem) => updateData("/ipd", newItem._id, newItem),
+        mutationFn: (newItem) => updateData("/ipd", newItem.ipd_id, newItem),
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["ipdarecord"] }); // Refetch data after adding
+            queryClient.invalidateQueries({ queryKey: ["ipdarecord"] });
             setFormData(initialState);
             SuccessHandling(data.message);
+            router.push(`/bedmanagement/bedallotment/${data?.data?._id}?reg_id=${data?.data.reg_id}`);
         },
         onError: (error) => {
             ErrorHandeling(error);
         },
     });
 
-    const handleSubmit = (e) => {
-        e.preventDefault(); // Prevents default form submission
-        mutation.mutate({ ...formData, consultant: consultant.value });
+    const handleSubmit = async () => {
+        setLoading(true);
+        try {
+            if (!consultant.value) {
+                setLoading(false);
+                return toast.error("Please select consultant");
+            }
+            if (!formData.admit_type) {
+                setLoading(false);
+                return toast.error("Please select Admit Type");
+            }
+            if (!formData.paidby) {
+                setLoading(false);
+                return toast.error("Please select Payment Type");
+            }
+
+            const newItem = { ...formData, consultant: consultant.value };
+            const response = await createData(`/ipd?bedid=${search || ""}`, newItem);
+
+            queryClient.invalidateQueries({ queryKey: ["ipdarecord"] });
+            setFormData(initialState);
+            SuccessHandling(response.message);
+
+            if (search) {
+                router.push(`/ipd/print/${response?.data?.reg_id}`);
+            } else {
+                router.push(`/bedmanagement/bedallotment/${response?.data?._id}?reg_id=${response?.data?.reg_id}`);
+            }
+            setLoading(false);
+        } catch (error) {
+            setLoading(false);
+            ErrorHandeling(error);
+        }
     };
 
     const handleUpdate = () => {
+        if (!consultant.value._id) {
+            return toast.error("Please select consultant");
+        }
         mutationUpdate.mutate({ ...formData, consultant: consultant.value });
     };
 
-
     useEffect(() => {
         const handleKeyPress = (event) => {
-            if (event.key === 'F5') {
+            if (event.key === "F5") {
                 event.preventDefault();
-                mutation.mutate({ ...formDataRef.current, consultant: consultantRef.current?.value });
+                if (!consultant.value) {
+                    setLoading(false);
+                    return toast.error("Please select consultant");
+                }
+                if (!formData.admit_type) {
+                    setLoading(false);
+                    return toast.error("Please select Admit Type");
+                }
+                if (!formData.paidby) {
+                    setLoading(false);
+                    return toast.error("Please select Payment Type");
+                }
+
+                handleSubmit();
+            }
+            if (event.key === "F6" && formData?.isEditing) {
+                event.preventDefault();
+                handleUpdate();
             }
         };
 
-        window.addEventListener('keydown', handleKeyPress);
-        return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [mutation]);
-
+        window.addEventListener("keydown", handleKeyPress);
+        return () => window.removeEventListener("keydown", handleKeyPress);
+    }, [handleSubmit, formData?.isEditing])
 
     return (
         <>
@@ -172,19 +245,50 @@ const IpdAdmission = () => {
                         <div className="w-full">
                             <Heading heading="IPD Admission">
                                 <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter MRD ID"
+                                    <select
                                         className="p-2 border rounded"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                    <button
-                                        onClick={handlemrdIdSearch}
-                                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        value={AdmitType}
+                                        onChange={(e) => setAdmitType(e.target.value)}
                                     >
-                                        Search
-                                    </button>
+                                        <option value="NEW">New</option>
+                                        <option value="UPDATE">Update</option>
+                                    </select>
+                                    {AdmitType === "NEW" && (
+                                        <>
+                                            <input
+                                                type="text"
+                                                placeholder="Enter MRD ID"
+                                                className="p-2 border rounded"
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                            />
+                                            <button
+                                                onClick={handlemrdIdSearch}
+                                                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                                disabled={loadingSearch}
+                                            >
+                                                {loadingSearch ? <Spinner /> : "Search"}
+                                            </button>
+                                        </>
+                                    )}
+                                    {AdmitType === "UPDATE" && (
+                                        <>
+                                            <input
+                                                type="text"
+                                                placeholder="Enter REG ID"
+                                                className="p-2 border rounded"
+                                                value={PatientSearch}
+                                                onChange={(e) => setPatientSearch(e.target.value)}
+                                            />
+                                            <button
+                                                onClick={handleRedidSearch}
+                                                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                                disabled={loadingSearch}
+                                            >
+                                                {loadingSearch ? <Spinner /> : "Get"}
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </Heading>
 
@@ -203,7 +307,7 @@ const IpdAdmission = () => {
                                                     name="fullname"
                                                     value={formData.fullname}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -215,7 +319,7 @@ const IpdAdmission = () => {
                                                     name="phone_number"
                                                     value={formData.phone_number}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -227,7 +331,7 @@ const IpdAdmission = () => {
                                                     name="selectDob"
                                                     value={selectDob}
                                                     onChange={(e) => setSelectDob(e.target.value)}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -239,7 +343,7 @@ const IpdAdmission = () => {
                                                     name="age"
                                                     value={formData.age}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -250,7 +354,7 @@ const IpdAdmission = () => {
                                                     name="gender"
                                                     value={formData.gender}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 >
                                                     <option value="">Select</option>
                                                     <option value="Male">Male</option>
@@ -266,7 +370,7 @@ const IpdAdmission = () => {
                                                     name="marital_status"
                                                     value={formData.marital_status}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 >
                                                     <option value="">Select</option>
                                                     <option value="Single">Single</option>
@@ -283,7 +387,7 @@ const IpdAdmission = () => {
                                                     name="occupation"
                                                     value={formData.occupation}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -294,7 +398,7 @@ const IpdAdmission = () => {
                                                     name="blood_group"
                                                     value={formData.blood_group}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 >
                                                     <option value="">Select</option>
                                                     <option value="A+">A+</option>
@@ -316,7 +420,7 @@ const IpdAdmission = () => {
                                                     name="address"
                                                     value={formData.address}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -328,7 +432,7 @@ const IpdAdmission = () => {
                                                     name="aadhar"
                                                     value={formData.aadhar}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -340,7 +444,7 @@ const IpdAdmission = () => {
                                                     name="guardian_name"
                                                     value={formData.guardian_name}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -352,7 +456,7 @@ const IpdAdmission = () => {
                                                     name="religion"
                                                     value={formData.religion}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -364,7 +468,7 @@ const IpdAdmission = () => {
                                                     name="guardian_phone"
                                                     value={formData.guardian_phone}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -376,7 +480,7 @@ const IpdAdmission = () => {
                                                     name="referr_by"
                                                     value={formData.referr_by}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                         </div>
@@ -398,10 +502,12 @@ const IpdAdmission = () => {
                                                     name="hight"
                                                     value={formData?.hight}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                                     placeholder="Enter height"
                                                 />
-                                                <span className="absolute right-3 top-2.5 text-gray-500 text-sm">cm</span>
+                                                <span className="absolute right-3 top-2.5 text-gray-500 text-sm">
+                                                    cm
+                                                </span>
                                             </div>
                                         </div>
 
@@ -416,10 +522,12 @@ const IpdAdmission = () => {
                                                     name="weight"
                                                     value={formData?.weight}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                                     placeholder="Enter weight"
                                                 />
-                                                <span className="absolute right-3 top-2.5 text-gray-500 text-sm">kg</span>
+                                                <span className="absolute right-3 top-2.5 text-gray-500 text-sm">
+                                                    kg
+                                                </span>
                                             </div>
                                         </div>
 
@@ -433,7 +541,7 @@ const IpdAdmission = () => {
                                                 name="bp"
                                                 value={formData?.bp}
                                                 onChange={handleChange}
-                                                className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                                 placeholder="e.g., 120/80"
                                             />
                                         </div>
@@ -447,7 +555,7 @@ const IpdAdmission = () => {
                                                 value={formData?.present_complain}
                                                 onChange={handleChange}
                                                 rows={3}
-                                                className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                                 placeholder="Describe the primary complaint"
                                             />
                                         </div>
@@ -462,7 +570,7 @@ const IpdAdmission = () => {
                                                 name="medical_case"
                                                 value={formData?.medical_case}
                                                 onChange={handleChange}
-                                                className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                                 placeholder="Enter medical case"
                                             />
                                         </div>
@@ -477,17 +585,16 @@ const IpdAdmission = () => {
                                                 value={formData?.provisional_diagnosis}
                                                 onChange={handleChange}
                                                 rows={3}
-                                                className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                                 placeholder="Enter initial diagnosis"
                                             />
                                         </div>
 
-
-
                                         {/* Admit Date & Time */}
                                         <div className="space-y-2">
                                             <label className="block text-sm font-medium text-gray-700">
-                                                Admit Date & Time <span className="text-red-500">*</span>
+                                                Admit Date & Time{" "}
+                                                <span className="text-red-500">*</span>
                                             </label>
                                             <div className="flex gap-3">
                                                 <input
@@ -495,14 +602,14 @@ const IpdAdmission = () => {
                                                     name="admit_date"
                                                     value={formData?.admit_date}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                                 <input
                                                     type="text"
                                                     name="admit_time"
                                                     value={formData?.admit_time}
                                                     onChange={handleChange}
-                                                    className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
                                         </div>
@@ -512,7 +619,6 @@ const IpdAdmission = () => {
                                                 Consultant <span className="text-red-500">*</span>
                                             </label>
                                             <div className="flex items-center space-x-2">
-
                                                 <Select
                                                     options={doctorOptions}
                                                     value={consultant}
@@ -527,7 +633,6 @@ const IpdAdmission = () => {
                                             </div>
                                         </div>
 
-
                                         <div className="space-y-2">
                                             <label className="block text-sm font-medium text-gray-700">
                                                 Admission Charge
@@ -537,9 +642,26 @@ const IpdAdmission = () => {
                                                 name="admission_charge"
                                                 value={formData?.admission_charge}
                                                 onChange={handleChange}
-                                                className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                                 placeholder="Enter medical case"
                                             />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Admit Type
+                                            </label>
+
+                                            <select
+                                                name="admit_type"
+                                                value={formData?.admit_type}
+                                                onChange={handleChange}
+                                                className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white cursor-pointer"
+                                            >
+                                                <option value="">Select</option>
+                                                <option value="Cash">Cash</option>
+                                                <option value="Cashless">Cashless</option>
+                                                <option value="Sasthyasathi">Sasthyasathi</option>
+                                            </select>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="block text-sm font-medium text-gray-700">
@@ -550,7 +672,7 @@ const IpdAdmission = () => {
                                                 name="paidby"
                                                 value={formData?.paidby}
                                                 onChange={handleChange}
-                                                className="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white cursor-pointer"
+                                                className="w-full py-2 px-4 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white cursor-pointer"
                                             >
                                                 <option value="">Select</option>
                                                 <option value="Cash">Cash</option>
@@ -565,42 +687,37 @@ const IpdAdmission = () => {
                                     {/* Submit Button */}
                                     <div className="pt-6 flex justify-end space-x-2">
                                         <button
-
                                             onClick={() => setFormData(initialState)} // Ensure proper reset
                                             className="px-6 py-2 bg-gray-500 text-white rounded-lg transition-colors font-medium hover:bg-gray-600"
                                         >
                                             Clear
                                         </button>
-                                        {formData?.patient?.ipd_id ? <button
-                                            onClick={handleUpdate}
-                                            className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
-                                            disabled={mutation.isPending} // Disable if mutation is pending
-                                        >
-                                            {mutationUpdate.isPending ? (
-                                                <>
-                                                    <Spinner />
-
-                                                </>
-                                            ) : (
-                                                "Update Patient"
-                                            )}
-                                        </button> :
+                                        {formData?.isEditing ? (
+                                            <button
+                                                onClick={handleUpdate}
+                                                className="btn btn-warning"
+                                                disabled={mutationUpdate.isPending}
+                                            >
+                                                Update Patient <kbd className="kbd kbd-sm ml-2">F6</kbd>
+                                                {mutationUpdate.isPending && <Spinner />}
+                                            </button>
+                                        ) : (
                                             <button
                                                 onClick={handleSubmit}
-                                                className="px-6 py-2 bg-primary text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:bg-gray-400"
-                                                disabled={mutation.isPending} // Disable if mutation is pending
+                                                className="btn btn-primary md:w-64"
                                             >
-                                                {mutation.isPending ? (
+                                                {loading ? (
                                                     <>
                                                         <Spinner />
-
                                                     </>
                                                 ) : (
-                                                    "Admit Patient 0r F5"
+                                                    <>
+                                                        Admit Patient <kbd className="kbd kbd-sm">F5</kbd>
+                                                    </>
                                                 )}
-                                            </button>}
+                                            </button>
+                                        )}
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -608,7 +725,7 @@ const IpdAdmission = () => {
                 </div>
             </Suspense>
         </>
-    )
-}
+    );
+};
 
-export default withAuth(IpdAdmission)
+export default withAuth(IpdAdmission);

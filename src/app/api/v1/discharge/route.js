@@ -24,8 +24,6 @@ export async function POST(req) {
     try {
         const body = await req.json();
 
-        console.log(body);
-
         // Create new discharge record
         const newDischarge = new Discharge({
             reg_id: body.reg_id,
@@ -101,10 +99,18 @@ export async function GET(req) {
         if (reg_id) {
             records = await Discharge.findOne({ reg_id })
                 .populate('patient');
+
+            if (!records) {
+                return NextResponse.json({
+                    success: false,
+                    message: "Record not found"
+                }, { status: 404 });
+
+            }
         } else {
             records = await Discharge.find(query)
                 .populate('patient')
-                .sort({ discharge_date: -1 });
+                .sort({ createdAt: -1 });
         }
 
         return NextResponse.json({

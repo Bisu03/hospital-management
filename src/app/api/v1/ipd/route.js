@@ -8,10 +8,10 @@ import Ipd from "@/models/Ipd.models"; // Mongoose  model
 import Counter from "@/models/Counter.models";
 import Patient from "@/models/Patient.models";
 import Billing from "@/models/Billing.models";
-import Bed from "@/models/Bed.models"; 
-import Discharge from "@/models/Discharge.models"; 
-
+import Bed from "@/models/Bed.models";
+import Discharge from "@/models/Discharge.models";
 import "@/models/BedCategory.models";
+import { formattedTime } from "@/lib/timeGenerate";
 
 export async function GET(req) {
     try {
@@ -35,7 +35,9 @@ export async function GET(req) {
             const data = await Ipd.findOne({ reg_id: idsearch })
                 .populate("patient")
                 .populate("consultant");
-            return NextResponse.json({ success: true, data });
+
+            const billdata = await Billing.findOne({ reg_id: idsearch })
+            return NextResponse.json({ success: true, data, billdata });
         } else {
             const matchConditions = {};
 
@@ -143,12 +145,13 @@ export async function POST(req) {
             hight,
             weight,
             bp,
+            admit_type,
             admited_in,
             consultant,
             admission_charge,
             paidby,
             admit_date,
-            admit_time,
+            admittime,
             present_complain,
             medical_case,
             provisional_diagnosis,
@@ -170,7 +173,6 @@ export async function POST(req) {
             religion,
             admited_by,
             guardian_phone,
-            referr_by,
             reg_id: regid.seq,
             mrd_id: mrdid.seq,
         });
@@ -183,14 +185,15 @@ export async function POST(req) {
                 weight,
                 bp,
                 admission_charge,
+                admit_type,
                 paidby,
                 admit_date,
-                admit_time,
+                admit_time: admittime ? admittime : formattedTime(),
                 present_complain,
                 medical_case,
                 provisional_diagnosis,
                 admited_by,
-                admited_in,
+                referr_by,
                 patient: data._id,
                 consultant: consultant._id,
             });
@@ -214,7 +217,7 @@ export async function POST(req) {
                         reg_id: regid.seq,
                         mrd_id: mrdid.seq,
                         consultant_cart: {
-                            items: [{ ...consultant }],
+                            items: [{ ...consultant, doctor_visit: 1 }],
                             total: consultant.charge,
                         },
                         patient: data._id,
@@ -241,7 +244,7 @@ export async function POST(req) {
                         reg_id: regid.seq,
                         mrd_id: mrdid.seq,
                         consultant_cart: {
-                            items: [{ ...consultant }],
+                            items: [{ ...consultant, doctor_visit: 1 }],
                             total: consultant.charge,
                         },
                         patient: data._id,

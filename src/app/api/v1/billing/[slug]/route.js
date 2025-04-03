@@ -51,6 +51,11 @@ export async function PUT(req, context) {
         let updatedBill;
         if (body.isDone === true) {
             if (body.bill_no) {
+                await Bed.findOneAndUpdate(
+                    { patitentID: body?.ipd?._id },
+                    { isAllocated: false, patitentID: "" }, { new: true }
+                )
+
                 updatedBill = await Billing.findOneAndUpdate(
                     { reg_id: slug },
                     { ...body }
@@ -64,7 +69,7 @@ export async function PUT(req, context) {
                 );
 
                 await Bed.findOneAndUpdate(
-                    { patitentID: body?.ipdid },
+                    { patitentID: body?.ipd?._id },
                     { isAllocated: false, patitentID: "" }
                 )
                 updatedBill = await Billing.findOneAndUpdate(

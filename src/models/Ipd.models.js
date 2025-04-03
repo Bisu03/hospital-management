@@ -1,65 +1,74 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-const ipdSchema = new Schema({
+const ipdSchema = new Schema(
+  {
     reg_id: {
-        type: Number,
-        required: true,
+      type: Number,
+      required: true,
     },
     mrd_id: {
-        type: Number,
-        required: true,
+      type: Number,
+      required: true,
     },
     patient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "patient_registration",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "patient_registration",
     },
     consultant: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "doctors",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "doctors",
     },
     admit_date: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     hight: {
-        type: String,
+      type: String,
     },
     weight: {
-        type: String,
+      type: String,
     },
     bp: {
-        type: String,
+      type: String,
     },
     discharge_date: {
-        type: String,
+      type: String,
     },
     admit_time: {
-        type: String,
+      type: String,
     },
     discharge_time: {
-        type: String,
+      type: String,
     },
     present_complain: {
-        type: String,
+      type: String,
     },
     medical_case: {
-        type: String,
+      type: String,
     },
     provisional_diagnosis: {
-        type: String,
+      type: String,
     },
     admission_charge: {
-        type: String,
+      type: String,
+    },
+    admit_type: {
+      type: String,
     },
     paidby: {
-        type: String,
+      type: String,
     },
-    bed_allotment: {
-        type: Array,
+    referr_by: {
+      type: String,
     },
-}, {
-    timestamps: true
-});
+    admited_by: {
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-export default mongoose.models.ipd || mongoose.model("ipd", ipdSchema)
+export default mongoose.models.ipd || mongoose.model("ipd", ipdSchema);

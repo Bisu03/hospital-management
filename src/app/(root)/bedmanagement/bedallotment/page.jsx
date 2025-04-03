@@ -91,12 +91,12 @@ const BedAllotment = () => {
                                 </div>
 
                                 <div className="flex gap-4 mt-6">
-                                    <Link href={`/ipd/ipdservice?regid=${patientData?.reg_id}`}
+                                    {/* <Link href={`/ipd/ipdservice?regid=${patientData?.reg_id}`}
                                         className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
 
                                     >
                                         Add Service
-                                    </Link>
+                                    </Link> */}
 
                                     <Link
                                         className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors"
@@ -108,7 +108,7 @@ const BedAllotment = () => {
                             </div>
                         </FixedLayout>
 
-                        {Object?.entries(groupedBeds || {}).map(([category, beds]) => (
+                        {Object?.entries(groupedBeds || {})?.map(([category, beds]) => (
                             <div key={category} className="w-full mb-6">
                                 <h3 className="text-lg font-semibold mb-3 p-2 bg-secondary text-center rounded-t">
                                     {category}
@@ -122,7 +122,7 @@ const BedAllotment = () => {
                                                 text-sm font-medium transition-all
                                                 min-w-[80px] sm:min-w-[100px] 
                                                 hover:shadow-sm hover:border-blue-300"
-                                                onClick={() => handleBedSelect(bed.patitentID)}
+                                                onClick={() => handleBedSelect(bed?.patitentID)}
                                             >
                                                 {bed?.bed_number}
                                             </button> :

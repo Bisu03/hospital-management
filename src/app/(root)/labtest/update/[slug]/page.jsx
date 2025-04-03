@@ -26,7 +26,6 @@ const UpdateLabrecord = () => {
   const queryClient = useQueryClient();
   const { slug } = useParams();
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
   const [searchTest, setSearchTest] = useState("");
   const [loading, setLoading] = useState(false);
   const [ServiceData, setServiceData] = useState({
@@ -40,7 +39,7 @@ const UpdateLabrecord = () => {
     dob: "",
     age: "",
     address: "",
-    paydby: "",
+    paidby: "",
     amount: {
       total: 0,
       discount: 0,
@@ -114,7 +113,7 @@ const UpdateLabrecord = () => {
     label: doctor.drname,
   }));
 
-  const handleRegIdSearch = async () => {
+  const handleDetailSearch = async () => {
     setLoading(true);
     try {
       const { data: prevData } = await fetchData(`/labtest/${slug}`)
@@ -129,7 +128,7 @@ const UpdateLabrecord = () => {
         age: prevData?.patient?.age,
         dob: prevData?.patient?.dob,
         address: prevData?.patient?.address,
-        paydby: prevData?.paydby,
+        paidby: prevData?.paidby,
         reporting_date: prevData?.reporting_date,
         pathology_test_cart: prevData?.pathology_test_cart,
         radiology_test_cart: prevData?.radiology_test_cart,
@@ -150,7 +149,7 @@ const UpdateLabrecord = () => {
   }
 
   useEffect(() => {
-    handleRegIdSearch()
+    handleDetailSearch()
   }, [slug]);
 
 
@@ -187,6 +186,7 @@ const UpdateLabrecord = () => {
   const handleSubmit = () => {
     mutation.mutate({ ...ServiceData, consultant: consultant.value._id });
   };
+  
   const addToCart = (test, test_type) => {
     setServiceData((prev) => {
 
@@ -601,8 +601,8 @@ const UpdateLabrecord = () => {
                       Payment Method<span className="text-red-500">*</span>
                     </label>
                     <select
-                      name="paydby"
-                      value={ServiceData.paydby}
+                      name="paidby"
+                      value={ServiceData.paidby}
                       onChange={handleChange}
                       className="w-full p-2 border rounded"
                       required
@@ -625,7 +625,7 @@ const UpdateLabrecord = () => {
                 <button
                   onClick={handleSubmit}
                   className="btn btn-primary w-full mt-4"
-                  disabled={mutation.isPending || !ServiceData.paydby}
+                  disabled={mutation.isPending || !ServiceData.paidby}
                 >
                   {mutation.isPending ? (
                     <span className="flex items-center justify-center gap-2">

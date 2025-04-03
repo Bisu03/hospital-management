@@ -17,6 +17,7 @@ export async function GET(req, context) {
         const { slug } = await context.params;
         const data = await Discharge.findOne({ reg_id: slug }).populate("patient").populate("consultant");
         return NextResponse.json({
+            
             success: true,
             data
         });
@@ -38,6 +39,7 @@ export async function PUT(req, context) {
         const body = await req.json();
         const data = await Discharge.findOneAndUpdate({ reg_id: slug }, { ...body }).populate("patient").populate("consultant");
         return NextResponse.json({
+            message: "Discharge Done",
             success: true,
             data
         });

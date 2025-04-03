@@ -5,6 +5,7 @@ import { FaEye, FaEyeSlash, FaEnvelope, FaPhone, FaHospitalSymbol, FaUserCircle,
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import ButtomSpinner from "@/components/ui/Spinner";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -89,6 +90,7 @@ export default function LoginPage() {
                       className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
                       placeholder="••••••••"
                     />
+
                     <button
                       type="button"
                       onClick={togglePasswordVisibility}
@@ -112,6 +114,12 @@ export default function LoginPage() {
                   )}
                 </button>
               </form>
+              <Link href="/forgotpass" className="text-teal-600 hover:text-teal-700 mt-4 w-full" >
+                <p className="text-sm text-right">
+                  Forgot Password
+                </p>
+
+              </Link>
             </div>
           </div>
 

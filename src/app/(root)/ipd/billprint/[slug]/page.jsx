@@ -7,10 +7,8 @@ import { withAuth } from "@/services/withAuth";
 import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { fetchData } from "@/services/apiService";
 import { formatDate } from "@/lib/formateDate";
-import QRCode from "react-qr-code";
 import { amountToWords } from "@/lib/numberToWord";
 import Image from "next/image";
 
@@ -34,7 +32,7 @@ const IpdBill = () => {
             const { data } = await fetchData(`/billing/${slug}`);
             if (data) {
                 setFormData(data);
-                setAcomodation(data?.acomodation_cart || { items: [], total: 0 });
+                // setAcomodation(data?.acomodation_cart || { items: [], total: 0 });
                 setDoctorCharge(data?.consultant_cart || { items: [], total: 0 });
                 setServiceCharges(data?.service_cart || { items: [], total: 0 });
                 setMedicineCharge(data?.medicine_cart || { items: [], total: 0 });
@@ -47,15 +45,13 @@ const IpdBill = () => {
     };
 
     useEffect(() => {
-        handleGetPatient(); // Fetch data when slug changes
+        handleGetPatient();
     }, [slug]);
 
 
     return (
         <PrintUi path="/ipd/record">
-
             <div className="w-full flex justify-between items-center px-6 py-2 border-b-2 border-black ">
-                {/* Left Side - Logo and Name */}
                 <div className="flex items-center space-x-4">
                     <Image
                         width={120}
@@ -86,7 +82,7 @@ const IpdBill = () => {
             </div>
 
             {loading && <Loading />}
-            <div className="mx-auto bg-white p-2 print:p-1">
+            <div className="mx-auto bg-white p-2 print:p-3">
                 {/* Compact Patient Details */}
                 <div>
                     <h2 className="text-lg font-bold text-center mb-2">Money Receipt</h2>
@@ -121,7 +117,7 @@ const IpdBill = () => {
 
                 {/* Compact Tables */}
 
-                <div className="space-y-1">
+                {/* <div className="space-y-1">
                     <h3 className="text-xs font-semibold border-b border-black">Bed Charges</h3>
                     <table className="w-full text-[10px] print:text-[8px]">
                         <thead>
@@ -143,7 +139,7 @@ const IpdBill = () => {
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </div> */}
 
                 <div className="space-y-1">
                     <h3 className="text-xs font-semibold border-b border-black">Doctor Charges</h3>
@@ -160,8 +156,8 @@ const IpdBill = () => {
                             {DoctorCharge?.items?.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-0.5 border">{item.drname}</td>
-                                    <td className="p-0.5 text-right border">₹{(item.charge / item.visit).toFixed(2)}/visit</td>
-                                    <td className="p-0.5 text-right border">{item.visit}</td>
+                                    <td className="p-0.5 text-right border">₹{(item.charge / item.doctor_visit).toFixed(2)}/visit</td>
+                                    <td className="p-0.5 text-right border">{item.doctor_visit}</td>
                                     <td className="p-0.5 text-right border">₹{item.charge}</td>
                                 </tr>
                             ))}
@@ -194,7 +190,7 @@ const IpdBill = () => {
                                         <td className="p-0.5 text-right border">
                                             {item.unittype ? `₹${(+item.unitcharge / item.unit).toFixed(2)}/${item.unittype}` : "-"}
                                         </td>
-                                        <td className="p-0.5 text-right border">{item.unit || "-"}</td>
+                                        <td className="p-0.5 text-right border">{item.unittype ? "-" : item.unit}</td>
                                         <td className="p-0.5 text-right border">₹{item.unitcharge}</td>
                                     </tr>
                                 ))}
@@ -203,7 +199,7 @@ const IpdBill = () => {
                     </div>
                 ))}
 
-                <div className="mt-1">
+                {MedicineCharge?.total > 0 && <div className="mt-1">
                     <h3 className="text-xs font-semibold border-b border-black">Medicines</h3>
                     <table className="w-full text-[10px] print:text-[10px]">
                         <thead>
@@ -225,7 +221,7 @@ const IpdBill = () => {
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </div>}
 
                 {/* Compact Billing Summary */}
                 <div className="mt-2 flex justify-between gap-2 text-[10px] print:text-[8px]">
@@ -253,7 +249,7 @@ const IpdBill = () => {
                         </div>
                         <div className="flex justify-between">
                             <span>Method:</span>
-                            <span className="capitalize">{formData?.paydby}</span>
+                            <span className="capitalize">{formData?.paidby}</span>
                         </div>
                         <div className="flex justify-between font-semibold border-t pt-0.5">
                             <span>Due:</span>
@@ -268,7 +264,7 @@ const IpdBill = () => {
                         <p>Thank you for choosing {hospitalInfo?.hospital_name}</p>
                         <div className="text-center">
                             <div className="mt-4 w-32 border-b border-black"></div>
-                            <p>E.&O.E: {formData?.patient?.admited_by}</p>
+                            <p>Signature by staff</p>
                         </div>
                     </div>
                 </div>

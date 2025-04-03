@@ -5,7 +5,6 @@ import { useHospital } from "@/context/setting/HospitalInformation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -14,7 +13,7 @@ export default function Home() {
   return (
     <>
       {loading && <Loading />}
-      
+
 
       <div className="w-full min-h-screen flex items-center justify-center bg-slate-50 p-4 sm:p-6">
         <div className="w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-6xl p-6 sm:p-8 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100">
@@ -40,7 +39,7 @@ export default function Home() {
           </header>
 
           {/* Main Information Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-12">
+          <div className="flex w-full justify-between flex-wrap md:flex-nowrap">
             <InfoCard title="Contact Information">
               <InfoItem icon="📞" label="Phone" value={hospitalInfo?.phone} />
               <InfoItem icon="📧" label="Email" value={hospitalInfo?.email} />
@@ -51,13 +50,6 @@ export default function Home() {
               <InfoItem icon="📜" label="GST Number" value={hospitalInfo?.gst_number} />
               <InfoItem icon="📃" label="License No." value={hospitalInfo?.licence_number} />
               <InfoItem icon="🆔" label="PAN" value={hospitalInfo?.pan} />
-            </InfoCard>
-
-            <InfoCard title="System Configuration">
-              <InfoItem icon="🌐" label="Language" value={hospitalInfo?.language} />
-              <InfoItem icon="⏰" label="Timezone" value={hospitalInfo?.timezone} />
-              <InfoItem icon="💲" label="Currency"
-                value={`${hospitalInfo?.currency_symbol} (${hospitalInfo?.currency})`} />
             </InfoCard>
           </div>
 
@@ -95,7 +87,7 @@ export default function Home() {
 }
 
 const InfoCard = ({ title, children }) => (
-  <div className="bg-gray-50 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-gray-200">
+  <div className="bg-gray-50 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-gray-200 w-full">
     <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
       <span className="bg-blue-100 text-blue-600 p-1.5 sm:p-2 rounded-md sm:rounded-lg">{title[0]}</span>
       {title.slice(1)}

@@ -1,3 +1,4 @@
+import { BiChart } from "react-icons/bi";
 import { FaCartPlus, FaClinicMedical, FaMoneyBill, FaRegistered, FaXRay } from "react-icons/fa";
 import { ImLab } from "react-icons/im";
 import {
@@ -7,7 +8,9 @@ import {
   MdDashboard,
   MdGraphicEq,
   MdMedicalServices,
+  MdMedication,
   MdPostAdd,
+  MdReport,
   MdRestore,
 } from "react-icons/md";
 
@@ -17,7 +20,7 @@ export const NavLinks = [
     category: "Dashboard",
     routes: [
       {
-        name: "Menu",
+        name: "Summary",
         path: "/dashboard/menu",
       },
     ],
@@ -79,12 +82,44 @@ export const NavLinks = [
         path: "/labtest/record",
       },
       {
-        name: "Pathology Reading",
+        name: "Lab Reading",
         path: "/labtest/reading",
       },
     ],
   },
+  {
+    icon: < MdMedication />,
+    category: "Doctor Summary",
+    routes: [
+      {
+        name: "OPD Summary",
+        path: "/doctorsummary/opd",
+      },
+      {
+        name: "IPD Summary",
+        path: "/doctorsummary/ipd",
+      },
+    ],
+  },
 
+  {
+    icon: <BiChart />,
+    category: "Report",
+    routes: [
+      {
+        name: "IPD Report",
+        path: "/report/ipd",
+      },
+      {
+        name: "OPD Report",
+        path: "/report/opd",
+      },
+      {
+        name: "LAB Report",
+        path: "/report/lab",
+      },
+    ],
+  },
   {
     icon: <MdBed />,
     category: "Bed",

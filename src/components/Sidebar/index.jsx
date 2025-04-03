@@ -13,14 +13,20 @@ import { NavLinks } from "@/utils/navlinks";
 import Link from "next/link";
 import { useHospital } from "@/context/setting/HospitalInformation";
 import { FaBed } from "react-icons/fa";
+import { BiSearch } from "react-icons/bi";
+import toast from "react-hot-toast";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ResponsiveSidebar({ children }) {
   const { data: session } = useSession();
 
-
+const router = useRouter();
   const { hospitalInfo } = useHospital();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+  const [showSearchPopup, setShowSearchPopup] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   const sidebarRef = React.useRef();
   const menuButtonRef = React.useRef();
@@ -49,8 +55,20 @@ export default function ResponsiveSidebar({ children }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, isProfileOpen]);
 
+  const handleSearchDetails = () => {
+    if (!searchValue.trim()) {
+      toast.error("Please enter a patient ID");
+      return;
+    }
+    router.push(`/patient/details/${searchValue.trim()}`);
+    setShowSearchPopup(false);
+    setSearchValue("");
+  };
+
   return (
     <div className="flex h-screen flex-col bg-gray-100">
+
+
       {/* Top Navigation Bar */}
       <header className="bg-gradient-to-r from-teal-600 to-teal-700 shadow-lg">
         <div className="mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,6 +91,13 @@ export default function ResponsiveSidebar({ children }) {
 
             {/* Right Section */}
             <div className="flex items-center space-x-6">
+              <button
+                onClick={() => setShowSearchPopup(true)}
+                className="flex items-center space-x-2 group focus:outline-none"
+              >
+                <BiSearch className="h-6 w-6 text-white hover:text-teal-200 transition-colors" />
+              </button>
+
               <Link href="/bedmanagement/bedallotment" className="flex items-center space-x-2 group focus:outline-none">
                 <FaBed className="h-6 w-6 text-white" />
               </Link>
@@ -215,6 +240,44 @@ export default function ResponsiveSidebar({ children }) {
             </ul>
           </nav>
         </aside>
+
+        {showSearchPopup && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Search Patient
+                </h3>
+                <button
+                  onClick={() => setShowSearchPopup(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <ImCross className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter Reg ID"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearchDetails()}
+                  autoFocus
+                />
+                <button
+                  onClick={handleSearchDetails}
+                  className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <BiSearch className="h-5 w-5" />
+                  Search
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Mobile Overlay */}
         {isOpen && (

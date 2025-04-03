@@ -51,9 +51,6 @@ const patientSchema = new Schema({
     guardian_phone: {
         type: String
     },
-    referr_by: {
-        type: String,
-    },
     is_locked: {
         type: Boolean,
         default: false

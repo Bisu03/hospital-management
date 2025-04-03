@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { connectDB } from "@/lib/mongoConnection";
@@ -6,6 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import Labtest from "@/models/Labtest.models";
 import Patient from "@/models/Patient.models";
 import Counter from "@/models/Counter.models";
+import { formattedTime } from "@/lib/timeGenerate";
 
 export async function GET(req) {
   try {
@@ -22,8 +22,8 @@ export async function GET(req) {
     const searchParams = {
       id: url.searchParams.get("id"),
       search: url.searchParams.get("search"),
-      page: parseInt(url.searchParams.get("page")) || 1,
-      limit: parseInt(url.searchParams.get("limit")) || 10,
+      startDate: url.searchParams.get("startDate"),
+      endDate: url.searchParams.get("endDate"),
     };
 
     if (searchParams.id) {
@@ -34,6 +34,22 @@ export async function GET(req) {
         .exec();
       return NextResponse.json({ success: true, data });
     }
+
+    const matchConditions = {};
+    if (searchParams.search) {
+      matchConditions.$or = [
+        { "patient.fullname": { $regex: searchParams.search, $options: "i" } },
+        { bill_no: { $regex: searchParams.search, $options: "i" } },
+        { mrd_id: { $regex: searchParams.search, $options: "i" } },
+      ];
+    }
+    if (searchParams.startDate && searchParams.endDate) {
+      matchConditions.reporting_date = {
+        $gte: searchParams.startDate,
+        $lte: searchParams.endDate,
+      };
+    }
+
     const pipeline = [
       {
         $lookup: {
@@ -44,47 +60,24 @@ export async function GET(req) {
         },
       },
       { $unwind: "$patient" },
-      ...(searchParams.search
-        ? [
-          {
-            $match: {
-              $or: [
-                {
-                  "patient.fullname": {
-                    $regex: searchParams.search,
-                    $options: "i",
-                  },
-                },
-                { bill_no: { $regex: searchParams.search, $options: "i" } },
-                { mrd_id: { $regex: searchParams.search, $options: "i" } },
-              ],
-            },
-          },
-        ]
-        : []),
-      { $sort: { createdAt: -1 } },
-      { $skip: (searchParams.page - 1) * searchParams.limit },
-      { $limit: searchParams.limit },
       {
-        $facet: {
-          data: [],
-          totalCount: [{ $count: "total" }],
+        $lookup: {
+          from: "doctors",
+          localField: "consultant",
+          foreignField: "_id",
+          as: "consultant",
         },
       },
+      { $unwind: "$consultant" },
+      { $match: matchConditions },
+      { $sort: { createdAt: -1 } },
     ];
 
-    const result = await Labtest.aggregate(pipeline);
-    const data = result[0]?.data || [];
-    const total = result[0]?.totalCount?.[0]?.total || 0;
+    const data = await Labtest.aggregate(pipeline);
 
     return NextResponse.json({
       success: true,
       data,
-      pagination: {
-        currentPage: searchParams.page,
-        totalPages: Math.ceil(total / searchParams.limit),
-        totalItems: total,
-      },
     });
   } catch (error) {
     return NextResponse.json(
@@ -109,6 +102,7 @@ export async function POST(req) {
 
     const {
       mrd_id,
+      reg_id,
       fullname,
       phone_number,
       referr_by,
@@ -118,13 +112,12 @@ export async function POST(req) {
       age,
       consultant,
       address,
-      paydby,
+      paidby,
       amount,
-      reporting_time,
       reporting_date,
       pathology_test_cart,
       radiology_test_cart,
-      admited_by
+      admited_by,
     } = body;
 
     let newLabtest;
@@ -132,13 +125,11 @@ export async function POST(req) {
     let billno = null;
     let mrdid = null;
 
-
     billno = await Counter.findOneAndUpdate(
       { id: "labtestbill" },
       { $inc: { seq: 1 } },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
-
 
     if (!body.mrd_id) {
       mrdid = await Counter.findOneAndUpdate(
@@ -148,23 +139,36 @@ export async function POST(req) {
       );
     }
 
-
     if (body?.mrd_id) {
-      newLabtest = await Labtest.create({
-        bill_no: billno?.seq,
-        mrd_id,
-        paydby,
-        amount,
+      const data = await Patient.create({
+        fullname,
+        phone_number,
+        gender,
         patient,
-        consultant,
-        reporting_time,
-        reporting_date,
-        pathology_test_cart,
-        radiology_test_cart,
-        admited_by
+        dob,
+        age,
+        address,
+        reg_id,
+        mrd_id,
       });
+      if (data) {
+        newLabtest = await Labtest.create({
+          mrd_id,
+          reg_id,
+          bill_no: billno?.seq,
+          patient: data._id,
+          paidby,
+          amount,
+          consultant,
+          reporting_time: formattedTime(),
+          reporting_date,
+          referr_by,
+          pathology_test_cart,
+          radiology_test_cart,
+          admited_by,
+        });
+      }
     } else {
-
       const data = await Patient.create({
         fullname,
         phone_number,
@@ -174,22 +178,23 @@ export async function POST(req) {
         dob,
         age,
         address,
+        reg_id,
         mrd_id: mrdid?.seq,
       });
-
-      data._id;
       newLabtest = await Labtest.create({
         bill_no: billno?.seq,
         mrd_id: mrdid?.seq,
-        paydby,
+        reg_id,
+        paidby,
         patient: data._id,
         amount,
         consultant,
-        reporting_time,
+        reporting_time: formattedTime(),
         reporting_date,
         pathology_test_cart,
+        referr_by,
         radiology_test_cart,
-        admited_by
+        admited_by,
       });
     }
 
@@ -205,4 +210,3 @@ export async function POST(req) {
     );
   }
 }
-

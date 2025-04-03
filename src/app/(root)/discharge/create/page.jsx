@@ -126,20 +126,20 @@ const CreateDischarge = () => {
                     <div className="w-full">
                         <Heading heading="Service">
                             <div className="flex gap-2">
+
                                 <input
                                     type="text"
                                     placeholder="Enter REG ID"
                                     className="p-2 border rounded"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleGetPatient()}
                                 />
                                 <button
                                     onClick={handleGetPatient}
                                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                                     disabled={loading}
                                 >
-                                    {loading ? <Spinner size="sm" /> : "Search"}
+                                    {loading ? <Spinner /> : 'Search'}
                                 </button>
                             </div>
                         </Heading>
@@ -150,43 +150,43 @@ const CreateDischarge = () => {
                                 {formData?.patient?.fullname || "Enter Reg ID"}
                             </h1>
                             <div className="grid grid-cols-2 sm:grid-cols-1 lg:grid-cols-4 gap-2 md:gap-4">
-                                {formData.mrd_id && (
+                                {formData?.mrd_id && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
                                             MRD ID
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formData.mrd_id}
+                                            {formData?.mrd_id}
                                         </p>
                                     </div>
                                 )}
-                                {formData.reg_id && (
+                                {formData?.reg_id && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
                                             Reg ID
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formData.reg_id}
+                                            {formData?.reg_id}
                                         </p>
                                     </div>
                                 )}
-                                {formData.patient?.age && (
+                                {formData?.patient?.age && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
                                             Age
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formData.patient.age}
+                                            {formData?.patient?.age}
                                         </p>
                                     </div>
                                 )}
-                                {formData.ipd?.admit_date && (
+                                {formData?.ipd?.admit_date && (
                                     <div className="space-y-0.5 min-w-[200px]">
                                         <p className="text-xs md:text-sm font-medium text-gray-500">
                                             Admit Date
                                         </p>
                                         <p className="text-gray-700 text-sm md:text-base font-mono truncate">
-                                            {formatDate(formData.ipd.admit_date)}
+                                            {formatDate(formData?.ipd.admit_date)}
                                         </p>
                                     </div>
                                 )}
@@ -218,7 +218,7 @@ const CreateDischarge = () => {
                                         <input
                                             type="text"
                                             name="surgery"
-                                            value={formData.surgery}
+                                            value={formData?.surgery}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                             placeholder="Enter surgery details"
@@ -233,7 +233,7 @@ const CreateDischarge = () => {
                                         </label>
                                         <textarea
                                             name="final_diagnosis"
-                                            value={formData.final_diagnosis}
+                                            value={formData?.final_diagnosis}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                             rows="3"
@@ -247,7 +247,7 @@ const CreateDischarge = () => {
                                         </label>
                                         <textarea
                                             name="discharge_summary"
-                                            value={formData.discharge_summary}
+                                            value={formData?.discharge_summary}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                             rows="3"
@@ -264,7 +264,7 @@ const CreateDischarge = () => {
                                         <input
                                             type="text"
                                             name="condition"
-                                            value={formData.condition}
+                                            value={formData?.condition}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                             placeholder="Patient's condition"
@@ -277,7 +277,7 @@ const CreateDischarge = () => {
                                         </label>
                                         <textarea
                                             name="advice"
-                                            value={formData.advice}
+                                            value={formData?.advice}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                             rows="2"
@@ -294,7 +294,7 @@ const CreateDischarge = () => {
                                         <input
                                             type="date"
                                             name="discharge_date"
-                                            value={formData.discharge_date}
+                                            value={formData?.discharge_date}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                         />
@@ -307,7 +307,7 @@ const CreateDischarge = () => {
                                         <input
                                             type="text"
                                             name="discharge_time"
-                                            value={formData.discharge_time}
+                                            value={formData?.discharge_time}
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded-lg"
                                         />
